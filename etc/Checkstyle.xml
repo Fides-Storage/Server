@@ -107,7 +107,6 @@
       <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
     </module>
     <module name="FinalClass"/>
-    <module name="HideUtilityClassConstructor"/>
     <module name="InterfaceIsType"/>
     <module name="VisibilityModifier"/>
     <module name="ArrayTypeStyle"/>
@@ -121,7 +120,9 @@
       <property name="severity" value="ignore"/>
       <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
     </module>
-    <module name="UncommentedMain"/>
+    <module name="UncommentedMain">
+		<property name="excludedClasses" value="\.App$"/>
+	</module>
     <module name="CyclomaticComplexity"/>
     <module name="DefaultComesLast"/>
     <module name="DeclarationOrder"/>
