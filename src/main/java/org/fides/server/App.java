@@ -1,8 +1,6 @@
 package org.fides.server;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * 
@@ -19,32 +17,15 @@ public class App {
 	 *            unused
 	 */
 	public static void main(String[] args) {
-		ServerSocket listener = null;
+		Server server;
 		try {
-			listener = new ServerSocket(PORT);
-			Socket server;
-
-			while (true) {
-
-				server = listener.accept();
-				ClientConnection client = new ClientConnection(server);
-				Thread t = new Thread(client);
-				t.start();
-			}
+			server = new Server(PORT);
+			Thread serverThread = new Thread(server);
+			serverThread.start();
 		}
 		catch (IOException e) {
-			System.out.println("IOException on socket listen: " + e.getMessage());
-
+			System.out.println(e.getMessage());
 		}
-		finally {
 
-			try {
-				listener.close();
-			}
-			catch (IOException e) {
-				System.out.println("IOException on socket listen: " + e.getMessage());
-
-			}
-		}
 	}
 }
