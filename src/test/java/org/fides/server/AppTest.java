@@ -22,6 +22,9 @@ public class AppTest {
 
 	private Server server;
 
+	/**
+	 * Initiates the test
+	 */
 	@Before
 	public void runBefore() {
 
@@ -35,13 +38,19 @@ public class AppTest {
 		}
 	}
 
+	/**
+	 * Tears the test down
+	 */
 	@After
 	public void runAfter() {
 		server.kill();
 	}
 
+	/**
+	 * Tests whether the socket is connected
+	 */
 	@Test
-	public void testSocketConnection_IsConnected() {
+	public void testSocketConnectionIsConnected() {
 
 		Socket client;
 		try {

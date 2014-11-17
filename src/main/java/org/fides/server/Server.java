@@ -4,16 +4,32 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * 
+ * @author Niels en Jesse
+ * 
+ */
 public class Server implements Runnable {
 
 	private ServerSocket listener;
 
 	private volatile boolean isRunning = true;
 
+	/**
+	 * Constructor to create a new server socket
+	 * 
+	 * @param port
+	 *            port number
+	 * @throws IOException
+	 *             Throws an IOException if the connection can't be made
+	 */
 	public Server(int port) throws IOException {
 		listener = new ServerSocket(port);
 	}
 
+	/**
+	 * Accepting client connections
+	 */
 	public void run() {
 
 		try {
@@ -44,6 +60,9 @@ public class Server implements Runnable {
 		}
 	}
 
+	/**
+	 * Kills the running thread
+	 */
 	public void kill() {
 		isRunning = false;
 	}
