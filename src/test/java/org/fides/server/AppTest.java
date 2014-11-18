@@ -41,6 +41,9 @@ public class AppTest {
 
 	/**
 	 * Tears the test down
+	 * 
+	 * Sleep is used to wait for the running thread in Server to complete
+	 * 
 	 */
 	@After
 	public void runAfter() {
@@ -48,8 +51,7 @@ public class AppTest {
 			Thread.sleep(1000);
 		}
 		catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 		server.kill();
 	}
