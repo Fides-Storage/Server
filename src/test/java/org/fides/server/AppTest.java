@@ -3,10 +3,8 @@ package org.fides.server;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -14,6 +12,9 @@ import java.net.UnknownHostException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * Unit test for simple App.
@@ -43,6 +44,13 @@ public class AppTest {
 	 */
 	@After
 	public void runAfter() {
+		try {
+			Thread.sleep(1000);
+		}
+		catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		server.kill();
 	}
 
@@ -51,22 +59,23 @@ public class AppTest {
 	 */
 	@Test
 	public void testSocketConnectionIsConnected() {
-
 		Socket client;
 		try {
+			Gson gson = new Gson();
+
 			client = new Socket("localhost", 4444);
 
 			assertTrue(client.isConnected());
+
+			JsonObject obj = new JsonObject();
+			obj.addProperty("username", "ThisisKoen");
+			obj.addProperty("password", "Thisisapassword");
+
 			OutputStream outToServer = client.getOutputStream();
 			DataOutputStream out =
 				new DataOutputStream(outToServer);
 
-			out.writeUTF("Hello from "
-				+ client.getLocalSocketAddress());
-			InputStream inFromServer = client.getInputStream();
-			DataInputStream in =
-				new DataInputStream(inFromServer);
-			System.out.println("Server says " + in.readUTF());
+			out.writeUTF(gson.toJson(obj));
 
 			client.close();
 		}
@@ -76,6 +85,5 @@ public class AppTest {
 		catch (IOException e) {
 			fail("IOException");
 		}
-
 	}
 }

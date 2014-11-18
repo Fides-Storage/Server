@@ -1,11 +1,13 @@
 package org.fides.server;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
 import org.fides.server.files.UserFile;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * 
@@ -37,24 +39,22 @@ public class ClientConnection implements Runnable {
 
 		try {
 			// Get input from the client
+			DataInputStream in = new DataInputStream(server.getInputStream());
+			String data = in.readUTF();
 
-			System.out.println("Waiting for client on port " +
-				server.getLocalPort() + "...");
-			System.out.println("Just connected to "
-				+ server.getRemoteSocketAddress());
-			DataInputStream in =
-				new DataInputStream(server.getInputStream());
-			System.out.println(in.readUTF());
-			DataOutputStream out =
-				new DataOutputStream(server.getOutputStream());
-			out.writeUTF("Thank you for connecting to "
-				+ server.getLocalSocketAddress() + "\nGoodbye!");
+			Gson gson = new Gson();
+			JsonObject jobj = gson.fromJson(data, JsonObject.class);
+
+			String username = jobj.get("username").toString();
+			String password = jobj.get("password").toString();
+
+			System.out.println("username: " + username + " " + "password: " + password);
 
 			server.close();
 		}
-		catch (IOException ioe) {
-			System.out.println("IOException on socket listen: " + ioe);
-			ioe.printStackTrace();
+		catch (IOException e) {
+			System.out.println("IOException on socket listen: " + e);
+			e.printStackTrace();
 		}
 	}
 }
