@@ -54,6 +54,7 @@ public class AppTest {
 		server.kill();
 	}
 
+	// TODO: Add actual assertions.
 	/**
 	 * Tests whether the socket is connected
 	 */
@@ -72,8 +73,7 @@ public class AppTest {
 			obj.addProperty("password", "Thisisapassword");
 
 			OutputStream outToServer = client.getOutputStream();
-			DataOutputStream out =
-				new DataOutputStream(outToServer);
+			DataOutputStream out = new DataOutputStream(outToServer);
 
 			out.writeUTF(gson.toJson(obj));
 

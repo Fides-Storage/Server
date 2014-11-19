@@ -12,6 +12,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
+ * The JUnit Test Case for the UserFile
  * 
  * @author Niels and Jesse
  * 
