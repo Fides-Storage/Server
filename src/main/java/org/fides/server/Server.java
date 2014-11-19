@@ -4,22 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.fides.server.tools.PropertiesManager;
+
 /**
  * 
  * @author Niels en Jesse
  * 
  */
 public class Server implements Runnable {
-
-	/**
-	 * The user directory
-	 */
-	private static String userDir;
-
-	/**
-	 * The data directory
-	 */
-	private static String dataDir;
 
 	private ServerSocket listener;
 
@@ -28,15 +20,17 @@ public class Server implements Runnable {
 	/**
 	 * Constructor to create a new server socket
 	 * 
-	 * @param port
-	 *            port number
 	 * @throws IOException
 	 *             Throws an IOException if the connection can't be made
 	 */
-	public Server(int port, String userDir, String dataDir) throws IOException {
-		Server.userDir = userDir;
-		Server.dataDir = dataDir;
-		listener = new ServerSocket(port);
+	public Server() throws IOException {
+		PropertiesManager pm = PropertiesManager.getInstance();
+
+		System.out.println("Starting up the Fides server on port: " + pm.getPort());
+		System.out.println("Using user directory: " + pm.getUserDir());
+		System.out.println("Using data directory: " + pm.getDataDir());
+
+		listener = new ServerSocket(pm.getPort());
 	}
 
 	/**
@@ -74,13 +68,5 @@ public class Server implements Runnable {
 	 */
 	public void kill() {
 		isRunning = false;
-	}
-
-	public static String getUserDir() {
-		return userDir;
-	}
-
-	public static String getDataDir() {
-		return dataDir;
 	}
 }
