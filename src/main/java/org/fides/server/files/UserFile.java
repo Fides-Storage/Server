@@ -1,12 +1,13 @@
 package org.fides.server.files;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
 /**
  * 
- * @author Niels en Jesse
+ * @author Niels and Jesse
  * 
  */
 public class UserFile implements Serializable {
@@ -20,7 +21,7 @@ public class UserFile implements Serializable {
 
 	private String passwordHash;
 
-	private Collection<String> userFiles;
+	private Collection<String> userFiles = new ArrayList<String>();
 
 	private String keyFile;
 
@@ -51,6 +52,7 @@ public class UserFile implements Serializable {
 	 * @return true if the user contains the file at the given location, false otherwise
 	 */
 	public boolean checkOwned(String location) {
+
 		return userFiles.contains(location);
 
 	}

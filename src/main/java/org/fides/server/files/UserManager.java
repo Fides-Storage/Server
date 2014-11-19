@@ -12,7 +12,7 @@ import org.fides.server.tools.PropertiesManager;
 
 /**
  * 
- * @author Niels en Jesse
+ * @author Niels and Jesse
  * 
  */
 public class UserManager {
