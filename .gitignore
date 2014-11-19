@@ -23,7 +23,5 @@ target/
 .settings/
 
 # Folders
-user/*
-data/*
-!user/.gitkeep
-!data/.gitkeep
+user/
+data/

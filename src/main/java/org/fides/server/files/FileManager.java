@@ -17,7 +17,8 @@ import org.fides.server.tools.PropertiesManager;
  */
 public final class FileManager {
 
-	private static final int MAXUNIQUEATTEMPTS = 10;
+	/** The maximum number of attempts when trying to create a unique filename **/
+	private static final int MAXUNIQUENAMEATTEMPTS = 10;
 
 	/**
 	 * Creates a new file with a unique name.
@@ -32,7 +33,7 @@ public final class FileManager {
 		
 		try {
 			int uniqueAttempts = 0;
-			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUEATTEMPTS) {
+			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
 				location = UUID.randomUUID().toString();
 				newFile = new File(properties.getDataDir(), location);
 			}
