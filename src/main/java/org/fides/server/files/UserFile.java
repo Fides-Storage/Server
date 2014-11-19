@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.GregorianCalendar;
 
 /**
+ * This class is responsible for keeping track of the files that belong to a user.
  * 
  * @author Niels and Jesse
  * 
@@ -52,9 +53,7 @@ public class UserFile implements Serializable {
 	 * @return true if the user contains the file at the given location, false otherwise
 	 */
 	public boolean checkOwned(String location) {
-
 		return userFiles.contains(location);
-
 	}
 
 	/**
@@ -77,7 +76,6 @@ public class UserFile implements Serializable {
 	public void removeFile(String location) {
 		userFiles.remove(location);
 		UserManager.saveUserFile(this);
-
 	}
 
 }

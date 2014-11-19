@@ -11,11 +11,12 @@ import java.io.ObjectOutputStream;
 import org.fides.server.tools.PropertiesManager;
 
 /**
+ * This class manages the users using static functions. It can unlock and save user files.
  * 
  * @author Niels and Jesse
  * 
  */
-public class UserManager {
+public final class UserManager {
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
@@ -32,12 +33,12 @@ public class UserManager {
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
 
-				// TODO decrypt file
+				// TODO: decrypt file
 
 				ObjectInputStream os = new ObjectInputStream(in);
-				UserFile uf = (UserFile) os.readObject();
+				UserFile userFile = (UserFile) os.readObject();
 				os.close();
-				return uf;
+				return userFile;
 
 			} catch (FileNotFoundException e) {
 				System.err.println("UserFile not found: " + e.getMessage());
@@ -51,7 +52,7 @@ public class UserManager {
 	}
 
 	/**
-	 * Saves the user file in the user directory
+	 * Encrypts the user file and saves it in the user directory
 	 * 
 	 * @param userFile
 	 *            the user file based on the user name
@@ -60,6 +61,9 @@ public class UserManager {
 	public static boolean saveUserFile(UserFile userFile) {
 		try {
 			FileOutputStream fos = new FileOutputStream(new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername()));
+
+			// TODO: encrypt file
+			
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(userFile);
 			oos.close();

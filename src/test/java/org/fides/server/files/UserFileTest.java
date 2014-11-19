@@ -3,22 +3,39 @@ package org.fides.server.files;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * 
  * @author Niels and Jesse
  * 
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(UserManager.class)
 public class UserFileTest {
 
+	/**
+	 * Disables the static UserManager to prevent the creation of userfiles.
+	 */
+	@Before
+	public void disableUserManager() {
+		PowerMockito.mockStatic(UserManager.class);
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+	}
+	
 	/**
 	 * Checks whether the user file doesn't contain the given data
 	 */
 	@Test
 	public void testUserFilesDontContainGivenFile() {
-		UserFile uf = new UserFile("pietje", "passwordHash");
-		assertFalse(uf.checkOwned("testLocation"));
+		UserFile userFile = new UserFile("userName1", "passwordHash");
+		assertFalse(userFile.checkOwned("testLocation"));
 	}
 
 	/**
@@ -26,10 +43,9 @@ public class UserFileTest {
 	 */
 	@Test
 	public void testUserFilesContainsGivenFile() {
-		UserFile uf = new UserFile("Pietje", "passwordHash");
-		uf.addFile("testlocation");
-		assertTrue(uf.checkOwned("testlocation"));
-
+		UserFile userFile = new UserFile("userName2", "passwordHash");
+		userFile.addFile("testlocation");
+		assertTrue(userFile.checkOwned("testlocation"));
 	}
 
 	/**
@@ -37,11 +53,11 @@ public class UserFileTest {
 	 */
 	@Test
 	public void testRemoveUserFile() {
-		UserFile uf = new UserFile("pietje", "passwordHash");
+		UserFile userFile = new UserFile("userName3", "passwordHash");
 
-		uf.addFile("testlocation");
-		uf.removeFile("testlocation");
-		assertFalse(uf.checkOwned("testlocation"));
+		userFile.addFile("testlocation");
+		userFile.removeFile("testlocation");
+		assertFalse(userFile.checkOwned("testlocation"));
 	}
 
 }
