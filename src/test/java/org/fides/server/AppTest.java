@@ -30,11 +30,10 @@ public class AppTest {
 	public void runBefore() {
 
 		try {
-			server = new Server(4444, "./user", "./data");
+			server = new Server();
 			Thread serverThread = new Thread(server);
 			serverThread.start();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			fail("IOException");
 		}
 	}
@@ -49,8 +48,7 @@ public class AppTest {
 	public void runAfter() {
 		try {
 			Thread.sleep(1000);
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			System.out.println(e.getMessage());
 		}
 		server.kill();
@@ -80,11 +78,9 @@ public class AppTest {
 			out.writeUTF(gson.toJson(obj));
 
 			client.close();
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			fail("UnknownHostException");
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			fail("IOException");
 		}
 	}

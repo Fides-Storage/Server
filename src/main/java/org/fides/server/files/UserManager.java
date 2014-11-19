@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import org.fides.server.Server;
+import org.fides.server.tools.PropertiesManager;
 
 /**
  * 
@@ -27,7 +27,7 @@ public class UserManager {
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
-		File file = new File(Server.getUserDir(), username);
+		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
 		if (file.exists() && file.isFile()) {
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
@@ -59,7 +59,7 @@ public class UserManager {
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
 		try {
-			FileOutputStream fos = new FileOutputStream(new File(Server.getUserDir(), userFile.getUsername()));
+			FileOutputStream fos = new FileOutputStream(new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername()));
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(userFile);
 			oos.close();

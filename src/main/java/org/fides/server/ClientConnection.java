@@ -55,16 +55,16 @@ public class ClientConnection implements Runnable {
 				userFile = UserManager.unlockUserFile(username, passwordHash);
 
 				if (userFile != null) {
-
+					// TODO return auth.
+				} else {
+					// TODO Json error return can't open user file
 				}
-			}
-			else {
+			} else {
 				// TODO return json error to client
 			}
 
 			server.close();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.out.println("IOException on socket listen: " + e);
 			e.printStackTrace();
 		}

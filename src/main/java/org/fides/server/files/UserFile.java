@@ -55,13 +55,27 @@ public class UserFile implements Serializable {
 
 	}
 
+	/**
+	 * Adds file location to the list of files and saves itself
+	 * 
+	 * @param location
+	 *            the location of the new file
+	 */
 	public void addFile(String location) {
-
+		userFiles.add(location);
+		UserManager.saveUserFile(this);
 	}
 
+	/**
+	 * Removes the file at the given location and saves itself
+	 * 
+	 * @param location
+	 *            the location of the removed file
+	 */
 	public void removeFile(String location) {
 		userFiles.remove(location);
-		// FileManager.removeFile(location);
+		UserManager.saveUserFile(this);
+
 	}
 
 }

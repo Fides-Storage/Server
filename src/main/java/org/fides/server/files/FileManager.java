@@ -10,10 +10,10 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
-import org.fides.server.Server;
+import org.fides.server.tools.PropertiesManager;
 
 public final class FileManager {
-	
+
 	/**
 	 * Creates a new file with a unique name.
 	 * 
@@ -21,19 +21,21 @@ public final class FileManager {
 	 * @throws IOException
 	 */
 	public static String createFile() throws IOException {
+		PropertiesManager pm = PropertiesManager.getInstance();
+
 		String location = UUID.randomUUID().toString();
-		File newFile = new File(Server.getDataDir(), location);
+		File newFile = new File(pm.getDataDir(), location);
 		while (!newFile.createNewFile()) {
 			// TODO: Prevent infinite loop by giving a max tries.
 			location = UUID.randomUUID().toString();
-			newFile = new File(Server.getDataDir(), location);
+			newFile = new File(pm.getDataDir(), location);
 		}
 		return location;
 	}
 
 	public static boolean updateFile(InputStream instream, String location) {
 		try {
-			File file = new File(Server.getDataDir(), location);
+			File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 			if (!file.exists()) {
 				// The FileManager can't update a non-existing file.
 				return false;
