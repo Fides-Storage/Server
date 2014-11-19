@@ -44,7 +44,7 @@
     <module name="UnusedImports"/>
     <module name="LineLength">
       <property name="max" value="200"/>
-      <property name="tabWidth" value="1"/>
+      <property name="tabWidth" value="4"/>
     </module>
     <module name="MethodLength"/>
     <module name="ParameterNumber">

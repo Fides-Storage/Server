@@ -3,8 +3,10 @@ package org.fides.server.files;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.fides.server.Server;
 
@@ -25,8 +27,7 @@ public class UserManager {
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
-		String fileLocation = Server.getUserDir() + "/" + username;
-		File file = new File(fileLocation);
+		File file = new File(Server.getUserDir(), username);
 		if (file.exists() && file.isFile()) {
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
@@ -49,7 +50,27 @@ public class UserManager {
 		return null;
 	}
 
+	/**
+	 * Saves the user file in the user directory
+	 * 
+	 * @param userFile
+	 *            the user file based on the user name
+	 * @return true if succeeded, false otherwise
+	 */
 	public static boolean saveUserFile(UserFile userFile) {
+		try {
+			FileOutputStream fos = new FileOutputStream(new File(Server.getUserDir(), userFile.getUsername()));
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(userFile);
+			oos.close();
+			return true;
+
+		} catch (FileNotFoundException e) {
+			System.err.println("UserFile not found: " + e.getMessage());
+		} catch (IOException e) {
+			System.err.println("IOException has occured: " + e.getMessage());
+		}
+
 		return false;
 	}
 
