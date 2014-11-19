@@ -11,6 +11,16 @@ import java.net.Socket;
  */
 public class Server implements Runnable {
 
+	/**
+	 * The user directory
+	 */
+	private static String userDir;
+
+	/**
+	 * The data directory
+	 */
+	private static String dataDir;
+
 	private ServerSocket listener;
 
 	private volatile boolean isRunning = true;
@@ -24,6 +34,8 @@ public class Server implements Runnable {
 	 *             Throws an IOException if the connection can't be made
 	 */
 	public Server(int port, String userDir, String dataDir) throws IOException {
+		Server.userDir = userDir;
+		Server.dataDir = dataDir;
 		listener = new ServerSocket(port);
 	}
 
@@ -43,17 +55,14 @@ public class Server implements Runnable {
 				Thread t = new Thread(client);
 				t.start();
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.out.println("IOException on socket listen: " + e.getMessage());
 
-		}
-		finally {
+		} finally {
 
 			try {
 				listener.close();
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				System.out.println("IOException on socket listen: " + e.getMessage());
 
 			}
@@ -65,5 +74,13 @@ public class Server implements Runnable {
 	 */
 	public void kill() {
 		isRunning = false;
+	}
+
+	public static String getUserDir() {
+		return userDir;
+	}
+
+	public static String getDataDir() {
+		return dataDir;
 	}
 }

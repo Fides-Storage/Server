@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import org.fides.server.files.UserFile;
+import org.fides.server.files.UserManager;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -46,9 +47,20 @@ public class ClientConnection implements Runnable {
 			JsonObject jobj = gson.fromJson(data, JsonObject.class);
 
 			String username = jobj.get("username").toString();
-			String password = jobj.get("password").toString();
+			String passwordHash = jobj.get("password").toString();
 
-			System.out.println("username: " + username + " " + "password: " + password);
+			System.out.println("username: " + username + " " + "password: " + passwordHash);
+
+			if (!username.isEmpty() && !passwordHash.isEmpty()) {
+				userFile = UserManager.unlockUserFile(username, passwordHash);
+
+				if (userFile != null) {
+
+				}
+			}
+			else {
+				// TODO return json error to client
+			}
 
 			server.close();
 		}
