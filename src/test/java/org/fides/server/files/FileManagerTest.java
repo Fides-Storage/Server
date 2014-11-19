@@ -6,7 +6,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
@@ -19,48 +18,41 @@ import org.junit.Test;
  */
 public class FileManagerTest {
 
+	// TODO: replace with singleton's basepath
 	private static final String BASEPATH = "C:/Temp/Fides/";
 
-	private static final String BASEPATH2 = "C:/Temp/Fides";
-	
 	private static final byte[] MESSAGE = ("DEFAULT MESSAGE: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore "
 		+ "et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
 		+ "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
 		+ "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.").getBytes();
 
 	private static final String DEFAULTEMPTYFILELOCATION = "defaultEmptyFile.txt";
-	
+
 	private static final String DEFAULTFILELOCATION = "defaultFile.txt";
 
+	private static final String DEFAULTREMOVEFILELOCATION = "defaultRemoveFile.txt";
+
 	/**
-	 * Sets up the test class by adding a temporary file.
+	 * Sets up the test class by adding a the necessary temporary files to the test folder.
 	 */
 	@BeforeClass
 	public static void setUp() {
 		try {
 			File emptyFile = new File(BASEPATH, DEFAULTEMPTYFILELOCATION);
 			emptyFile.createNewFile();
-			
+
 			File defaultFile = new File(BASEPATH, DEFAULTFILELOCATION);
 			FileOutputStream outputStream = new FileOutputStream(defaultFile);
+			outputStream.write(MESSAGE);
+			outputStream.close();
+
+			File removeFile = new File(BASEPATH, DEFAULTREMOVEFILELOCATION);
+			outputStream = new FileOutputStream(removeFile);
 			outputStream.write(MESSAGE);
 			outputStream.close();
 		} catch (Exception e) {
 			fail("Unexpected error in setUp: " + e.getMessage());
 		}
-	}
-
-	/**
-	 * Tests if the constructor of FileManager correctly creates a new directory
-	 * if it doesn't exist already.
-	 */
-	@Test
-	public void testConstructor() {
-		String testPath = BASEPATH + "TestFolderCreate";
-
-		// Test if the fileManager created the testfolder
-		Path path = Paths.get(testPath);
-		assertTrue(Files.exists(path));
 	}
 
 	/**
@@ -79,31 +71,13 @@ public class FileManagerTest {
 	}
 
 	/**
-	 * Tests if a file is still correctly created if the basepath has no slash at the end.
-	 */
-	/* Not sure if this test has to exist
-	@Test
-	public void testCreateFileWithoutSlash() {
-		try {
-			FileManager fileManager = new FileManager(BASEPATH2);
-			String fileName = fileManager.createFile();
-
-			// Check if the file was created
-			assertTrue(Files.exists(Paths.get(BASEPATH, fileName)));
-		} catch (Exception e) {
-			fail("An unexpected exception has occured: " + e.getMessage());
-		}
-	}
-	*/
-
-	/**
 	 * Tests if updating an empty file fills the file with an inputstream.
 	 */
 	@Test
 	public void testUpdateEmptyFile() {
 		try {
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(MESSAGE);
-			FileManager.updateFile(inputStream, DEFAULTEMPTYFILELOCATION);
+			assertTrue(FileManager.updateFile(inputStream, DEFAULTEMPTYFILELOCATION));
 			assertArrayEquals(MESSAGE, FileUtils.readFileToByteArray(new File(BASEPATH, DEFAULTEMPTYFILELOCATION)));
 		} catch (Exception e) {
 			fail("An unexpected exception has occured: " + e.getMessage());
@@ -118,7 +92,7 @@ public class FileManagerTest {
 		try {
 			byte[] newMessage = "This file has been updated correctly.".getBytes();
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(newMessage);
-			FileManager.updateFile(inputStream, DEFAULTFILELOCATION);
+			assertTrue(FileManager.updateFile(inputStream, DEFAULTFILELOCATION));
 			assertArrayEquals(newMessage, FileUtils.readFileToByteArray(new File(BASEPATH, DEFAULTFILELOCATION)));
 		} catch (Exception e) {
 			fail("An unexpected exception has occured: " + e.getMessage());
@@ -126,13 +100,40 @@ public class FileManagerTest {
 	}
 
 	/**
-	 * Tears down the test class by removing the temporary folder.
+	 * Tests if updating a non-existing file returns false.
+	 */
+	@Test
+	public void testUpdateNonExistingFile() {
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(MESSAGE);
+		assertFalse(FileManager.updateFile(inputStream, "nonExistingFile.txt"));
+	}
+
+	/**
+	 * Tests the removing of an existing file.
+	 */
+	@Test
+	public void testRemoveFile() {
+		assertTrue(Files.exists(Paths.get(BASEPATH, DEFAULTREMOVEFILELOCATION)));
+		assertTrue(FileManager.removeFile(DEFAULTREMOVEFILELOCATION));
+		assertFalse(Files.exists(Paths.get(BASEPATH, DEFAULTREMOVEFILELOCATION)));
+	}
+
+	/**
+	 * Tests if removing a non-existing file returns false.
+	 */
+	@Test
+	public void testRemoveNonExistingFile() {
+		assertFalse(FileManager.removeFile("nonExistingFile.txt"));
+	}
+
+	/**
+	 * Tears down the test class by clearing the test folder.
 	 */
 	@AfterClass
 	public static void tearDown() {
 		File dir = new File(BASEPATH);
 		try {
-			FileUtils.deleteDirectory(dir);
+			FileUtils.cleanDirectory(dir);
 		} catch (Exception e) {
 			fail("Unexpected error in tearDown: " + e.getMessage());
 		}
