@@ -22,20 +22,19 @@ public class App {
 	 */
 	public static void main(String[] args) {
 		Properties properties = new Properties();
-		String propertiesFile = "config.properties";
+		String propertiesFile = "./config.properties";
 		try {
 			InputStream in = new FileInputStream(propertiesFile);
 			properties.load(in);
+			in.close();
 			port = Integer.parseInt(properties.getProperty("port"));
+			System.out.println(port);
 		}
 		catch (FileNotFoundException e) {
 			System.exit(1);
 		}
 		catch (IOException e) {
 			System.exit(1);
-		}
-		finally {
-
 		}
 
 		Server server;
