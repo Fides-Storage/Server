@@ -1,5 +1,6 @@
 package org.fides.server;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,6 +48,16 @@ public class App {
 		catch (IOException e) {
 			System.err.println("IOException has occured: " + e.getMessage());
 			System.exit(1);
+		}
+		
+		// Create the userDirectory and the dataDirectory if they don't exist.
+		File userFolder = new File(userDir);
+		if (!userFolder.exists()) {
+			userFolder.mkdirs();
+		}
+		File dataFolder = new File(dataDir);
+		if (!dataFolder.exists()) {
+			dataFolder.mkdirs();
 		}
 
 		Server server;
