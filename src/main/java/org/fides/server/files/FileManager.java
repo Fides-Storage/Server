@@ -24,7 +24,6 @@ public final class FileManager {
 	 * Creates a new file with a unique name.
 	 * 
 	 * @return The file's location.
-	 * @throws IOException
 	 */
 	public static String createFile() {
 		PropertiesManager properties = PropertiesManager.getInstance();
