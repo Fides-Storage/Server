@@ -1,7 +1,6 @@
 package org.fides.server.files;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,51 +9,39 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.UUID;
 
-public class FileManager {
+import org.apache.commons.io.IOUtils;
+import org.fides.server.Server;
 
-	private String basePath;
-
-	/**
-	 * Creates a new {@link FileManager} which manages the files in the folder specified by basepath. If basepath points
-	 * to a non-existing directory, it gets created.
-	 * 
-	 * @param basePath
-	 *            the path used by the {@link FileManager}
-	 */
-	public FileManager(String basePath)
-	{
-		this.basePath = basePath;
-		File baseFolder = new File(basePath);
-		if (!baseFolder.exists()) {
-			baseFolder.mkdirs();
-		}
-
-		// If basepath doesn't exist, create the basepath.
-	}
-
+public final class FileManager {
+	
 	/**
 	 * Creates a new file with a unique name.
 	 * 
 	 * @return the file's location.
 	 * @throws IOException
 	 */
-	public String createFile() throws IOException {
+	public static String createFile() throws IOException {
 		String location = UUID.randomUUID().toString();
-		File newFile = new File(basePath, location);
+		File newFile = new File(Server.getDataDir(), location);
 		while (!newFile.createNewFile()) {
 			// TODO: Prevent infinite loop by giving a max tries.
 			location = UUID.randomUUID().toString();
-			newFile = new File(basePath + location);
+			newFile = new File(Server.getDataDir(), location);
 		}
 		return location;
 	}
 
-	public boolean updateFile(InputStream instream, String location) {
+	public static boolean updateFile(InputStream instream, String location) {
 		try {
-			File file = new File(basePath, location);
+			File file = new File(Server.getDataDir(), location);
+			if (!file.exists()) {
+				// The FileManager can't update a non-existing file.
+				return false;
+			}
 			OutputStream fileStream = new FileOutputStream(file);
-
+			IOUtils.copy(instream, fileStream);
 			fileStream.close();
+			return true;
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -69,12 +56,12 @@ public class FileManager {
 		return false;
 	}
 
-	public boolean removeFile(String location) {
+	public static boolean removeFile(String location) {
 		// Delete the file
 		return false;
 	}
 
-	public void updateTimestamps(Collection<File> files) {
+	public static void updateTimestamps(Collection<File> files) {
 
 	}
 
