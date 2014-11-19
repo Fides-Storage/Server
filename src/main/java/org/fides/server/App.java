@@ -14,6 +14,10 @@ import java.util.Properties;
 public class App {
 	private static int port;
 
+	private static String userDir;
+
+	private static String dataDir;
+
 	/**
 	 * Main class of the Fides Server
 	 * 
@@ -23,23 +27,31 @@ public class App {
 	public static void main(String[] args) {
 		Properties properties = new Properties();
 		String propertiesFile = "./config.properties";
+
 		try {
 			InputStream in = new FileInputStream(propertiesFile);
 			properties.load(in);
 			in.close();
 			port = Integer.parseInt(properties.getProperty("port"));
-			System.out.println(port);
+			userDir = properties.getProperty("userDir");
+			dataDir = properties.getProperty("dataDir");
+
+			System.out.println("Starting up the Fides server on port: " + port);
+			System.out.println("Using user directory: " + userDir);
+			System.out.println("Using data directory: " + dataDir);
 		}
 		catch (FileNotFoundException e) {
+			System.err.println("Properties file is not found: " + e.getMessage());
 			System.exit(1);
 		}
 		catch (IOException e) {
+			System.err.println("IOException has occured: " + e.getMessage());
 			System.exit(1);
 		}
 
 		Server server;
 		try {
-			server = new Server(port);
+			server = new Server(port, userDir, dataDir);
 			Thread serverThread = new Thread(server);
 			serverThread.start();
 		}

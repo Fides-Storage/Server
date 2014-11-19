@@ -23,7 +23,7 @@ public class Server implements Runnable {
 	 * @throws IOException
 	 *             Throws an IOException if the connection can't be made
 	 */
-	public Server(int port) throws IOException {
+	public Server(int port, String userDir, String dataDir) throws IOException {
 		listener = new ServerSocket(port);
 	}
 

@@ -30,7 +30,7 @@ public class AppTest {
 	public void runBefore() {
 
 		try {
-			server = new Server(4444);
+			server = new Server(4444, "./user", "./data");
 			Thread serverThread = new Thread(server);
 			serverThread.start();
 		}
