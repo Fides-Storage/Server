@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -38,6 +39,7 @@ import javax.net.ssl.SSLSocketFactory;
 /**
  * Unit test for simple App.
  */
+@PowerMockIgnore("javax.net.ssl.*")
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PropertiesManager.class)
 public class AppTest {
@@ -57,6 +59,12 @@ public class AppTest {
 	 */
 	@BeforeClass
 	public static void setUp() {
+		//For testing purposes only
+		Properties systemProps = System.getProperties();
+		systemProps.put("javax.net.ssl.trustStore", "/home/tom/Development/Prive/School/SchoolGit/cert/truststore.ts");
+		systemProps.put("javax.net.ssl.trustStorePassword", "");
+		System.setProperties(systemProps);
+
 		try {
 			testUserDir = new File(PropertiesManager.getInstance().getUserDir(), "Test");
 			if (!testUserDir.exists()) {
@@ -71,6 +79,8 @@ public class AppTest {
 			Mockito.when(mockedPropertiesManager.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
 			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 			Mockito.when(mockedPropertiesManager.getPort()).thenReturn(port);
+			Mockito.when(mockedPropertiesManager.getKeystorePath()).thenReturn("./keystore.jks");
+			Mockito.when(mockedPropertiesManager.getKeystorePassword()).thenReturn("12345678".toCharArray());
 
 		} catch (Exception e) {
 			fail("Unexpected error in setUp: " + e.getMessage());
@@ -103,12 +113,6 @@ public class AppTest {
 	@Test
 	public void testSocketConnectionIsConnected() {
 
-		//For testing purposes only
-		Properties systemProps = System.getProperties();
-		systemProps.put("javax.net.ssl.trustStore", "/home/tom/Development/Prive/School/SchoolGit/cert/truststore.ts");
-		systemProps.put("javax.net.ssl.trustStorePassword", "");
-		System.setProperties(systemProps);
-
 		SSLSocket sslsocket;
 		try {
 			SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -123,14 +127,11 @@ public class AppTest {
 
 			assertTrue(sslsocket.isConnected());
 
-			JsonObject obj = new JsonObject();
-			obj.addProperty("username", "ThisisKoen");
-			obj.addProperty("password", "Thisisapassword");
+
 
 			OutputStream outToServer = sslsocket.getOutputStream();
 			DataOutputStream out = new DataOutputStream(outToServer);
 
-			out.writeUTF(gson.toJson(obj));
 
 			sslsocket.close();
 		} catch (UnknownHostException e) {
@@ -147,10 +148,11 @@ public class AppTest {
 	 */
 	@Test
 	public void testSocketConnectionCreateUser() {
-		Socket client;
+		SSLSocket client;
 		try {
 
-			client = new Socket("localhost", 4444);
+			SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			client = (SSLSocket) sslsocketfactory.createSocket("localhost", 4444);
 
 			assertTrue(client.isConnected());
 
