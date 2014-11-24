@@ -10,6 +10,8 @@ import org.fides.server.files.UserManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import javax.net.ssl.SSLSocket;
+
 /**
  * 
  * @author Niels and Jesse
@@ -28,7 +30,7 @@ public class ClientConnection implements Runnable {
 	 * @param server
 	 *            socket for the connection with the client
 	 */
-	public ClientConnection(Socket server) {
+	public ClientConnection(SSLSocket server) {
 		this.server = server;
 	}
 

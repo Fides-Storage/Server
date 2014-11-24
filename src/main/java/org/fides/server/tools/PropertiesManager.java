@@ -29,7 +29,8 @@ public class PropertiesManager {
 	protected PropertiesManager() {
 		Properties properties = new Properties();
 		try {
-			InputStream in = new FileInputStream(FILEPATH);
+			File location = new File(FILEPATH);
+			InputStream in = new FileInputStream(location.getCanonicalPath());
 			properties.load(in);
 			in.close();
 			port = Integer.parseInt(properties.getProperty("port"));
