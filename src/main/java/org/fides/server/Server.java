@@ -2,10 +2,7 @@ package org.fides.server;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.security.KeyStore;
-import java.util.Properties;
 
 import org.fides.server.tools.PropertiesManager;
 
@@ -16,9 +13,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
 /**
- * 
  * @author Niels en Jesse
- * 
  */
 public class Server implements Runnable {
 
@@ -29,50 +24,41 @@ public class Server implements Runnable {
 
 	/**
 	 * Constructor to create a new server socket
-	 * 
-	 * @throws IOException
-	 *             Throws an IOException if the connection can't be made
+	 *
+	 * @throws IOException Throws an IOException if the connection can't be made
 	 */
 	public Server() throws IOException {
 
-		PropertiesManager pm = PropertiesManager.getInstance();
-
-
-		SSLServerSocketFactory ssf = null;
+		//Instantiating the propertiesmanager
+		PropertiesManager propertiesManager = PropertiesManager.getInstance();
 
 		try {
-			// set up key manager to do server authentication
-			SSLContext ctx;
-			KeyManagerFactory kmf;
-			KeyStore ks;
-			char[] passphrase = "12345678".toCharArray();
+			//Set up the key manager for server authentication
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+			KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+			KeyStore keyStore = KeyStore.getInstance("JKS");
 
-			ctx = SSLContext.getInstance("TLS");
-			kmf = KeyManagerFactory.getInstance("SunX509");
-			ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream("/home/tom/Development/Prive/School/SchoolGit/cert/keystore.jks"), passphrase);
-			kmf.init(ks, passphrase);
-			ctx.init(kmf.getKeyManagers(), null, null);
+			//Load the given keystore with the given password
+			keyStore.load(new FileInputStream(propertiesManager.getKeystorePath()), propertiesManager.getKeystorePassword());
+			keyManagerFactory.init(keyStore, propertiesManager.getKeystorePassword());
 
-			ssf = ctx.getServerSocketFactory();
+			//Load the keymanagers in the sslcontext
+			sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+
+			//Create a SSLServerSocketFactory from the SSLContext
+			SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
+
+			//Create the SSLServerSocket from the factory on the given port
+			sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(propertiesManager.getPort());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		sslServerSocket = (SSLServerSocket) ssf.createServerSocket(pm.getPort());
+		//TODO: Printing usefull information
+		System.out.println("Server started on port: " + propertiesManager.getPort());
+		System.out.println("Using user directory: " + propertiesManager.getUserDir());
+		System.out.println("Using data directory: " + propertiesManager.getDataDir());
 
-//		SSLServerSocketFactory sslserversocketfactory =
-//			(SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-//		sslServerSocket = (SSLServerSocket) sslserversocketfactory.createServerSocket(pm.getPort());
-
-
-
-
-		System.out.println("Starting up the Fides server on port: " + pm.getPort());
-		System.out.println("Using user directory: " + pm.getUserDir());
-		System.out.println("Using data directory: " + pm.getDataDir());
-
-		//listener = new ServerSocket(pm.getPort());
 	}
 
 	/**
@@ -82,12 +68,15 @@ public class Server implements Runnable {
 
 		try {
 
+			//The SSLSocket that will handle the connection
 			SSLSocket sslsocket;
 
 			while (isRunning) {
-
+				//Listens for a connection to be made to this socket and accepts
 				sslsocket = (SSLSocket) sslServerSocket.accept();
-				ClientConnection client = new ClientConnection(sslsocket);
+				//Create a client object from the connection
+				Client client = new Client(sslsocket);
+				//Start a thread with the created Client
 				Thread t = new Thread(client);
 				t.start();
 			}
