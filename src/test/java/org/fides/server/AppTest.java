@@ -43,44 +43,35 @@ import javax.net.ssl.SSLSocketFactory;
 @PrepareForTest(PropertiesManager.class)
 public class AppTest {
 
-	private static File testUserDir;
-
-	private static File testDataDir;
-
 	private static int port = 4444;
 
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static String TRUSTSTOREPATH = "./truststore.ts";
 
-	private Server server;
+	private static String KEYSTOREPATH = "./keystore.jks";
+
+	private static char[] KEYSTOREPASSWORD = "12345678".toCharArray();
+
+	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.
 	 */
 	@BeforeClass
 	public static void setUp() {
+
+
+
 		//For testing purposes only
 		Properties systemProps = System.getProperties();
-		systemProps.put("javax.net.ssl.trustStore", "/home/tom/Development/Prive/School/SchoolGit/cert/truststore.ts");
+		systemProps.put("javax.net.ssl.trustStore", TRUSTSTOREPATH);
 		systemProps.put("javax.net.ssl.trustStorePassword", "");
 		System.setProperties(systemProps);
 
 		try {
-			testUserDir = new File(PropertiesManager.getInstance().getUserDir(), "Test");
-			if (!testUserDir.exists()) {
-				testUserDir.mkdirs();
-			}
-			testDataDir = new File(PropertiesManager.getInstance().getDataDir(), "Test");
-			if (!testDataDir.exists()) {
-				testDataDir.mkdirs();
-			}
-
 			// This causes the mocked PropertiesManager to always return the test Data directory:
-			Mockito.when(mockedPropertiesManager.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
-			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 			Mockito.when(mockedPropertiesManager.getPort()).thenReturn(port);
-			Mockito.when(mockedPropertiesManager.getKeystorePath()).thenReturn("./keystore.jks");
-			Mockito.when(mockedPropertiesManager.getKeystorePassword()).thenReturn("12345678".toCharArray());
-
+			Mockito.when(mockedPropertiesManager.getKeystorePath()).thenReturn(KEYSTOREPATH);
+			Mockito.when(mockedPropertiesManager.getKeystorePassword()).thenReturn(KEYSTOREPASSWORD);
 		} catch (Exception e) {
 			fail("Unexpected error in setUp: " + e.getMessage());
 		}
@@ -94,17 +85,7 @@ public class AppTest {
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
 		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
-
-		try {
-			server = new Server();
-			Thread serverThread = new Thread(server);
-			serverThread.start();
-		} catch (IOException e) {
-			fail("IOException");
-		}
 	}
-
-	// TODO: Add actual assertions.
 
 	/**
 	 * Tests whether the socket is connected
@@ -112,33 +93,31 @@ public class AppTest {
 	@Test
 	public void testSocketConnectionIsConnected() {
 
-		SSLSocket sslsocket;
+		Server server = null;
 		try {
+			//Starting a Server
+			server = new Server();
+			Thread serverThread = new Thread(server);
+			serverThread.start();
+
+			//Starting the connection
 			SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			sslsocket = (SSLSocket) sslsocketfactory.createSocket("localhost", 4444);
+			SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket("localhost", port);
 
-			SSLContext context = SSLContext.getInstance("TLS");
-
-			SSLSession session = sslsocket.getSession();
-			java.security.cert.Certificate[] servercerts = session.getPeerCertificates();
-
-			Gson gson = new Gson();
-
+			//Assert that the connection is active
 			assertTrue(sslsocket.isConnected());
 
-
-
-			OutputStream outToServer = sslsocket.getOutputStream();
-			DataOutputStream out = new DataOutputStream(outToServer);
-
-
+			//Close connection
 			sslsocket.close();
+
 		} catch (UnknownHostException e) {
 			fail("UnknownHostException");
 		} catch (IOException e) {
 			fail("IOException");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+		} finally {
+			if(server != null) {
+				server.kill();
+			}
 		}
 	}
 
@@ -149,7 +128,6 @@ public class AppTest {
 	public void testSocketConnectionCreateUser() {
 		SSLSocket client;
 		try {
-
 			SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			client = (SSLSocket) sslsocketfactory.createSocket("localhost", 4444);
 
@@ -178,33 +156,6 @@ public class AppTest {
 			fail("UnknownHostException");
 		} catch (IOException e) {
 			fail("IOException");
-		}
-	}
-
-	/**
-	 * Tears the test down
-	 * <p/>
-	 * Sleep is used to wait for the running thread in Server to complete
-	 */
-	@After
-	public void runAfter() {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			System.out.println(e.getMessage());
-		}
-		server.kill();
-	}
-
-	/**
-	 * Tears down the test class by clearing the test folder.
-	 */
-	@AfterClass
-	public static void tearDown() {
-		try {
-			FileUtils.deleteDirectory(testUserDir);
-		} catch (Exception e) {
-			fail("Unexpected error in tearDown: " + e.getMessage());
 		}
 	}
 }
