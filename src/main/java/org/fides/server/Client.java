@@ -18,7 +18,7 @@ import javax.net.ssl.SSLSocket;
  * 
  *         Runnable to create a thread for the handling of a client
  */
-public class ClientConnection implements Runnable {
+public class Client implements Runnable {
 
 	private UserFile userFile;
 
@@ -30,7 +30,7 @@ public class ClientConnection implements Runnable {
 	 * @param server
 	 *            socket for the connection with the client
 	 */
-	public ClientConnection(SSLSocket server) {
+	public Client(SSLSocket server) {
 		this.server = server;
 	}
 
