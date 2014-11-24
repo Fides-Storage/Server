@@ -23,18 +23,25 @@ public class PropertiesManager {
 
 	private String dataDir;
 
+	private String keystorePath;
+
+	private char[] keystorePassword;
+
 	/**
 	 * Constructor of the properties manager
 	 */
 	protected PropertiesManager() {
 		Properties properties = new Properties();
 		try {
-			InputStream in = new FileInputStream(FILEPATH);
+			File location = new File(FILEPATH);
+			InputStream in = new FileInputStream(location.getCanonicalPath());
 			properties.load(in);
 			in.close();
 			port = Integer.parseInt(properties.getProperty("port"));
 			userDir = properties.getProperty("userDir");
 			dataDir = properties.getProperty("dataDir");
+			keystorePath = properties.getProperty("keystorePath");
+			keystorePassword = properties.getProperty("keystorePassword").toCharArray();
 
 		} catch (FileNotFoundException e) {
 			System.err.println("Properties file is not found: " + e.getMessage());
@@ -77,5 +84,13 @@ public class PropertiesManager {
 
 	public String getDataDir() {
 		return dataDir;
+	}
+
+	public String getKeystorePath() {
+		return keystorePath;
+	}
+
+	public char[] getKeystorePassword() {
+		return keystorePassword;
 	}
 }
