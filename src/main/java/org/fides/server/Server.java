@@ -99,5 +99,11 @@ public class Server implements Runnable {
 	 */
 	public void kill() {
 		isRunning = false;
+		try {
+			sslServerSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
+
 }
