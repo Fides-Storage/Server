@@ -16,7 +16,6 @@ public class App {
 	 *            unused
 	 */
 	public static void main(String[] args) {
-
 		Server server;
 		try {
 			server = new Server();
