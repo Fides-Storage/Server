@@ -9,10 +9,11 @@ import java.util.Properties;
 
 /**
  * 
- * @author Niels en Jesse
+ * @author Niels and Jesse
  * 
  */
 public class PropertiesManager {
+	private static final String FILEPATH = "./config.properties";
 
 	private static PropertiesManager instance = null;
 
@@ -26,10 +27,9 @@ public class PropertiesManager {
 	 * Constructor of the properties manager
 	 */
 	protected PropertiesManager() {
-		String propertiesFile = "./config.properties";
 		Properties properties = new Properties();
 		try {
-			InputStream in = new FileInputStream(propertiesFile);
+			InputStream in = new FileInputStream(FILEPATH);
 			properties.load(in);
 			in.close();
 			port = Integer.parseInt(properties.getProperty("port"));

@@ -18,7 +18,6 @@ import com.google.gson.JsonObject;
  */
 public class ClientConnection implements Runnable {
 
-	// TODO
 	private UserFile userFile;
 
 	private Socket server;
