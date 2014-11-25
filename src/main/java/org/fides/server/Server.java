@@ -2,6 +2,7 @@ package org.fides.server;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.security.KeyStore;
 
 import org.fides.server.tools.PropertiesManager;
@@ -66,30 +67,22 @@ public class Server implements Runnable {
 	 */
 	public void run() {
 
-		try {
+		while (isRunning) {
+			try {
 
-			//The SSLSocket that will handle the connection
-			SSLSocket sslsocket;
-
-			while (isRunning) {
+				//The SSLSocket that will handle the connection
 				//Listens for a connection to be made to this socket and accepts
-				sslsocket = (SSLSocket) sslServerSocket.accept();
+				SSLSocket sslsocket = (SSLSocket) sslServerSocket.accept();
+				//Set the socket timeout on 10 seconds, when changing this value change it also on the client
+				sslsocket.setSoTimeout(10000);
 				//Create a client object from the connection
 				Client client = new Client(sslsocket);
 				//Start a thread with the created Client
 				Thread t = new Thread(client);
 				t.start();
-			}
-		} catch (IOException e) {
-			System.out.println("IOException on socket listen: " + e.getMessage());
 
-		} finally {
-
-			try {
-				sslServerSocket.close();
 			} catch (IOException e) {
 				System.out.println("IOException on socket listen: " + e.getMessage());
-
 			}
 		}
 	}
