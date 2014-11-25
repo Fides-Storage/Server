@@ -42,7 +42,8 @@ public class ClientTest {
 		PowerMockito.mockStatic(UserManager.class);
 		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
-
+		Mockito.when(UserManager.checkIfUserExists("authenticatedUsername")).thenReturn(true);
+		Mockito.when(UserManager.unlockUserFile("authenticatedUsername", "Thisisapassword")).thenReturn(new UserFile("authenticatedUsername", "Thisisapassword"));
 	}
 
 	/**
@@ -82,7 +83,28 @@ public class ClientTest {
 	@Test
 	public void testAuthenticateUser() {
 
-		// TODO:
+		JsonObject user = new JsonObject();
+		user.addProperty("action", "login");
+		user.addProperty("username", "authenticatedUsername");
+		user.addProperty("passwordHash", "Thisisapassword");
+
+		try {
+			Client client = new Client((SSLSocket) mockedSSLSocket);
+
+			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
+			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
+			assertTrue(client.authenticateUser(user, mockedDataLoginStream));
+
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(mockedLoginStream.toByteArray());
+			DataInputStream in = new DataInputStream(inputStream);
+
+			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(jobj.has("successful"));
+			assertTrue(jobj.get("successful").getAsBoolean());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("IOException: " + e);
+		}
 
 	}
 
