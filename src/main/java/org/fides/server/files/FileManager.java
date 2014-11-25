@@ -70,6 +70,23 @@ public final class FileManager {
 		}
 		return false;
 	}
+	
+	/**
+	 * Requests the data in a user's file
+	 * 
+	 * @param location
+	 * 			The location of the file
+	 * @return The inputstream with the content of the file.
+	 */
+	public static InputStream requestFile(String location) {
+		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
+		if (!file.exists()) {
+			// The FileManager can't update a non-existing file.
+			return null;
+		}
+		
+		return null;
+	}
 
 	/**
 	 * Removes a file
