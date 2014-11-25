@@ -50,7 +50,7 @@ public final class FileManager {
 	 *            The new content
 	 * @param location
 	 *            The location of the file
-	 * @return Wether the update was succesfull
+	 * @return Wether the update was successful
 	 */
 	public static boolean updateFile(InputStream instream, String location) {
 		try {
@@ -75,7 +75,7 @@ public final class FileManager {
 	 * Removes a file
 	 * 
 	 * @param location The location of the file
-	 * @return If the file was succesfully deleted. Returns false if the file doesn't exist.
+	 * @return If the file was successfully deleted. Returns false if the file doesn't exist.
 	 */
 	public static boolean removeFile(String location) {
 		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
