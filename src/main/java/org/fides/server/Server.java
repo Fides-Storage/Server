@@ -73,8 +73,7 @@ public class Server implements Runnable {
 				//The SSLSocket that will handle the connection
 				//Listens for a connection to be made to this socket and accepts
 				SSLSocket sslsocket = (SSLSocket) sslServerSocket.accept();
-				//Set the socket timeout on 10 seconds, when changing this value change it also on the client
-				sslsocket.setSoTimeout(10000);
+				//TODO: Check if connection is correctly closed without a timeout
 				//Create a client object from the connection
 				Client client = new Client(sslsocket);
 				//Start a thread with the created Client
