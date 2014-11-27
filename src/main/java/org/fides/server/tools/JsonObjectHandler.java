@@ -2,15 +2,19 @@ package org.fides.server.tools;
 
 import com.google.gson.JsonObject;
 
-public class JsonObjectHandler {
+//TODO Add Javadoc to this class
+public final class JsonObjectHandler {
 
-  public static String getProperty(JsonObject jobj, String property) {
+	private JsonObjectHandler() {
+	}
 
-    if (jobj.has(property)) {
-      return jobj.get(property).getAsString();
-    }
+	public static String getProperty(JsonObject jobj, String property) {
 
-    return null;
+		if (jobj.has(property)) {
+			return jobj.get(property).getAsString();
+		}
 
-  }
+		return null;
+
+	}
 }

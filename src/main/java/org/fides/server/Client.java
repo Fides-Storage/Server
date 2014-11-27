@@ -9,6 +9,7 @@ import java.net.Socket;
 import javax.net.ssl.SSLSocket;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.JsonObjectHandler;
@@ -17,9 +18,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 /**
+ * Runnable to create a thread for the handling of a client
+ * 
  * @author Niels and Jesse
- *         <p/>
- *         Runnable to create a thread for the handling of a client
+ *
  */
 public class Client implements Runnable {
 
@@ -108,7 +110,7 @@ public class Client implements Runnable {
 
 		JsonObject returnJobj = new JsonObject();
 
-		if (username != null && !username.isEmpty() && passwordHash != null && !passwordHash.isEmpty()) {
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			if (!UserManager.checkIfUserExists(username)) {
 				UserFile uf = new UserFile(username, passwordHash);
 				UserManager.saveUserFile(uf);
@@ -131,7 +133,7 @@ public class Client implements Runnable {
 	 * Authenticate user based on jsonobject with username and password
 	 * 
 	 * @param jobj
-	 *            json object with atleast username and password
+	 *            json object with at least username and password
 	 * @param out
 	 *            output stream to client to write error message
 	 * @return if user is authenticated or not
@@ -144,7 +146,7 @@ public class Client implements Runnable {
 
 		String errorMessage = null;
 
-		if (!username.isEmpty() && !passwordHash.isEmpty()) {
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			userFile = UserManager.unlockUserFile(username, passwordHash);
 			if (userFile == null) {
 				errorMessage = "can't open user file";
@@ -153,7 +155,7 @@ public class Client implements Runnable {
 			errorMessage = "username or password is empty";
 		}
 
-		if (errorMessage != null && !errorMessage.isEmpty()) {
+		if (StringUtils.isNotBlank(errorMessage)) {
 			JsonObject returnJobj = new JsonObject();
 			returnJobj.addProperty("successful", false);
 			returnJobj.addProperty("error", errorMessage);

@@ -17,7 +17,7 @@ import org.fides.server.tools.PropertiesManager;
  */
 public final class FileManager {
 
-	/** The maximum number of attempts when trying to create a unique filename **/
+	/** The maximum number of attempts when trying to create a unique filename */
 	private static final int MAXUNIQUENAMEATTEMPTS = 10;
 
 	/**
@@ -50,7 +50,7 @@ public final class FileManager {
 	 *            The new content
 	 * @param location
 	 *            The location of the file
-	 * @return Wether the update was successful
+	 * @return Whether the update was successful
 	 */
 	public static boolean updateFile(InputStream instream, String location) {
 		OutputStream fileStream = null;
