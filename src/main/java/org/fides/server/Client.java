@@ -91,7 +91,7 @@ public class Client implements Runnable {
 			}
 
 		} catch (EOFException e) {
-			// Closed by client don't throw a error message
+			log.debug("Closed by client don't throw a error message");
 		} catch (IOException e) {
 			log.error("IOException on server socket listen", e);
 		} finally {
