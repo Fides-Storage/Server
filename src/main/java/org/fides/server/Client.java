@@ -52,6 +52,7 @@ public class Client implements Runnable {
 
 			String action = JsonObjectHandler.getProperty(jobj, "action");
 
+			// first action needs to be create user or login
 			if (action.equals("createUser")) { // Create User
 				createUser(jobj, out);
 			} else if (action.equals("login")) { // Login User
@@ -63,6 +64,18 @@ public class Client implements Runnable {
 				out.writeUTF(new Gson().toJson(returnJobj));
 			}
 
+			// Client needs to be logged in
+			while (userFile != null) {
+				if (action.equals("getKeyFile")) { // Get Key file
+					// TODO return keyFile
+				} else { // else action not found
+					JsonObject returnJobj = new JsonObject();
+					returnJobj.addProperty("successful", false);
+					returnJobj.addProperty("error", "action not found");
+					out.writeUTF(new Gson().toJson(returnJobj));
+				}
+			}
+
 		} catch (EOFException e) {
 			// Closed by client don't throw a error message
 		} catch (IOException e) {
@@ -71,6 +84,7 @@ public class Client implements Runnable {
 			IOUtils.closeQuietly(in);
 			IOUtils.closeQuietly(out);
 			IOUtils.closeQuietly(server);
+			// TODO unlock and close userFile
 		}
 	}
 
