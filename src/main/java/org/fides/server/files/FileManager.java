@@ -10,12 +10,18 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.PropertiesManager;
 
 /**
  * This class is responsible for creating a file, removing a file and filling a file with an inputstream.
  */
 public final class FileManager {
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(FileManager.class);
 
 	/** The maximum number of attempts when trying to create a unique filename */
 	private static final int MAXUNIQUENAMEATTEMPTS = 10;
@@ -37,7 +43,7 @@ public final class FileManager {
 				newFile = new File(properties.getDataDir(), location);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error(e);
 			location = null;
 		}
 		return location;
@@ -65,9 +71,9 @@ public final class FileManager {
 
 			return true;
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			log.error(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error(e);
 		} finally {
 			IOUtils.closeQuietly(fileStream);
 		}

@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * 
@@ -15,6 +17,11 @@ import org.apache.commons.io.IOUtils;
  * 
  */
 public class PropertiesManager {
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(PropertiesManager.class);
+
 	private static final String FILEPATH = "./config.properties";
 
 	private static PropertiesManager instance = null;
@@ -42,10 +49,10 @@ public class PropertiesManager {
 			properties.load(in);
 
 		} catch (FileNotFoundException e) {
-			System.err.println("Properties file is not found: " + e.getMessage());
+			log.error("Properties file is not found", e);
 			System.exit(1);
 		} catch (IOException e) {
-			System.err.println("IOException has occured: " + e.getMessage());
+			log.error("IOException has occured", e);
 			System.exit(1);
 		} finally {
 			IOUtils.closeQuietly(in);

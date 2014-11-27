@@ -11,12 +11,18 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.PropertiesManager;
 
 /**
  * @author Niels en Jesse
  */
 public class Server implements Runnable {
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(Server.class);
 
 	// private ServerSocket listener;
 	private SSLServerSocket sslServerSocket;
@@ -53,13 +59,13 @@ public class Server implements Runnable {
 			// Create the SSLServerSocket from the factory on the given port
 			sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(propertiesManager.getPort());
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
 
 		// TODO: Printing usefull information
-		System.out.println("Server started on port: " + propertiesManager.getPort());
-		System.out.println("Using user directory: " + propertiesManager.getUserDir());
-		System.out.println("Using data directory: " + propertiesManager.getDataDir());
+		log.debug("Server started on port: " + propertiesManager.getPort());
+		log.debug("Using user directory: " + propertiesManager.getUserDir());
+		log.debug("Using data directory: " + propertiesManager.getDataDir());
 
 	}
 
@@ -83,7 +89,7 @@ public class Server implements Runnable {
 				t.start();
 
 			} catch (IOException e) {
-				System.out.println("IOException on socket listen: " + e.getMessage());
+				log.error("IOException on socket listen", e);
 			}
 		}
 	}

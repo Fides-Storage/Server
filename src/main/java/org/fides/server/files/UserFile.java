@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * This class is responsible for keeping track of the files that belong to a user.
  * 
@@ -12,6 +15,10 @@ import java.util.GregorianCalendar;
  * 
  */
 public class UserFile implements Serializable {
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(UserFile.class);
 
 	/**
 	 * Serializable key

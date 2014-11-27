@@ -9,6 +9,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.PropertiesManager;
 
 /**
@@ -18,6 +20,10 @@ import org.fides.server.tools.PropertiesManager;
  * 
  */
 public final class UserManager {
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(UserManager.class);
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
@@ -42,11 +48,11 @@ public final class UserManager {
 				return userFile;
 
 			} catch (FileNotFoundException e) {
-				System.err.println("UserFile not found: " + e.getMessage());
+				log.error("UserFile not found", e);
 			} catch (IOException e) {
-				System.err.println("IOException has occured: " + e.getMessage());
+				log.error("IOException has occured", e);
 			} catch (ClassNotFoundException e) {
-				System.err.println("UserFile was not a UserFile: " + e.getMessage());
+				log.error("UserFile was not a UserFile", e);
 			} finally {
 				IOUtils.closeQuietly(os);
 			}
@@ -75,9 +81,9 @@ public final class UserManager {
 			return true;
 
 		} catch (FileNotFoundException e) {
-			System.err.println("UserFile not found: " + e.getMessage());
+			log.error("UserFile not found", e);
 		} catch (IOException e) {
-			System.err.println("IOException has occured: " + e.getMessage());
+			log.error("IOException has occured", e);
 		} finally {
 			IOUtils.closeQuietly(oos);
 		}

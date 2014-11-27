@@ -10,6 +10,8 @@ import javax.net.ssl.SSLSocket;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.JsonObjectHandler;
@@ -24,6 +26,10 @@ import com.google.gson.JsonObject;
  *
  */
 public class Client implements Runnable {
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(Client.class);
 
 	private UserFile userFile;
 
@@ -87,7 +93,7 @@ public class Client implements Runnable {
 		} catch (EOFException e) {
 			// Closed by client don't throw a error message
 		} catch (IOException e) {
-			System.err.println("IOException on server socket listen: " + e);
+			log.error("IOException on server socket listen", e);
 		} finally {
 			IOUtils.closeQuietly(in);
 			IOUtils.closeQuietly(out);
