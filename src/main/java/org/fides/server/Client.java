@@ -43,14 +43,16 @@ public class Client implements Runnable {
 	public void run() {
 		DataInputStream in = null;
 		DataOutputStream out = null;
+		JsonObject jobj;
+		String action;
 		try {
 			// Get input from the client
 			in = new DataInputStream(server.getInputStream());
 			out = new DataOutputStream(server.getOutputStream());
 
-			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-			String action = JsonObjectHandler.getProperty(jobj, "action");
+			action = JsonObjectHandler.getProperty(jobj, "action");
 
 			// first action needs to be create user or login
 			if (action.equals("createUser")) { // Create User
@@ -66,6 +68,10 @@ public class Client implements Runnable {
 
 			// Client needs to be logged in
 			while (userFile != null) {
+				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+
+				action = JsonObjectHandler.getProperty(jobj, "action");
+
 				if (action.equals("getKeyFile")) { // Get Key file
 					// TODO return keyFile
 				} else { // else action not found
