@@ -29,7 +29,7 @@ public final class FileManager {
 		PropertiesManager properties = PropertiesManager.getInstance();
 		String location = UUID.randomUUID().toString();
 		File newFile = new File(properties.getDataDir(), location);
-		
+
 		try {
 			int uniqueAttempts = 0;
 			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
@@ -61,7 +61,8 @@ public final class FileManager {
 			}
 			OutputStream fileStream = new FileOutputStream(file);
 			IOUtils.copy(instream, fileStream);
-			fileStream.close();
+			IOUtils.closeQuietly(fileStream);
+
 			return true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -74,7 +75,8 @@ public final class FileManager {
 	/**
 	 * Removes a file
 	 * 
-	 * @param location The location of the file
+	 * @param location
+	 *            The location of the file
 	 * @return If the file was successfully deleted. Returns false if the file doesn't exist.
 	 */
 	public static boolean removeFile(String location) {
@@ -89,7 +91,8 @@ public final class FileManager {
 	/**
 	 * Updates the timestamp in a list of files.
 	 * 
-	 * @param fileLocations The list with the locations of the files to update.
+	 * @param fileLocations
+	 *            The list with the locations of the files to update.
 	 */
 	public static void updateTimestamps(Collection<String> fileLocations) {
 

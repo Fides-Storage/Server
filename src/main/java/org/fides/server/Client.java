@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import javax.net.ssl.SSLSocket;
 
+import org.apache.commons.io.IOUtils;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.JsonObjectHandler;
@@ -28,7 +29,7 @@ public class Client implements Runnable {
 
 	/**
 	 * Constructor for client connection
-	 *
+	 * 
 	 * @param server
 	 *            socket for the connection with the client
 	 */
@@ -62,20 +63,20 @@ public class Client implements Runnable {
 				out.writeUTF(new Gson().toJson(returnJobj));
 			}
 
-			in.close();
-			out.close();
-			server.close();
 		} catch (EOFException e) {
 			// Closed by client don't throw a error message
 		} catch (IOException e) {
 			System.err.println("IOException on server socket listen: " + e);
+		} finally {
+			IOUtils.closeQuietly(in);
+			IOUtils.closeQuietly(out);
+			IOUtils.closeQuietly(server);
 		}
-
 	}
 
 	/**
 	 * Creates a user based on received json object
-	 *
+	 * 
 	 * @param jobj
 	 * @param out
 	 * @throws IOException
@@ -108,7 +109,7 @@ public class Client implements Runnable {
 
 	/**
 	 * Authenticate user based on jsonobject with username and password
-	 *
+	 * 
 	 * @param jobj
 	 *            json object with atleast username and password
 	 * @param out
