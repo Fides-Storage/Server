@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * 
  * @author Niels and Jesse
@@ -32,16 +34,12 @@ public class PropertiesManager {
 	 */
 	protected PropertiesManager() {
 		Properties properties = new Properties();
+		InputStream in = null;
+
 		try {
 			File location = new File(FILEPATH);
-			InputStream in = new FileInputStream(location.getCanonicalPath());
+			in = new FileInputStream(location.getCanonicalPath());
 			properties.load(in);
-			in.close();
-			port = Integer.parseInt(properties.getProperty("port"));
-			userDir = properties.getProperty("userDir");
-			dataDir = properties.getProperty("dataDir");
-			keystorePath = properties.getProperty("keystorePath");
-			keystorePassword = properties.getProperty("keystorePassword").toCharArray();
 
 		} catch (FileNotFoundException e) {
 			System.err.println("Properties file is not found: " + e.getMessage());
@@ -49,7 +47,15 @@ public class PropertiesManager {
 		} catch (IOException e) {
 			System.err.println("IOException has occured: " + e.getMessage());
 			System.exit(1);
+		} finally {
+			IOUtils.closeQuietly(in);
 		}
+
+		port = Integer.parseInt(properties.getProperty("port"));
+		userDir = properties.getProperty("userDir");
+		dataDir = properties.getProperty("dataDir");
+		keystorePath = properties.getProperty("keystorePath");
+		keystorePassword = properties.getProperty("keystorePassword").toCharArray();
 
 		// Create the userDirectory and the dataDirectory if they don't exist.
 		File userFolder = new File(userDir);

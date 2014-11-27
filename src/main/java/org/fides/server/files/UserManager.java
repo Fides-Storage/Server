@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.fides.server.tools.PropertiesManager;
 
 /**
@@ -18,80 +19,85 @@ import org.fides.server.tools.PropertiesManager;
  */
 public final class UserManager {
 
-  /**
-   * Opens the user file based on the user name and decrypts it based on the password hash
-   * 
-   * @param username
-   *          the given user name
-   * @param passwordHash
-   *          the given password hash
-   * @return the user file
-   */
-  public static UserFile unlockUserFile(String username, String passwordHash) {
-    File file = new File(PropertiesManager.getInstance().getUserDir(), username);
-    if (file.exists() && file.isFile()) {
-      try {
-        FileInputStream in = new FileInputStream(file.getPath());
+	/**
+	 * Opens the user file based on the user name and decrypts it based on the password hash
+	 * 
+	 * @param username
+	 *            the given user name
+	 * @param passwordHash
+	 *            the given password hash
+	 * @return the user file
+	 */
+	public static UserFile unlockUserFile(String username, String passwordHash) {
+		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
+		if (file.exists() && file.isFile()) {
+			ObjectInputStream os = null;
+			try {
+				FileInputStream in = new FileInputStream(file.getPath());
 
-        // TODO: decrypt file
+				// TODO: decrypt file
 
-        ObjectInputStream os = new ObjectInputStream(in);
-        UserFile userFile = (UserFile) os.readObject();
-        os.close();
-        return userFile;
+				os = new ObjectInputStream(in);
+				UserFile userFile = (UserFile) os.readObject();
+				return userFile;
 
-      } catch (FileNotFoundException e) {
-        System.err.println("UserFile not found: " + e.getMessage());
-      } catch (IOException e) {
-        System.err.println("IOException has occured: " + e.getMessage());
-      } catch (ClassNotFoundException e) {
-        System.err.println("UserFile was not a UserFile: " + e.getMessage());
-      }
-    }
-    return null;
-  }
+			} catch (FileNotFoundException e) {
+				System.err.println("UserFile not found: " + e.getMessage());
+			} catch (IOException e) {
+				System.err.println("IOException has occured: " + e.getMessage());
+			} catch (ClassNotFoundException e) {
+				System.err.println("UserFile was not a UserFile: " + e.getMessage());
+			} finally {
+				IOUtils.closeQuietly(os);
+			}
+		}
+		return null;
+	}
 
-  /**
-   * Encrypts the user file and saves it in the user directory
-   * 
-   * @param userFile
-   *          the user file based on the user name
-   * @return true if succeeded, false otherwise
-   */
-  public static boolean saveUserFile(UserFile userFile) {
-    try {
-      FileOutputStream fos = new FileOutputStream(new File(PropertiesManager.getInstance()
-        .getUserDir(), userFile.getUsername()));
+	/**
+	 * Encrypts the user file and saves it in the user directory
+	 * 
+	 * @param userFile
+	 *            the user file based on the user name
+	 * @return true if succeeded, false otherwise
+	 */
+	public static boolean saveUserFile(UserFile userFile) {
+		ObjectOutputStream oos = null;
+		try {
+			FileOutputStream fos = new FileOutputStream(new File(PropertiesManager.getInstance()
+				.getUserDir(), userFile.getUsername()));
 
-      // TODO: encrypt file
+			// TODO: encrypt file
 
-      ObjectOutputStream oos = new ObjectOutputStream(fos);
-      oos.writeObject(userFile);
-      oos.close();
-      return true;
+			oos = new ObjectOutputStream(fos);
+			oos.writeObject(userFile);
 
-    } catch (FileNotFoundException e) {
-      System.err.println("UserFile not found: " + e.getMessage());
-    } catch (IOException e) {
-      System.err.println("IOException has occured: " + e.getMessage());
-    }
+			return true;
 
-    return false;
-  }
+		} catch (FileNotFoundException e) {
+			System.err.println("UserFile not found: " + e.getMessage());
+		} catch (IOException e) {
+			System.err.println("IOException has occured: " + e.getMessage());
+		} finally {
+			IOUtils.closeQuietly(oos);
+		}
 
-  /**
-   * Checks if user name exists
-   * 
-   * @param username
-   *          the given user name
-   * @return username exists or not
-   */
-  public static boolean checkIfUserExists(String username) {
-    File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
-    if (userFile.exists() && userFile.isFile()) {
-      return true;
-    }
-    return false;
-  }
+		return false;
+	}
+
+	/**
+	 * Checks if user name exists
+	 * 
+	 * @param username
+	 *            the given user name
+	 * @return username exists or not
+	 */
+	public static boolean checkIfUserExists(String username) {
+		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
+		if (userFile.exists() && userFile.isFile()) {
+			return true;
+		}
+		return false;
+	}
 
 }

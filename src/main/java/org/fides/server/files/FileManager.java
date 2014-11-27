@@ -53,21 +53,23 @@ public final class FileManager {
 	 * @return Wether the update was successful
 	 */
 	public static boolean updateFile(InputStream instream, String location) {
+		OutputStream fileStream = null;
 		try {
 			File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 			if (!file.exists()) {
 				// The FileManager can't update a non-existing file.
 				return false;
 			}
-			OutputStream fileStream = new FileOutputStream(file);
+			fileStream = new FileOutputStream(file);
 			IOUtils.copy(instream, fileStream);
-			IOUtils.closeQuietly(fileStream);
 
 			return true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			IOUtils.closeQuietly(fileStream);
 		}
 		return false;
 	}
