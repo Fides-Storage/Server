@@ -1,88 +1,115 @@
 package org.fides.server;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import javax.net.ssl.SSLSocket;
+
+import org.fides.server.files.UserFile;
+import org.fides.server.files.UserManager;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * This unittest tests the Client class
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(UserManager.class)
 public class ClientTest {
 
-
-	private SSLSocket mocketSSLSocket = mock(SSLSocket.class);
-
-	private ByteArrayInputStream mocketInputStream;
-
-	private ByteArrayOutputStream mocketOutputStream = new ByteArrayOutputStream();
+	private SSLSocket mockedSSLSocket = mock(SSLSocket.class);
 
 	/**
-	 * Tests whether the socket is connected
+	 * Disables the static UserManager to prevent the creation of userfiles.
 	 */
-	@Test
-	public void testSocketConnectionCreateUser() {
-
-//		JsonObject user = new JsonObject();
-//		user.addProperty("action", "createUser");
-//		user.addProperty("username", "ThisisKoen");
-//		user.addProperty("passwordHash", "Thisisapassword");
-//
-//		mocketInputStream = new ByteArrayInputStream(new Gson().toJson(user).getBytes());
-//		when(mocketSSLSocket.getInputStream()).thenReturn();
-//
-//		Client client = new Client((SSLSocket) mocketSSLSocket);
-//
-//
-//
-//
-//		try {
-//			assertTrue(client.authenticateUser(user, new DataOutputStream(mocketSSLSocket.getOutputStream())));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-
-//		try {
-//
-//			OutputStream outToServer = client.getOutputStream();
-//			DataOutputStream out = new DataOutputStream(outToServer);
-//
-//			out.writeUTF(new Gson().toJson(obj));
-//
-//			InputStream inFromServer = client.getInputStream();
-//			DataInputStream in = new DataInputStream(inFromServer);
-//
-//			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
-//			assertTrue(jobj.has("succesfull"));
-//			System.out.println(jobj.toString());
-//			assertTrue(jobj.get("succesfull").getAsBoolean());
-//
-//			client.close();
-//		} catch (UnknownHostException e) {
-//			fail("UnknownHostException");
-//		} catch (IOException e) {
-//			fail("IOException");
-//		}
+	@Before
+	public void disableUserManager() {
+		PowerMockito.mockStatic(UserManager.class);
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
+		Mockito.when(UserManager.checkIfUserExists("authenticatedUsername")).thenReturn(true);
+		Mockito.when(UserManager.unlockUserFile("authenticatedUsername", "Thisisapassword")).thenReturn(new UserFile("authenticatedUsername", "Thisisapassword"));
 	}
 
+	/**
+	 * Tests whether a new user can be created that doesn't exists
+	 */
+	@Test
+	public void testCreateUser() {
+
+		JsonObject user = new JsonObject();
+		user.addProperty("action", "createUser");
+		user.addProperty("username", "createUsername");
+		user.addProperty("passwordHash", "Thisisapassword");
+
+		try {
+			Client client = new Client((SSLSocket) mockedSSLSocket);
+
+			ByteArrayOutputStream mockedRegisterStream = new ByteArrayOutputStream();
+			DataOutputStream mockedDataRegisterStream = new DataOutputStream(mockedRegisterStream);
+			client.createUser(user, mockedDataRegisterStream);
+
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(mockedRegisterStream.toByteArray());
+			DataInputStream in = new DataInputStream(inputStream);
+
+			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(jobj.has("successful"));
+			assertTrue(jobj.get("successful").getAsBoolean());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("IOException: " + e);
+		}
+
+	}
+
+	/**
+	 * Tests whether a valid user can authenticate
+	 */
+	@Test
+	public void testAuthenticateUser() {
+
+		JsonObject user = new JsonObject();
+		user.addProperty("action", "login");
+		user.addProperty("username", "authenticatedUsername");
+		user.addProperty("passwordHash", "Thisisapassword");
+
+		try {
+			Client client = new Client((SSLSocket) mockedSSLSocket);
+
+			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
+			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
+			assertTrue(client.authenticateUser(user, mockedDataLoginStream));
+
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(mockedLoginStream.toByteArray());
+			DataInputStream in = new DataInputStream(inputStream);
+
+			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(jobj.has("successful"));
+			assertTrue(jobj.get("successful").getAsBoolean());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("IOException: " + e);
+		}
+
+	}
+
+	// TODO: Some badweather tests:
+	// Strange username (";!\.)
+	// Register/login with insufficient data
+	// Let usermanager return false (what if user doesn't exist of password is incorrect?)
 }

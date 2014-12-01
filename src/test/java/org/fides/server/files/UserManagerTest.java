@@ -62,7 +62,7 @@ public class UserManagerTest {
 	}
 
 	/**
-	 * Tests whether the is created at the given path
+	 * Tests whether the userfile is created at the given path
 	 */
 	@Test
 	public void testSaveUserFile() {
@@ -90,6 +90,7 @@ public class UserManagerTest {
 		uf.addFile(filename);
 
 		UserFile loadedFile = UserManager.unlockUserFile(username, password);
+		//TODO: Test password
 		assertNotNull(loadedFile);
 
 		assertEquals(username, loadedFile.getUsername());

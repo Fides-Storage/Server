@@ -2,15 +2,34 @@ package org.fides.server.tools;
 
 import com.google.gson.JsonObject;
 
-public class JsonObjectHandler {
+/**
+ * Helper for jsonobject
+ * 
+ * @author niels
+ * @author jesse
+ *
+ */
+public final class JsonObjectHandler {
 
-  public static String getProperty(JsonObject jobj, String property) {
+	private JsonObjectHandler() {
+	}
 
-    if (jobj.has(property)) {
-      return jobj.get(property).getAsString();
-    }
+	/**
+	 * Get property from jsonobject
+	 * 
+	 * @param jobj
+	 *            jsonobject where to property is taken from
+	 * @param property
+	 *            name to get property
+	 * @return the value of the given property
+	 */
+	public static String getProperty(JsonObject jobj, String property) {
 
-    return null;
+		if (jobj.has(property)) {
+			return jobj.get(property).getAsString();
+		}
 
-  }
+		return null;
+	}
+
 }
