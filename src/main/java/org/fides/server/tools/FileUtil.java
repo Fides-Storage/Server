@@ -1,28 +1,30 @@
 package org.fides.server.tools;
 
 import java.io.File;
-import java.io.IOException;
 
+/**
+ * File utility
+ * 
+ * @author jesse
+ *
+ */
 public class FileUtil {
 
+	/**
+	 * Test if file is inside folder
+	 * 
+	 * @param folder
+	 *            the given folder to test
+	 * @param file
+	 *            the given file to test
+	 * @return if file inside folder
+	 */
 	public static boolean isInFolder(File folder, File file) {
-		try {
-			File fileParent = file.getCanonicalFile();
 
-			while (fileParent != null) {
+		folder = folder.getAbsoluteFile();
+		file = file.getAbsoluteFile();
 
-				if (folder.equals(fileParent)) {
-					return true;
-				}
-
-				fileParent = fileParent.getCanonicalFile();
-			}
-
-		} catch (IOException e) {
-			return false;
-		}
-
-		return false;
+		return folder.equals(file.getParentFile());
 
 	}
 }

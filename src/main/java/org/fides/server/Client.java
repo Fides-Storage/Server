@@ -58,27 +58,29 @@ public class Client implements Runnable {
 			in = new DataInputStream(server.getInputStream());
 			out = new DataOutputStream(server.getOutputStream());
 
-			jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
-
-			String action = JsonObjectHandler.getProperty(jobj, "action");
-
 			// first action needs to be create user or login
-			if (StringUtils.equals(action, "createUser")) { // Create User
-				createUser(jobj, out);
-			} else if (StringUtils.equals(action, "login")) { // Login User
-				authenticateUser(jobj, out);
-			} else { // else action not found
-				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty("successful", false);
-				returnJobj.addProperty("error", "action not found");
-				out.writeUTF(new Gson().toJson(returnJobj));
+			while (userFile == null) {
+				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+
+				String action = JsonObjectHandler.getProperty(jobj, "action");
+
+				if (StringUtils.equals(action, "createUser")) { // Create User
+					createUser(jobj, out);
+				} else if (StringUtils.equals(action, "login")) { // Login User
+					authenticateUser(jobj, out);
+				} else { // else action not found
+					JsonObject returnJobj = new JsonObject();
+					returnJobj.addProperty("successful", false);
+					returnJobj.addProperty("error", "action not found");
+					out.writeUTF(new Gson().toJson(returnJobj));
+				}
 			}
 
 			// While client is logged in
 			while (userFile != null) {
 				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-				action = JsonObjectHandler.getProperty(jobj, "action");
+				String action = JsonObjectHandler.getProperty(jobj, "action");
 
 				if (action.equals("getKeyFile")) { // Get Key file
 					// TODO: return keyFile

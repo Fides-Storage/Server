@@ -80,9 +80,10 @@ public final class UserManager {
 	public static boolean saveUserFile(UserFile userFile) {
 		ObjectOutputStream oos = null;
 		try {
-			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
+			File userLocation = new File(PropertiesManager.getInstance().getUserDir());
+			File userFileLocation = new File(userLocation, userFile.getUsername());
 
-			if (FileUtil.isInFolder(new File(PropertiesManager.getInstance().getUserDir()), userFileLocation)) {
+			if (FileUtil.isInFolder(userLocation, userFileLocation)) {
 				FileOutputStream fos = new FileOutputStream(userFileLocation);
 
 				// TODO: encrypt file
@@ -122,6 +123,7 @@ public final class UserManager {
 		if (userFile.exists() && userFile.isFile()) {
 			return true;
 		}
+
 		return false;
 	}
 
