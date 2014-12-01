@@ -46,13 +46,12 @@ public class Client implements Runnable {
 	}
 
 	/**
-	 *
+	 * TODO: Javadoc
 	 */
 	public void run() {
 		DataInputStream in = null;
 		DataOutputStream out = null;
 		JsonObject jobj;
-		String action;
 		try {
 			// Get input from the client
 			in = new DataInputStream(server.getInputStream());
@@ -60,9 +59,10 @@ public class Client implements Runnable {
 
 			jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-			action = JsonObjectHandler.getProperty(jobj, "action");
+			String action = JsonObjectHandler.getProperty(jobj, "action");
 
 			// first action needs to be create user or login
+			//TODO: Prevent NullpointerException on action
 			if (action.equals("createUser")) { // Create User
 				createUser(jobj, out);
 			} else if (action.equals("login")) { // Login User
@@ -74,14 +74,14 @@ public class Client implements Runnable {
 				out.writeUTF(new Gson().toJson(returnJobj));
 			}
 
-			// Client needs to be logged in
+			// While client is logged in
 			while (userFile != null) {
 				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
 				action = JsonObjectHandler.getProperty(jobj, "action");
 
 				if (action.equals("getKeyFile")) { // Get Key file
-					// TODO return keyFile
+					// TODO: return keyFile
 				} else { // else action not found
 					JsonObject returnJobj = new JsonObject();
 					returnJobj.addProperty("successful", false);
@@ -91,14 +91,14 @@ public class Client implements Runnable {
 			}
 
 		} catch (EOFException e) {
-			log.debug("Closed by client don't throw a error message");
+			log.debug("Closed by client don't throw an error message");
 		} catch (IOException e) {
 			log.error("IOException on server socket listen", e);
 		} finally {
 			IOUtils.closeQuietly(in);
 			IOUtils.closeQuietly(out);
 			IOUtils.closeQuietly(server);
-			// TODO unlock and close userFile
+			// TODO: unlock and close userFile
 		}
 	}
 
@@ -108,6 +108,7 @@ public class Client implements Runnable {
 	 * @param jobj
 	 * @param out
 	 * @throws IOException
+	 * TODO: Javadoc (explain parameters), more selfexplaining varnames (ex. 'userObject' instead of 'jobj')
 	 */
 	public void createUser(JsonObject jobj, DataOutputStream out) throws IOException {
 
@@ -145,6 +146,7 @@ public class Client implements Runnable {
 	 * @return if user is authenticated or not
 	 * @throws IOException
 	 *             when trying to write to the client
+	 * TODO: More selfexplaining varnames (ex. 'userObject' instead of 'jobj')            
 	 */
 	public boolean authenticateUser(JsonObject jobj, DataOutputStream out) throws IOException {
 		String username = JsonObjectHandler.getProperty(jobj, "username");
@@ -155,10 +157,10 @@ public class Client implements Runnable {
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			userFile = UserManager.unlockUserFile(username, passwordHash);
 			if (userFile == null) {
-				errorMessage = "can't open user file";
+				errorMessage = "Username or password is incorrect";
 			}
 		} else {
-			errorMessage = "username or password is empty";
+			errorMessage = "Username or password is empty";
 		}
 
 		if (StringUtils.isNotBlank(errorMessage)) {

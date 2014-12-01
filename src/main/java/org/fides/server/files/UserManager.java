@@ -37,18 +37,22 @@ public final class UserManager {
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
 		if (file.exists() && file.isFile()) {
+			// TODO: More selfexplaining names
 			ObjectInputStream os = null;
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
-
+				
 				// TODO: decrypt file
+				
+				// TODO: Check if password(hash) is correct
 
 				os = new ObjectInputStream(in);
 				UserFile userFile = (UserFile) os.readObject();
 				return userFile;
 
 			} catch (FileNotFoundException e) {
-				log.error("UserFile not found", e);
+				// TODO: Use log.debug, it's a valid state and not an error that shouldn't occur
+				log.error("UserFile not found", e); 
 			} catch (IOException e) {
 				log.error("IOException has occured", e);
 			} catch (ClassNotFoundException e) {

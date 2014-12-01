@@ -108,4 +108,8 @@ public class ClientTest {
 
 	}
 
+	// TODO: Some badweather tests:
+	// Strange username (";!\.)
+	// Register/login with insufficient data
+	// Let usermanager return false (what if user doesn't exist of password is incorrect?)
 }
