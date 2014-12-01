@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fides.server.tools.FileUtil;
 import org.fides.server.tools.PropertiesManager;
 
 /**
@@ -36,29 +37,34 @@ public final class UserManager {
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
+
+		// username is not in folder
+		if (!FileUtil.isInFolder(new File(PropertiesManager.getInstance().getUserDir()), file)) {
+			return null;
+		}
+
 		if (file.exists() && file.isFile()) {
-			// TODO: More selfexplaining names
-			ObjectInputStream os = null;
+			ObjectInputStream userFileObject = null;
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
-				
-				// TODO: decrypt file
-				
-				// TODO: Check if password(hash) is correct
 
-				os = new ObjectInputStream(in);
-				UserFile userFile = (UserFile) os.readObject();
-				return userFile;
+				// TODO: decrypt file
+
+				userFileObject = new ObjectInputStream(in);
+				UserFile userFile = (UserFile) userFileObject.readObject();
+
+				if (userFile.checkPasswordHash(passwordHash)) {
+					return userFile;
+				}
 
 			} catch (FileNotFoundException e) {
-				// TODO: Use log.debug, it's a valid state and not an error that shouldn't occur
-				log.error("UserFile not found", e); 
+				log.debug("UserFile not found for username: " + username);
 			} catch (IOException e) {
 				log.error("IOException has occured", e);
 			} catch (ClassNotFoundException e) {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
-				IOUtils.closeQuietly(os);
+				IOUtils.closeQuietly(userFileObject);
 			}
 		}
 		return null;
@@ -74,15 +80,18 @@ public final class UserManager {
 	public static boolean saveUserFile(UserFile userFile) {
 		ObjectOutputStream oos = null;
 		try {
-			FileOutputStream fos = new FileOutputStream(new File(PropertiesManager.getInstance()
-				.getUserDir(), userFile.getUsername()));
+			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
 
-			// TODO: encrypt file
+			if (FileUtil.isInFolder(new File(PropertiesManager.getInstance().getUserDir()), userFileLocation)) {
+				FileOutputStream fos = new FileOutputStream(userFileLocation);
 
-			oos = new ObjectOutputStream(fos);
-			oos.writeObject(userFile);
+				// TODO: encrypt file
 
-			return true;
+				oos = new ObjectOutputStream(fos);
+				oos.writeObject(userFile);
+
+				return true;
+			}
 
 		} catch (FileNotFoundException e) {
 			log.error("UserFile not found", e);
@@ -104,6 +113,12 @@ public final class UserManager {
 	 */
 	public static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
+
+		// username is not in folder
+		if (!FileUtil.isInFolder(new File(PropertiesManager.getInstance().getUserDir()), userFile)) {
+			return false;
+		}
+
 		if (userFile.exists() && userFile.isFile()) {
 			return true;
 		}

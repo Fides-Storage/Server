@@ -22,7 +22,8 @@ import com.google.gson.JsonObject;
 /**
  * Runnable to create a thread for the handling of a client
  * 
- * @author Niels and Jesse
+ * @author Niels
+ * @author Jesse
  *
  */
 public class Client implements Runnable {
@@ -46,7 +47,7 @@ public class Client implements Runnable {
 	}
 
 	/**
-	 * TODO: Javadoc
+	 * Runnable for client connection
 	 */
 	public void run() {
 		DataInputStream in = null;
@@ -62,10 +63,9 @@ public class Client implements Runnable {
 			String action = JsonObjectHandler.getProperty(jobj, "action");
 
 			// first action needs to be create user or login
-			//TODO: Prevent NullpointerException on action
-			if (action.equals("createUser")) { // Create User
+			if (StringUtils.equals(action, "createUser")) { // Create User
 				createUser(jobj, out);
-			} else if (action.equals("login")) { // Login User
+			} else if (StringUtils.equals(action, "login")) { // Login User
 				authenticateUser(jobj, out);
 			} else { // else action not found
 				JsonObject returnJobj = new JsonObject();
@@ -105,27 +105,33 @@ public class Client implements Runnable {
 	/**
 	 * Creates a user based on received json object
 	 * 
-	 * @param jobj
+	 * @param userObject
+	 *            jsonObject containing username and password
 	 * @param out
+	 *            outputstream to the client
 	 * @throws IOException
-	 * TODO: Javadoc (explain parameters), more selfexplaining varnames (ex. 'userObject' instead of 'jobj')
+	 *             if failed to write to outputstream
 	 */
-	public void createUser(JsonObject jobj, DataOutputStream out) throws IOException {
+	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
-		String username = JsonObjectHandler.getProperty(jobj, "username");
-		String passwordHash = JsonObjectHandler.getProperty(jobj, "passwordHash");
+		String username = JsonObjectHandler.getProperty(userObject, "username");
+		String passwordHash = JsonObjectHandler.getProperty(userObject, "passwordHash");
 
 		JsonObject returnJobj = new JsonObject();
 
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			if (!UserManager.checkIfUserExists(username)) {
-				UserFile uf = new UserFile(username, passwordHash);
-				UserManager.saveUserFile(uf);
-				returnJobj.addProperty("successful", true);
-
-			} else {
+			if (UserManager.checkIfUserExists(username)) {
 				returnJobj.addProperty("successful", false);
 				returnJobj.addProperty("error", "username already exists");
+
+			} else {
+				UserFile uf = new UserFile(username, passwordHash);
+				if (UserManager.saveUserFile(uf)) {
+					returnJobj.addProperty("successful", true);
+				} else {
+					returnJobj.addProperty("successful", false);
+					returnJobj.addProperty("error", "cannot save userfile");
+				}
 			}
 		} else {
 			returnJobj.addProperty("successful", false);
@@ -139,18 +145,17 @@ public class Client implements Runnable {
 	/**
 	 * Authenticate user based on jsonobject with username and password
 	 * 
-	 * @param jobj
+	 * @param userObject
 	 *            json object with at least username and password
 	 * @param out
 	 *            output stream to client to write error message
 	 * @return if user is authenticated or not
 	 * @throws IOException
 	 *             when trying to write to the client
-	 * TODO: More selfexplaining varnames (ex. 'userObject' instead of 'jobj')            
 	 */
-	public boolean authenticateUser(JsonObject jobj, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(jobj, "username");
-		String passwordHash = JsonObjectHandler.getProperty(jobj, "passwordHash");
+	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
+		String username = JsonObjectHandler.getProperty(userObject, "username");
+		String passwordHash = JsonObjectHandler.getProperty(userObject, "passwordHash");
 
 		String errorMessage = null;
 
