@@ -23,5 +23,5 @@ target/
 .settings/
 
 # Folders
-user/
+users/
 data/
