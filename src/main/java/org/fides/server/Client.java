@@ -24,9 +24,20 @@ import com.google.gson.JsonObject;
  * 
  * @author Niels
  * @author Jesse
- *
+ * 
  */
 public class Client implements Runnable {
+
+	private static final String SUCCESSFUL = "successful";
+
+	private static final String ERROR = "error";
+
+	private static final String ACTION = "action";
+
+	private static final String USERNAME = "username";
+
+	private static final String PASSWORD_HASH = "passwordHash";
+
 	/**
 	 * Log for this class
 	 */
@@ -62,7 +73,7 @@ public class Client implements Runnable {
 			while (userFile == null) {
 				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-				String action = JsonObjectHandler.getProperty(jobj, "action");
+				String action = JsonObjectHandler.getProperty(jobj, ACTION);
 
 				if (StringUtils.equals(action, "createUser")) { // Create User
 					createUser(jobj, out);
@@ -70,8 +81,8 @@ public class Client implements Runnable {
 					authenticateUser(jobj, out);
 				} else { // else action not found
 					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty("successful", false);
-					returnJobj.addProperty("error", "action not found");
+					returnJobj.addProperty(SUCCESSFUL, false);
+					returnJobj.addProperty(ERROR, "action not found");
 					out.writeUTF(new Gson().toJson(returnJobj));
 				}
 			}
@@ -80,14 +91,14 @@ public class Client implements Runnable {
 			while (userFile != null) {
 				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-				String action = JsonObjectHandler.getProperty(jobj, "action");
+				String action = JsonObjectHandler.getProperty(jobj, ACTION);
 
 				if (action.equals("getKeyFile")) { // Get Key file
 					// TODO: return keyFile
 				} else { // else action not found
 					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty("successful", false);
-					returnJobj.addProperty("error", "action not found");
+					returnJobj.addProperty(SUCCESSFUL, false);
+					returnJobj.addProperty(ERROR, "action not found");
 					out.writeUTF(new Gson().toJson(returnJobj));
 				}
 			}
@@ -116,28 +127,28 @@ public class Client implements Runnable {
 	 */
 	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
-		String username = JsonObjectHandler.getProperty(userObject, "username");
-		String passwordHash = JsonObjectHandler.getProperty(userObject, "passwordHash");
+		String username = JsonObjectHandler.getProperty(userObject, USERNAME);
+		String passwordHash = JsonObjectHandler.getProperty(userObject, PASSWORD_HASH);
 
 		JsonObject returnJobj = new JsonObject();
 
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			if (UserManager.checkIfUserExists(username)) {
-				returnJobj.addProperty("successful", false);
-				returnJobj.addProperty("error", "username already exists");
+				returnJobj.addProperty(SUCCESSFUL, false);
+				returnJobj.addProperty(ERROR, "username already exists");
 
 			} else {
 				UserFile uf = new UserFile(username, passwordHash);
 				if (UserManager.saveUserFile(uf)) {
-					returnJobj.addProperty("successful", true);
+					returnJobj.addProperty(SUCCESSFUL, true);
 				} else {
-					returnJobj.addProperty("successful", false);
-					returnJobj.addProperty("error", "cannot save userfile");
+					returnJobj.addProperty(SUCCESSFUL, false);
+					returnJobj.addProperty(ERROR, "cannot save userfile");
 				}
 			}
 		} else {
-			returnJobj.addProperty("successful", false);
-			returnJobj.addProperty("error", "username or password is empty");
+			returnJobj.addProperty(SUCCESSFUL, false);
+			returnJobj.addProperty(ERROR, "username or password is empty");
 		}
 
 		out.writeUTF(new Gson().toJson(returnJobj));
@@ -156,8 +167,8 @@ public class Client implements Runnable {
 	 *             when trying to write to the client
 	 */
 	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(userObject, "username");
-		String passwordHash = JsonObjectHandler.getProperty(userObject, "passwordHash");
+		String username = JsonObjectHandler.getProperty(userObject, USERNAME);
+		String passwordHash = JsonObjectHandler.getProperty(userObject, PASSWORD_HASH);
 
 		String errorMessage = null;
 
@@ -172,13 +183,13 @@ public class Client implements Runnable {
 
 		if (StringUtils.isNotBlank(errorMessage)) {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", false);
-			returnJobj.addProperty("error", errorMessage);
+			returnJobj.addProperty(SUCCESSFUL, false);
+			returnJobj.addProperty(ERROR, errorMessage);
 			out.writeUTF(new Gson().toJson(returnJobj));
 			return false;
 		} else {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", true);
+			returnJobj.addProperty(SUCCESSFUL, true);
 			out.writeUTF(new Gson().toJson(returnJobj));
 			return true;
 		}
