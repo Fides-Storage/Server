@@ -13,10 +13,10 @@ import java.io.IOException;
 
 import javax.net.ssl.SSLSocket;
 
+import org.fides.components.Actions;
+import org.fides.components.Responses;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
-import org.fides.server.tools.Actions;
-import org.fides.server.tools.Responses;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
