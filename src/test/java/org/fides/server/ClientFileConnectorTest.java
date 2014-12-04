@@ -19,12 +19,12 @@ import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.fides.components.Actions;
+import org.fides.components.Responses;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
-import org.fides.server.tools.Actions;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.PropertiesManager;
-import org.fides.server.tools.Responses;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
