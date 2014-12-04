@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * This class is responsible for keeping track of the files that belong to a user.
@@ -22,7 +25,7 @@ public class UserFile implements Serializable {
 
 	private String passwordHash;
 
-	private Collection<String> userFiles = new ArrayList<String>();
+	private Set<String> userFiles = new TreeSet<String>();
 
 	private String keyFile;
 
@@ -39,6 +42,7 @@ public class UserFile implements Serializable {
 	public UserFile(String username, String passwordHash) {
 		this.username = username;
 		this.passwordHash = passwordHash;
+		this.keyFile = FileManager.createFile();
 	}
 
 	public String getUsername() {
@@ -76,6 +80,24 @@ public class UserFile implements Serializable {
 	public void removeFile(String location) {
 		userFiles.remove(location);
 		UserManager.saveUserFile(this);
+	}
+	
+	/**
+	 * Returns the location of the user's keyfile.
+	 * 
+	 * @return The location of the keyfile.
+	 */
+	public String getKeyFileLocation() {
+		return keyFile;
+	}
+	
+	/**
+	 * Sets the location of the user's keyfile to the userfile.
+	 * 
+	 * @param location The location of the keyfile.
+	 */
+	public void setKeyFileLocation(String location) {
+		keyFile = location;
 	}
 
 }

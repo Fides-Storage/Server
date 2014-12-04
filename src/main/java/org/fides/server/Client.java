@@ -3,8 +3,14 @@ package org.fides.server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
 
 import javax.net.ssl.SSLSocket;
 
@@ -12,9 +18,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.JsonObjectHandler;
+import org.fides.server.tools.PropertiesManager;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -23,7 +31,7 @@ import com.google.gson.JsonObject;
  * Runnable to create a thread for the handling of a client
  * 
  * @author Niels and Jesse
- *
+ * 
  */
 public class Client implements Runnable {
 	/**
@@ -62,7 +70,7 @@ public class Client implements Runnable {
 			String action = JsonObjectHandler.getProperty(jobj, "action");
 
 			// first action needs to be create user or login
-			//TODO: Prevent NullpointerException on action
+			// TODO: Prevent NullpointerException on action
 			if (action.equals("createUser")) { // Create User
 				createUser(jobj, out);
 			} else if (action.equals("login")) { // Login User
@@ -74,14 +82,17 @@ public class Client implements Runnable {
 				out.writeUTF(new Gson().toJson(returnJobj));
 			}
 
+			ClientFileConnector clientFileConnector = new ClientFileConnector(userFile);
+			
 			// While client is logged in
 			while (userFile != null) {
 				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
-
 				action = JsonObjectHandler.getProperty(jobj, "action");
 
 				if (action.equals("getKeyFile")) { // Get Key file
-					// TODO: return keyFile
+					clientFileConnector.downloadKeyFile(out);
+				} else if (action.equals("getFile")) {
+					clientFileConnector.downloadFile(jobj, out);
 				} else { // else action not found
 					JsonObject returnJobj = new JsonObject();
 					returnJobj.addProperty("successful", false);
@@ -108,7 +119,7 @@ public class Client implements Runnable {
 	 * @param jobj
 	 * @param out
 	 * @throws IOException
-	 * TODO: Javadoc (explain parameters), more selfexplaining varnames (ex. 'userObject' instead of 'jobj')
+	 *             TODO: Javadoc (explain parameters), more selfexplaining varnames (ex. 'userObject' instead of 'jobj')
 	 */
 	public void createUser(JsonObject jobj, DataOutputStream out) throws IOException {
 
@@ -145,8 +156,8 @@ public class Client implements Runnable {
 	 *            output stream to client to write error message
 	 * @return if user is authenticated or not
 	 * @throws IOException
-	 *             when trying to write to the client
-	 * TODO: More selfexplaining varnames (ex. 'userObject' instead of 'jobj')            
+	 *             when trying to write to the client TODO: More selfexplaining varnames (ex. 'userObject' instead of
+	 *             'jobj')
 	 */
 	public boolean authenticateUser(JsonObject jobj, DataOutputStream out) throws IOException {
 		String username = JsonObjectHandler.getProperty(jobj, "username");

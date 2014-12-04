@@ -1,6 +1,9 @@
 package org.fides.server.files;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,6 +16,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.PropertiesManager;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * This class is responsible for creating a file, removing a file and filling a file with an inputstream.
@@ -50,32 +56,55 @@ public final class FileManager {
 	}
 
 	/**
-	 * Updates a file by filling it with the given inputstream. If a file already had content, it will be erased.
+	 * Copies an inputstream to fill the file.
 	 * 
-	 * @param instream
-	 *            The new content
-	 * @param location
-	 *            The location of the file
-	 * @return Whether the update was successful
+	 * @param inputStream
+	 *            The inputstream to copy to the file
+	 * @param file
+	 *            The file to fill with the inputstream
+	 * @param outputStream
+	 *            The outputstream to respond to the client
+	 * @return Wether the copy was successful or not
 	 */
-	public static boolean updateFile(InputStream instream, String location) {
-		OutputStream fileStream = null;
-		try {
-			File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-			if (!file.exists()) {
-				// The FileManager can't update a non-existing file.
-				return false;
-			}
-			fileStream = new FileOutputStream(file);
-			IOUtils.copy(instream, fileStream);
+	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
 
+		try {
+			JsonObject returnJobj = new JsonObject();
+			returnJobj.addProperty("successful", true);
+			outputStream.writeUTF(new Gson().toJson(returnJobj));
+			OutputStream fileOutputStream = new FileOutputStream(file);
+			IOUtils.copy(inputStream, fileOutputStream);
+			fileOutputStream.flush();
+			fileOutputStream.close();
+			// TODO: Check if the file was copied correctly
 			return true;
-		} catch (FileNotFoundException e) {
-			log.error(e);
 		} catch (IOException e) {
-			log.error(e);
-		} finally {
-			IOUtils.closeQuietly(fileStream);
+			log.error(e.getMessage());
+		}
+		return false;
+	}
+	
+	/**
+	 * Copies the content of a file to the outputstream
+	 * 
+	 * @param file
+	 *            The file to use
+	 * @param outputStream
+	 *            The stream to copy the file to
+	 * @return Wether the copy was successful.
+	 */
+	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
+		try (InputStream inStream = new FileInputStream(file)) {
+			JsonObject returnJobj = new JsonObject();
+			returnJobj.addProperty("successful", true);
+			outputStream.writeUTF(new Gson().toJson(returnJobj));
+
+			IOUtils.copy(inStream, outputStream);
+			outputStream.flush();
+			outputStream.close();
+			return true;
+		} catch (IOException e) {
+			log.error(e.getMessage());
 		}
 		return false;
 	}
@@ -95,23 +124,7 @@ public final class FileManager {
 		}
 		return file.delete();
 	}
-	
-	/**
-	 * Requests the data in a user's file
-	 * 
-	 * @param location
-	 * 			The location of the file
-	 * @return The inputstream with the content of the file.
-	 */
-	public static InputStream requestFile(String location) {
-		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-		if (!file.exists()) {
-			// The FileManager can't request a non-existing file.
-			return null;
-		}
-		
-		return null;
-	}
+
 
 	/**
 	 * Updates the timestamp in a list of files.
