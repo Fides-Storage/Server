@@ -14,18 +14,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
+import org.fides.server.tools.Actions;
+import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.fides.server.tools.Responses;
 
 /**
  * Runnable to create a thread for the handling of a client
- * 
- * @author Niels and Jesse
  *
+ * @author Niels
+ * @author Jesse
  */
 public class Client implements Runnable {
+
 	/**
 	 * Log for this class
 	 */
@@ -37,56 +41,64 @@ public class Client implements Runnable {
 
 	/**
 	 * Constructor for client connection
-	 * 
-	 * @param server
-	 *            socket for the connection with the client
+	 *
+	 * @param server socket for the connection with the client
 	 */
 	public Client(SSLSocket server) {
 		this.server = server;
 	}
 
 	/**
-	 * TODO: Javadoc
+	 * Runnable for client connection
 	 */
 	public void run() {
 		DataInputStream in = null;
 		DataOutputStream out = null;
-		JsonObject jobj;
+		JsonObject requestObject;
 		try {
 			// Get input from the client
 			in = new DataInputStream(server.getInputStream());
 			out = new DataOutputStream(server.getOutputStream());
 
-			jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
-
-			String action = JsonObjectHandler.getProperty(jobj, "action");
-
 			// first action needs to be create user or login
-			//TODO: Prevent NullpointerException on action
-			if (action.equals("createUser")) { // Create User
-				createUser(jobj, out);
-			} else if (action.equals("login")) { // Login User
-				authenticateUser(jobj, out);
-			} else { // else action not found
-				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty("successful", false);
-				returnJobj.addProperty("error", "action not found");
-				out.writeUTF(new Gson().toJson(returnJobj));
+			while (userFile == null) {
+				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
+
+				String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
+
+				switch (action) {
+				case Actions.CREATEUSER:
+					createUser(requestObject, out);
+					break;
+				case Actions.LOGIN:
+					authenticateUser(requestObject, out);
+					break;
+				default:
+					//TODO: ombouwen naar returnfunctie van Thijs
+					JsonObject returnJobj = new JsonObject();
+					returnJobj.addProperty(Responses.SUCCESSFUL, false);
+					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
+					out.writeUTF(new Gson().toJson(returnJobj));
+					break;
+				}
 			}
 
 			// While client is logged in
 			while (userFile != null) {
-				jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-				action = JsonObjectHandler.getProperty(jobj, "action");
+				String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 
-				if (action.equals("getKeyFile")) { // Get Key file
+				switch (action) {
+				case Actions.GETKEYFILE:
 					// TODO: return keyFile
-				} else { // else action not found
+					break;
+				default:
 					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty("successful", false);
-					returnJobj.addProperty("error", "action not found");
+					returnJobj.addProperty(Responses.SUCCESSFUL, false);
+					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
 					out.writeUTF(new Gson().toJson(returnJobj));
+					break;
 				}
 			}
 
@@ -104,32 +116,35 @@ public class Client implements Runnable {
 
 	/**
 	 * Creates a user based on received json object
-	 * 
-	 * @param jobj
-	 * @param out
-	 * @throws IOException
-	 * TODO: Javadoc (explain parameters), more selfexplaining varnames (ex. 'userObject' instead of 'jobj')
+	 *
+	 * @param userObject jsonObject containing username and password
+	 * @param out        outputstream to the client
+	 * @throws IOException if failed to write to outputstream
 	 */
-	public void createUser(JsonObject jobj, DataOutputStream out) throws IOException {
+	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
-		String username = JsonObjectHandler.getProperty(jobj, "username");
-		String passwordHash = JsonObjectHandler.getProperty(jobj, "passwordHash");
+		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		JsonObject returnJobj = new JsonObject();
 
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			if (!UserManager.checkIfUserExists(username)) {
-				UserFile uf = new UserFile(username, passwordHash);
-				UserManager.saveUserFile(uf);
-				returnJobj.addProperty("successful", true);
+			if (UserManager.checkIfUserExists(username)) {
+				returnJobj.addProperty(Responses.SUCCESSFUL, false);
+				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
 
 			} else {
-				returnJobj.addProperty("successful", false);
-				returnJobj.addProperty("error", "username already exists");
+				UserFile uf = new UserFile(username, passwordHash);
+				if (UserManager.saveUserFile(uf)) {
+					returnJobj.addProperty(Responses.SUCCESSFUL, true);
+				} else {
+					returnJobj.addProperty(Responses.SUCCESSFUL, false);
+					returnJobj.addProperty(Responses.ERROR, Errors.CANNOTSAVEUSERFILE);
+				}
 			}
 		} else {
-			returnJobj.addProperty("successful", false);
-			returnJobj.addProperty("error", "username or password is empty");
+			returnJobj.addProperty(Responses.SUCCESSFUL, false);
+			returnJobj.addProperty(Responses.ERROR, Errors.USERNAMEORPASSWORDEMPTY);
 		}
 
 		out.writeUTF(new Gson().toJson(returnJobj));
@@ -138,40 +153,36 @@ public class Client implements Runnable {
 
 	/**
 	 * Authenticate user based on jsonobject with username and password
-	 * 
-	 * @param jobj
-	 *            json object with at least username and password
-	 * @param out
-	 *            output stream to client to write error message
+	 *
+	 * @param userObject json object with at least username and password
+	 * @param out        output stream to client to write error message
 	 * @return if user is authenticated or not
-	 * @throws IOException
-	 *             when trying to write to the client
-	 * TODO: More selfexplaining varnames (ex. 'userObject' instead of 'jobj')            
+	 * @throws IOException when trying to write to the client
 	 */
-	public boolean authenticateUser(JsonObject jobj, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(jobj, "username");
-		String passwordHash = JsonObjectHandler.getProperty(jobj, "passwordHash");
+	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
+		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		String errorMessage = null;
 
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			userFile = UserManager.unlockUserFile(username, passwordHash);
 			if (userFile == null) {
-				errorMessage = "Username or password is incorrect";
+				errorMessage = Errors.USERNAMEORPASSWORDINCORRECT;
 			}
 		} else {
-			errorMessage = "Username or password is empty";
+			errorMessage = Errors.USERNAMEORPASSWORDEMPTY;
 		}
 
 		if (StringUtils.isNotBlank(errorMessage)) {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", false);
-			returnJobj.addProperty("error", errorMessage);
+			returnJobj.addProperty(Responses.SUCCESSFUL, false);
+			returnJobj.addProperty(Responses.ERROR, errorMessage);
 			out.writeUTF(new Gson().toJson(returnJobj));
 			return false;
 		} else {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", true);
+			returnJobj.addProperty(Responses.SUCCESSFUL, true);
 			out.writeUTF(new Gson().toJson(returnJobj));
 			return true;
 		}

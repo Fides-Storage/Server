@@ -62,7 +62,6 @@ public class Server implements Runnable {
 			log.error(e);
 		}
 
-		// TODO: Printing useful information: Log4j
 		log.debug("Server started on port: " + propertiesManager.getPort());
 		log.debug("Using user directory: " + propertiesManager.getUserDir());
 		log.debug("Using data directory: " + propertiesManager.getDataDir());
