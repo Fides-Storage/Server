@@ -48,6 +48,15 @@ public class UserFile implements Serializable {
 	public String getUsername() {
 		return username;
 	}
+	
+	/**
+	 * Checks if given passwordHash matches passwordHash in file
+	 * @param testPasswordHash given password hash to check
+	 * @return true if equals
+	 */
+	public boolean checkPasswordHash(String testPasswordHash) {
+		return passwordHash.equals(testPasswordHash);
+	}
 
 	/**
 	 * Checks if the given location contains a file belonging to the user

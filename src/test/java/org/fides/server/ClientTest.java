@@ -1,5 +1,6 @@
 package org.fides.server;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -14,6 +15,8 @@ import javax.net.ssl.SSLSocket;
 
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
+import org.fides.server.tools.Actions;
+import org.fides.server.tools.Responses;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,14 +54,15 @@ public class ClientTest {
 	 */
 	@Test
 	public void testCreateUser() {
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 
 		JsonObject user = new JsonObject();
-		user.addProperty("action", "createUser");
-		user.addProperty("username", "createUsername");
-		user.addProperty("passwordHash", "Thisisapassword");
+		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
+		user.addProperty(Actions.Properties.USERNAME, "createUsername");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
-			Client client = new Client((SSLSocket) mockedSSLSocket);
+			Client client = new Client(mockedSSLSocket);
 
 			ByteArrayOutputStream mockedRegisterStream = new ByteArrayOutputStream();
 			DataOutputStream mockedDataRegisterStream = new DataOutputStream(mockedRegisterStream);
@@ -68,8 +72,8 @@ public class ClientTest {
 			DataInputStream in = new DataInputStream(inputStream);
 
 			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(jobj.has("successful"));
-			assertTrue(jobj.get("successful").getAsBoolean());
+			assertTrue(jobj.has(Responses.SUCCESSFUL));
+			assertTrue(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
 		} catch (IOException e) {
 			e.printStackTrace();
 			fail("IOException: " + e);
@@ -82,14 +86,15 @@ public class ClientTest {
 	 */
 	@Test
 	public void testAuthenticateUser() {
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 
 		JsonObject user = new JsonObject();
-		user.addProperty("action", "login");
-		user.addProperty("username", "authenticatedUsername");
-		user.addProperty("passwordHash", "Thisisapassword");
+		user.addProperty(Actions.ACTION, Actions.LOGIN);
+		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsername");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
-			Client client = new Client((SSLSocket) mockedSSLSocket);
+			Client client = new Client(mockedSSLSocket);
 
 			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
 			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
@@ -99,8 +104,8 @@ public class ClientTest {
 			DataInputStream in = new DataInputStream(inputStream);
 
 			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(jobj.has("successful"));
-			assertTrue(jobj.get("successful").getAsBoolean());
+			assertTrue(jobj.has(Responses.SUCCESSFUL));
+			assertTrue(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
 		} catch (IOException e) {
 			e.printStackTrace();
 			fail("IOException: " + e);
@@ -108,10 +113,98 @@ public class ClientTest {
 
 	}
 
-	// TODO: Some badweather tests:
-	// Strange username (";!\.)
-	// Register/login with insufficient data
-	// Let usermanager return false (what if user doesn't exist of password is incorrect?)
-	
-	
+	/**
+	 * Tests whether a valid user can authenticate
+	 */
+	@Test
+	public void testAuthenticateInvalidUser() {
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+
+		JsonObject user = new JsonObject();
+		user.addProperty(Actions.ACTION, Actions.LOGIN);
+		user.addProperty(Actions.Properties.USERNAME, "invalidUsername");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
+
+		try {
+			Client client = new Client(mockedSSLSocket);
+
+			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
+			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
+			assertFalse(client.authenticateUser(user, mockedDataLoginStream));
+
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(mockedLoginStream.toByteArray());
+			DataInputStream in = new DataInputStream(inputStream);
+
+			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(jobj.has(Responses.SUCCESSFUL));
+			assertFalse(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("IOException: " + e);
+		}
+
+	}
+
+	/**
+	 * Tests whether a valid user can authenticate with invalid password
+	 */
+	@Test
+	public void testAuthenticateInvalidPassword() {
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+
+		JsonObject user = new JsonObject();
+		user.addProperty(Actions.ACTION, Actions.LOGIN);
+		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsername");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "invalidPassword");
+
+		try {
+			Client client = new Client(mockedSSLSocket);
+
+			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
+			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
+			assertFalse(client.authenticateUser(user, mockedDataLoginStream));
+
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(mockedLoginStream.toByteArray());
+			DataInputStream in = new DataInputStream(inputStream);
+
+			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(jobj.has(Responses.SUCCESSFUL));
+			assertFalse(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("IOException: " + e);
+		}
+
+	}
+
+	/**
+	 * Tests whether a new user can be created that doesn't exists
+	 */
+	@Test
+	public void testCreateStrangeUser() {
+
+		JsonObject user = new JsonObject();
+		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
+		user.addProperty(Actions.Properties.USERNAME, "/../createUsername");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
+
+		try {
+			Client client = new Client(mockedSSLSocket);
+
+			ByteArrayOutputStream mockedRegisterStream = new ByteArrayOutputStream();
+			DataOutputStream mockedDataRegisterStream = new DataOutputStream(mockedRegisterStream);
+			client.createUser(user, mockedDataRegisterStream);
+
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(mockedRegisterStream.toByteArray());
+			DataInputStream in = new DataInputStream(inputStream);
+
+			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(jobj.has(Responses.SUCCESSFUL));
+			assertFalse(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("IOException: " + e);
+		}
+
+	}
 }

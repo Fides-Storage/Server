@@ -2,6 +2,7 @@ package org.fides.server.files;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -24,17 +25,21 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * The JUnit Test Case for the UserManager
- * 
+ *
  * @author Niels and Jesse
- * 
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PropertiesManager.class)
 public class UserManagerTest {
 
-	/** A mocked PropertiesManager which should always return the test User Directory */
+	/**
+	 * A mocked PropertiesManager which should always return the test User Directory
+	 */
 	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
-	/** The test User Directory */
+
+	/**
+	 * The test User Directory
+	 */
 	private static File testUserDir;
 
 	/**
@@ -44,16 +49,17 @@ public class UserManagerTest {
 	public static void setUp() {
 		testUserDir = new File(PropertiesManager.getInstance().getUserDir(), "Test");
 		if (!testUserDir.exists()) {
-			testUserDir.mkdirs();
+			assertTrue(testUserDir.mkdirs());
 		}
 		// This causes the mocked PropertiesManager to always return the test Data directory:
 		Mockito.when(mockedPropertiesManager.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
 	}
-	
+
 	/**
-	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager.
-	 * This will cause the FileManager to use a testfolder instead of the main folder.
-	 * @throws IOException 
+	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager. This will cause the
+	 * FileManager to use a testfolder instead of the main folder.
+	 *
+	 * @throws IOException
 	 */
 	@Before
 	public void setUpMock() throws IOException {
@@ -90,11 +96,30 @@ public class UserManagerTest {
 		uf.addFile(filename);
 
 		UserFile loadedFile = UserManager.unlockUserFile(username, password);
-		//TODO: Test password
+
 		assertNotNull(loadedFile);
 
 		assertEquals(username, loadedFile.getUsername());
 		assertTrue(loadedFile.checkOwned(filename));
+	}
+
+	/**
+	 * Tests whether the file cannot be opened with invalid password
+	 */
+	@Test
+	public void testUnlockUserFileWithInvalidPassword() {
+		String username = "User3";
+		String filename = "testFile";
+		String password = "passwordHash";
+		String invalidPassword = "passwordHashInvalid";
+
+		UserFile uf = new UserFile(username, password);
+		uf.addFile(filename);
+
+		UserFile loadedFile = UserManager.unlockUserFile(username, invalidPassword);
+
+		assertNull(loadedFile);
+
 	}
 
 	/**

@@ -16,8 +16,8 @@ import org.fides.server.tools.PropertiesManager;
 /**
  * This class manages the users using static functions. It can unlock and save user files.
  * TODO: When registering a new user, create a location for his keyfile.
+ *
  * @author Niels and Jesse
- * 
  */
 public final class UserManager {
 	/**
@@ -27,38 +27,37 @@ public final class UserManager {
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
-	 * 
-	 * @param username
-	 *            the given user name
-	 * @param passwordHash
-	 *            the given password hash
+	 *
+	 * @param username     the given user name
+	 * @param passwordHash the given password hash
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
-		if (file.exists() && file.isFile()) {
-			// TODO: More selfexplaining names
-			ObjectInputStream os = null;
+
+		// Check if the username is in the folder
+		if (checkIfUserExists(username)) {
+			ObjectInputStream userFileObject = null;
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
-				
-				// TODO: decrypt file
-				
-				// TODO: Check if password(hash) is correct
 
-				os = new ObjectInputStream(in);
-				UserFile userFile = (UserFile) os.readObject();
-				return userFile;
+				// TODO: decrypt file
+
+				userFileObject = new ObjectInputStream(in);
+				UserFile userFile = (UserFile) userFileObject.readObject();
+
+				if (userFile.checkPasswordHash(passwordHash)) {
+					return userFile;
+				}
 
 			} catch (FileNotFoundException e) {
-				// TODO: Use log.debug, it's a valid state and not an error that shouldn't occur
-				log.error("UserFile not found", e); 
+				log.debug("UserFile not found for username: " + username);
 			} catch (IOException e) {
 				log.error("IOException has occured", e);
 			} catch (ClassNotFoundException e) {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
-				IOUtils.closeQuietly(os);
+				IOUtils.closeQuietly(userFileObject);
 			}
 		}
 		return null;
@@ -66,30 +65,32 @@ public final class UserManager {
 
 	/**
 	 * Encrypts the user file and saves it in the user directory
-	 * 
-	 * @param userFile
-	 *            the user file based on the user name
+	 *
+	 * @param userFile the user file based on the user name
 	 * @return true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
-		ObjectOutputStream oos = null;
+		ObjectOutputStream out = null;
 		try {
-			FileOutputStream fos = new FileOutputStream(new File(PropertiesManager.getInstance()
-				.getUserDir(), userFile.getUsername()));
+			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
 
-			// TODO: encrypt file
+			if (userFileLocation.getName().equals(userFile.getUsername())) {
+				FileOutputStream fos = new FileOutputStream(userFileLocation);
 
-			oos = new ObjectOutputStream(fos);
-			oos.writeObject(userFile);
+				// TODO: encrypt file
 
-			return true;
+				out = new ObjectOutputStream(fos);
+				out.writeObject(userFile);
+
+				return true;
+			}
 
 		} catch (FileNotFoundException e) {
 			log.error("UserFile not found", e);
 		} catch (IOException e) {
 			log.error("IOException has occured", e);
 		} finally {
-			IOUtils.closeQuietly(oos);
+			IOUtils.closeQuietly(out);
 		}
 
 		return false;
@@ -97,17 +98,15 @@ public final class UserManager {
 
 	/**
 	 * Checks if user name exists
-	 * 
-	 * @param username
-	 *            the given user name
+	 *
+	 * @param username the given user name
 	 * @return username exists or not
 	 */
 	public static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
-		if (userFile.exists() && userFile.isFile()) {
-			return true;
-		}
-		return false;
+
+		// Check if username is in the folder
+		return userFile.exists() && userFile.getName().equals(username) && userFile.isFile();
 	}
 
 }
