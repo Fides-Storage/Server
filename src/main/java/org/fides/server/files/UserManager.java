@@ -11,14 +11,12 @@ import java.io.ObjectOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.fides.server.tools.FileUtil;
 import org.fides.server.tools.PropertiesManager;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
- * 
+ *
  * @author Niels and Jesse
- * 
  */
 public final class UserManager {
 	/**
@@ -28,22 +26,16 @@ public final class UserManager {
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
-	 * 
-	 * @param username
-	 *            the given user name
-	 * @param passwordHash
-	 *            the given password hash
+	 *
+	 * @param username     the given user name
+	 * @param passwordHash the given password hash
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
 
-		// username is not in folder
-		if (!FileUtil.isInFolder(new File(PropertiesManager.getInstance().getUserDir()), file)) {
-			return null;
-		}
-
-		if (file.exists() && file.isFile()) {
+		// Check if the username is in the folder
+		if (checkIfUserExists(username)) {
 			ObjectInputStream userFileObject = null;
 			try {
 				FileInputStream in = new FileInputStream(file.getPath());
@@ -72,24 +64,22 @@ public final class UserManager {
 
 	/**
 	 * Encrypts the user file and saves it in the user directory
-	 * 
-	 * @param userFile
-	 *            the user file based on the user name
+	 *
+	 * @param userFile the user file based on the user name
 	 * @return true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
-		ObjectOutputStream oos = null;
+		ObjectOutputStream out = null;
 		try {
-			File userLocation = new File(PropertiesManager.getInstance().getUserDir());
-			File userFileLocation = new File(userLocation, userFile.getUsername());
+			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
 
-			if (FileUtil.isInFolder(userLocation, userFileLocation)) {
+			if (userFileLocation.getName().equals(userFile.getUsername())) {
 				FileOutputStream fos = new FileOutputStream(userFileLocation);
 
 				// TODO: encrypt file
 
-				oos = new ObjectOutputStream(fos);
-				oos.writeObject(userFile);
+				out = new ObjectOutputStream(fos);
+				out.writeObject(userFile);
 
 				return true;
 			}
@@ -99,7 +89,7 @@ public final class UserManager {
 		} catch (IOException e) {
 			log.error("IOException has occured", e);
 		} finally {
-			IOUtils.closeQuietly(oos);
+			IOUtils.closeQuietly(out);
 		}
 
 		return false;
@@ -107,24 +97,15 @@ public final class UserManager {
 
 	/**
 	 * Checks if user name exists
-	 * 
-	 * @param username
-	 *            the given user name
+	 *
+	 * @param username the given user name
 	 * @return username exists or not
 	 */
 	public static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
 
-		// username is not in folder
-		if (!FileUtil.isInFolder(new File(PropertiesManager.getInstance().getUserDir()), userFile)) {
-			return false;
-		}
-
-		if (userFile.exists() && userFile.isFile()) {
-			return true;
-		}
-
-		return false;
+		// Check if username is in the folder
+		return userFile.exists() && userFile.getName().equals(username) && userFile.isFile();
 	}
 
 }
