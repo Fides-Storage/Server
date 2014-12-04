@@ -15,7 +15,6 @@ import org.fides.server.tools.PropertiesManager;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
- * TODO: When registering a new user, create a location for his keyfile.
  *
  * @author Niels and Jesse
  */

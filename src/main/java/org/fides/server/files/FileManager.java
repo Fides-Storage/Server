@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fides.components.Responses;
 import org.fides.server.tools.PropertiesManager;
 
 import com.google.gson.Gson;
@@ -69,7 +70,7 @@ public final class FileManager {
 
 		try {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", true);
+			returnJobj.addProperty(Responses.SUCCESSFUL, true);
 			outputStream.writeUTF(new Gson().toJson(returnJobj));
 			OutputStream fileOutputStream = new FileOutputStream(file);
 			IOUtils.copy(inputStream, fileOutputStream);
@@ -95,7 +96,7 @@ public final class FileManager {
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
 		try (InputStream inStream = new FileInputStream(file)) {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", true);
+			returnJobj.addProperty(Responses.SUCCESSFUL, true);
 			outputStream.writeUTF(new Gson().toJson(returnJobj));
 
 			IOUtils.copy(inStream, outputStream);
@@ -117,10 +118,6 @@ public final class FileManager {
 	 */
 	public static boolean removeFile(String location) {
 		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-		if (!file.exists()) {
-			// The FileManager can't remove a non-existing file.
-			return false;
-		}
 		return file.delete();
 	}
 

@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
+import org.fides.components.Responses;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.tools.Errors;
@@ -113,8 +114,8 @@ public class ClientFileConnector {
 	private void copyErrorToStream(String errorMessage, DataOutputStream outputStream) {
 		try {
 			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty("successful", false);
-			returnJobj.addProperty("error", errorMessage);
+			returnJobj.addProperty(Responses.SUCCESSFUL, false);
+			returnJobj.addProperty(Responses.ERROR, errorMessage);
 			outputStream.writeUTF(new Gson().toJson(returnJobj));
 		} catch (IOException e) {
 			log.error(e.getMessage());
@@ -139,7 +140,7 @@ public class ClientFileConnector {
 			if (file.exists()) {
 				// Return the location on the server where the new file will be written
 				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty("successful", true);
+				returnJobj.addProperty(Responses.SUCCESSFUL, true);
 				returnJobj.addProperty(Actions.Properties.LOCATION, location);
 				outputStream.writeUTF(new Gson().toJson(returnJobj));
 

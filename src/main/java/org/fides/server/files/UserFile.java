@@ -22,7 +22,7 @@ public class UserFile implements Serializable {
 
 	private String passwordHash;
 
-	private Set<String> userFiles = new TreeSet<String>();
+	private Set<String> userFiles = new TreeSet<>();
 
 	private String keyFile;
 
