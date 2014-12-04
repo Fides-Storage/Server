@@ -1,10 +1,7 @@
 package org.fides.server.files;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.GregorianCalendar;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -48,10 +45,12 @@ public class UserFile implements Serializable {
 	public String getUsername() {
 		return username;
 	}
-	
+
 	/**
 	 * Checks if given passwordHash matches passwordHash in file
-	 * @param testPasswordHash given password hash to check
+	 * 
+	 * @param testPasswordHash
+	 *            given password hash to check
 	 * @return true if equals
 	 */
 	public boolean checkPasswordHash(String testPasswordHash) {
@@ -90,7 +89,7 @@ public class UserFile implements Serializable {
 		userFiles.remove(location);
 		UserManager.saveUserFile(this);
 	}
-	
+
 	/**
 	 * Returns the location of the user's keyfile.
 	 * 
@@ -99,11 +98,12 @@ public class UserFile implements Serializable {
 	public String getKeyFileLocation() {
 		return keyFile;
 	}
-	
+
 	/**
 	 * Sets the location of the user's keyfile to the userfile.
 	 * 
-	 * @param location The location of the keyfile.
+	 * @param location
+	 *            The location of the keyfile.
 	 */
 	public void setKeyFileLocation(String location) {
 		keyFile = location;

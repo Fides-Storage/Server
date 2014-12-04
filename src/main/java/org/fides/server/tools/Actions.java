@@ -43,6 +43,11 @@ public class Actions {
 		 * The property for passwordHash
 		 */
 		public static final String PASSWORD_HASH = "passwordHash";
+
+		/**
+		 * The property for a file location
+		 */
+		public static final String LOCATION = "location";
 	}
 
 }

@@ -3,14 +3,8 @@ package org.fides.server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.file.Files;
 
 import javax.net.ssl.SSLSocket;
 
@@ -18,21 +12,19 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.Actions;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
-import org.fides.server.tools.PropertiesManager;
+import org.fides.server.tools.Responses;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.fides.server.tools.Responses;
 
 /**
  * Runnable to create a thread for the handling of a client
- *
+ * 
  * @author Niels
  * @author Jesse
  */
@@ -49,8 +41,9 @@ public class Client implements Runnable {
 
 	/**
 	 * Constructor for client connection
-	 *
-	 * @param server socket for the connection with the client
+	 * 
+	 * @param server
+	 *            socket for the connection with the client
 	 */
 	public Client(SSLSocket server) {
 		this.server = server;
@@ -82,7 +75,7 @@ public class Client implements Runnable {
 					authenticateUser(requestObject, out);
 					break;
 				default:
-					//TODO: ombouwen naar returnfunctie van Thijs
+					// TODO: Use the copyErrorToStream function that's currently in ClientFileConnector
 					JsonObject returnJobj = new JsonObject();
 					returnJobj.addProperty(Responses.SUCCESSFUL, false);
 					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
@@ -123,16 +116,19 @@ public class Client implements Runnable {
 			IOUtils.closeQuietly(in);
 			IOUtils.closeQuietly(out);
 			IOUtils.closeQuietly(server);
-			// TODO: unlock and close userFile
+			// TODO: Unlock and close userFile
 		}
 	}
 
 	/**
 	 * Creates a user based on received json object
-	 *
-	 * @param userObject jsonObject containing username and password
-	 * @param out        outputstream to the client
-	 * @throws IOException if failed to write to outputstream
+	 * 
+	 * @param userObject
+	 *            jsonObject containing username and password
+	 * @param out
+	 *            outputstream to the client
+	 * @throws IOException
+	 *             if failed to write to outputstream
 	 */
 	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
@@ -166,9 +162,11 @@ public class Client implements Runnable {
 
 	/**
 	 * Authenticate user based on jsonobject with username and password
-	 *
-	 * @param userObject json object with at least username and password
-	 * @param out        output stream to client to write error message
+	 * 
+	 * @param userObject
+	 *            json object with at least username and password
+	 * @param out
+	 *            output stream to client to write error message
 	 * @return if user is authenticated or not
 	 */
 	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {

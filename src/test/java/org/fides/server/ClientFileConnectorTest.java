@@ -21,6 +21,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
+import org.fides.server.tools.Actions;
+import org.fides.server.tools.Errors;
 import org.fides.server.tools.PropertiesManager;
 import org.fides.server.tools.Responses;
 import org.junit.AfterClass;
@@ -150,7 +152,7 @@ public class ClientFileConnectorTest {
 
 			// The update
 			JsonObject updateRequest = new JsonObject();
-			updateRequest.addProperty("location", existingFileLocation);
+			updateRequest.addProperty(Actions.Properties.LOCATION, existingFileLocation);
 			assertTrue(connector.updateFile(in, updateRequest, out));
 			in.close();
 
@@ -177,14 +179,13 @@ public class ClientFileConnectorTest {
 
 			// The update
 			JsonObject updateRequest = new JsonObject();
-			updateRequest.addProperty("location", "");
+			updateRequest.addProperty(Actions.Properties.LOCATION, "");
 			assertFalse(connector.updateFile(in, updateRequest, out));
 			in.close();
 
-			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains("User didn't include a filelocation to upload to"));
+			assertTrue(response.contains(Errors.NOFILELOCATION));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -207,10 +208,9 @@ public class ClientFileConnectorTest {
 			assertFalse(connector.updateFile(in, updateRequest, out));
 			in.close();
 
-			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains("User didn't include a filelocation to upload to"));
+			assertTrue(response.contains(Errors.NOFILELOCATION));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -242,14 +242,13 @@ public class ClientFileConnectorTest {
 
 			// The update
 			JsonObject updateRequest = new JsonObject();
-			updateRequest.addProperty("location", notOwnedFileLocation);
+			updateRequest.addProperty(Actions.Properties.LOCATION, notOwnedFileLocation);
 			assertFalse(connector.updateFile(in, updateRequest, out));
 			in.close();
 
-			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains("User doesn't own a file on that location"));
+			assertTrue(response.contains(Errors.FILEWITHOUTOWNERSHIP));
 
 			// Make sure the file didn't get updated.
 			assertFalse(Arrays.equals(updatedFileContent, Files.readAllBytes(existingFile.toPath())));
@@ -278,15 +277,14 @@ public class ClientFileConnectorTest {
 
 			// The update of the non-existing file.
 			JsonObject updateRequest = new JsonObject();
-			updateRequest.addProperty("location", notExistingFileLocation);
+			updateRequest.addProperty(Actions.Properties.LOCATION, notExistingFileLocation);
 			assertFalse(connector.updateFile(in, updateRequest, out));
 			in.close();
 
 			// Check if the correct error was returned
-			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains("File could not be found on the server"));
+			assertTrue(response.contains(Errors.FILENOTFOUND));
 
 			// Make sure the file didn't get created.
 			assertFalse(notExistingFile.exists());
@@ -319,7 +317,7 @@ public class ClientFileConnectorTest {
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
-			fileRequest.addProperty("location", downloadFileLocation);
+			fileRequest.addProperty(Actions.Properties.LOCATION, downloadFileLocation);
 			assertTrue(connector.downloadFile(fileRequest, out));
 
 			// First read the JsonResponse to see if the request is successful
@@ -348,15 +346,14 @@ public class ClientFileConnectorTest {
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
-			fileRequest.addProperty("location", "");
+			fileRequest.addProperty(Actions.Properties.LOCATION, "");
 			assertFalse(connector.downloadFile(fileRequest, out));
 
 			// First read the JsonResponse to see if the request was unsuccessful
-			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains("User didn't include a file to download"));
+			assertTrue(downloadResponse.toString().contains(Errors.NOFILELOCATION));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -382,11 +379,10 @@ public class ClientFileConnectorTest {
 			assertFalse(connector.downloadFile(fileRequest, out));
 
 			// First read the JsonResponse to see if the request was unsuccessful
-			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains("User didn't include a file to download"));
+			assertTrue(downloadResponse.toString().contains(Errors.NOFILELOCATION));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -421,15 +417,14 @@ public class ClientFileConnectorTest {
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
-			fileRequest.addProperty("location", notOwnedFileLocation);
+			fileRequest.addProperty(Actions.Properties.LOCATION, notOwnedFileLocation);
 			assertFalse(connector.downloadFile(fileRequest, out));
 
 			// First read the JsonResponse to see if the request was unsuccessful
-			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains("Requested file does not belong to the user"));
+			assertTrue(downloadResponse.toString().contains(Errors.FILEWITHOUTOWNERSHIP));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -458,15 +453,14 @@ public class ClientFileConnectorTest {
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
-			fileRequest.addProperty("location", notExistingFileLocation);
+			fileRequest.addProperty(Actions.Properties.LOCATION, notExistingFileLocation);
 			assertFalse(connector.downloadFile(fileRequest, out));
 
 			// First read the JsonResponse to see if the request was unsuccessful
-			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains("Requested file could not be found"));
+			assertTrue(downloadResponse.toString().contains(Errors.FILENOTFOUND));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -509,7 +503,7 @@ public class ClientFileConnectorTest {
 
 			// The download request
 			JsonObject fileRequest = new JsonObject();
-			fileRequest.addProperty("location", newFileLocation);
+			fileRequest.addProperty(Actions.Properties.LOCATION, newFileLocation);
 			connector.downloadFile(fileRequest, out);
 
 			// First read the JsonResponse to see if the request is successful
@@ -560,7 +554,7 @@ public class ClientFileConnectorTest {
 
 			// The update
 			JsonObject updateRequest = new JsonObject();
-			updateRequest.addProperty("location", newFileLocation);
+			updateRequest.addProperty(Actions.Properties.LOCATION, newFileLocation);
 			assertTrue(connector.updateFile(in, updateRequest, out));
 			in.close();
 
@@ -570,7 +564,7 @@ public class ClientFileConnectorTest {
 
 			// The download request
 			JsonObject fileRequest = new JsonObject();
-			fileRequest.addProperty("location", newFileLocation);
+			fileRequest.addProperty(Actions.Properties.LOCATION, newFileLocation);
 			connector.downloadFile(fileRequest, out);
 
 			// First read the JsonResponse to see if the request is successful

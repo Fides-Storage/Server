@@ -15,6 +15,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
+import org.fides.server.tools.Actions;
+import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
 import org.fides.server.tools.PropertiesManager;
 
@@ -78,7 +80,7 @@ public class ClientFileConnector {
 	 * @return Wether the download is successful
 	 */
 	public boolean downloadFile(JsonObject fileRequest, DataOutputStream outputStream) {
-		String fileLocation = JsonObjectHandler.getProperty(fileRequest, "location");
+		String fileLocation = JsonObjectHandler.getProperty(fileRequest, Actions.Properties.LOCATION);
 		// Check if the user sent a location
 		if (!StringUtils.isBlank(fileLocation)) {
 			// Check if the file is owned by the user
@@ -88,13 +90,13 @@ public class ClientFileConnector {
 				if (file.exists()) {
 					return FileManager.copyFileToStream(file, outputStream);
 				} else {
-					copyErrorToStream("Requested file could not be found", outputStream);
+					copyErrorToStream(Errors.FILENOTFOUND, outputStream);
 				}
 			} else {
-				copyErrorToStream("Requested file does not belong to the user", outputStream);
+				copyErrorToStream(Errors.FILEWITHOUTOWNERSHIP, outputStream);
 			}
 		} else {
-			copyErrorToStream("User didn't include a file to download", outputStream);
+			copyErrorToStream(Errors.NOFILELOCATION, outputStream);
 		}
 		IOUtils.closeQuietly(outputStream);
 		return false;
@@ -138,7 +140,7 @@ public class ClientFileConnector {
 				// Return the location on the server where the new file will be written
 				JsonObject returnJobj = new JsonObject();
 				returnJobj.addProperty("successful", true);
-				returnJobj.addProperty("location", location);
+				returnJobj.addProperty(Actions.Properties.LOCATION, location);
 				outputStream.writeUTF(new Gson().toJson(returnJobj));
 
 				OutputStream fileOutputStream = new FileOutputStream(file);
@@ -146,17 +148,16 @@ public class ClientFileConnector {
 				fileOutputStream.flush();
 				fileOutputStream.close();
 
-				// TODO: check of bestand goed is aangekomen
+				// TODO: Make sure the upload was successful
 				userFile.addFile(location);
 				return true;
 			} else {
-				System.out.println("File doesn't exist: " + file.getCanonicalPath());
 				log.error("A file generated with FileManager.createFile() was not generated correctly.");
 				copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
 			}
 		} catch (IOException e) {
 			log.error(e.getMessage());
-			copyErrorToStream("Upload failed. Please contact your server's administrator. (In uploadFile)", outputStream);
+			copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
 		}
 		return false;
 	}
@@ -173,7 +174,7 @@ public class ClientFileConnector {
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
-		String location = JsonObjectHandler.getProperty(updateRequest, "location");
+		String location = JsonObjectHandler.getProperty(updateRequest, Actions.Properties.LOCATION);
 		// Check if the user sent a location
 		if (!StringUtils.isBlank(location)) {
 			// Check if the user owns the file on that location
@@ -183,13 +184,13 @@ public class ClientFileConnector {
 				if (file.exists()) {
 					return FileManager.copyStreamToFile(inputStream, file, outputStream);
 				} else {
-					copyErrorToStream("File could not be found on the server", outputStream);
+					copyErrorToStream(Errors.FILENOTFOUND, outputStream);
 				}
 			} else {
-				copyErrorToStream("User doesn't own a file on that location", outputStream);
+				copyErrorToStream(Errors.FILEWITHOUTOWNERSHIP, outputStream);
 			}
 		} else {
-			copyErrorToStream("User didn't include a filelocation to upload to", outputStream);
+			copyErrorToStream(Errors.NOFILELOCATION, outputStream);
 		}
 		return false;
 	}
@@ -215,18 +216,18 @@ public class ClientFileConnector {
 			if (FileManager.copyStreamToFile(inputStream, tempFile, outputStream)) {
 				try {
 					// Try to copy the temporary file to the real keyfile.
-					// TODO: First make sure the upload succeeded
+					// TODO: Make sure the upload was successful
 					Files.copy(tempFile.toPath(), keyFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					return true;
 				} catch (IOException e) {
 					log.error(e.getMessage());
-					copyErrorToStream("Upload failed. Please contact your server's administrator. (In updateKeyFile)", outputStream);
+					copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
 				} finally {
 					FileManager.removeFile(tempFileLocation);
 				}
 			} else {
 				FileManager.removeFile(tempFileLocation);
-				copyErrorToStream("Upload failed. Please contact your server's administrator. (In updateKeyFile)", outputStream);
+				copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
 			}
 		} else {
 			log.error("User's keyfile doesn't exist");

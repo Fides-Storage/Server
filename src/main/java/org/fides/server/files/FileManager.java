@@ -75,7 +75,7 @@ public final class FileManager {
 			IOUtils.copy(inputStream, fileOutputStream);
 			fileOutputStream.flush();
 			fileOutputStream.close();
-			// TODO: Check if the file was copied correctly
+			// TODO: Make sure the upload was successful
 			return true;
 		} catch (IOException e) {
 			log.error(e.getMessage());

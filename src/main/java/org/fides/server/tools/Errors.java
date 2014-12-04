@@ -29,4 +29,19 @@ public class Errors {
 	 * Username or password is incorrect
 	 */
 	public static final String USERNAMEORPASSWORDINCORRECT = "Username or password is incorrect";
+
+	/**
+	 * The user didn't add a file location to the request where one was needed.
+	 */
+	public static final String NOFILELOCATION = "User didn't include a filelocation";
+
+	/**
+	 * The user tries to reach (upload or download to) a file that isn't his.
+	 */
+	public static final String FILEWITHOUTOWNERSHIP = "User doesn't own a file on the included location";
+
+	/**
+	 * File could not be found
+	 */
+	public static final String FILENOTFOUND = "File could not be found on the server";
 }
