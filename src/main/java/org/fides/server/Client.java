@@ -32,15 +32,9 @@ import org.fides.server.tools.Responses;
 
 /**
  * Runnable to create a thread for the handling of a client
-<<<<<<< HEAD
- * 
- * @author Niels and Jesse
- * 
-=======
  *
  * @author Niels
  * @author Jesse
->>>>>>> master
  */
 public class Client implements Runnable {
 
@@ -98,7 +92,7 @@ public class Client implements Runnable {
 			}
 
 			ClientFileConnector clientFileConnector = new ClientFileConnector(userFile);
-			
+
 			// While client is logged in
 			while (userFile != null) {
 				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
@@ -135,8 +129,6 @@ public class Client implements Runnable {
 
 	/**
 	 * Creates a user based on received json object
-	 * 
-
 	 *
 	 * @param userObject jsonObject containing username and password
 	 * @param out        outputstream to the client

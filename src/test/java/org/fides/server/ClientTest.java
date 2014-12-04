@@ -47,7 +47,6 @@ public class ClientTest {
 		PowerMockito.mockStatic(UserManager.class);
 		Mockito.when(FileManager.createFile()).thenReturn("KeyFile");
 
-		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
 		Mockito.when(UserManager.checkIfUserExists("authenticatedUsername")).thenReturn(true);
 		UserFile userfile = new UserFile("authenticatedUsername", "Thisisapassword");
@@ -155,7 +154,7 @@ public class ClientTest {
 	 */
 	@Test
 	public void testAuthenticateInvalidPassword() {
-		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(false);
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
