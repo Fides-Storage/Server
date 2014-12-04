@@ -22,6 +22,7 @@ import org.apache.commons.io.IOUtils;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.tools.PropertiesManager;
+import org.fides.server.tools.Responses;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,9 +52,7 @@ public class ClientFileConnectorTest {
 	/** The test User Directory */
 	private static File testDataDir;
 
-	private static final String KEYFILELOCATION = "KeyFile";
-
-	private static final String KEYFILECONTENT = "This is the default keyfile content";
+	private static final byte[] KEYFILECONTENT = "This is the default keyfile content".getBytes();
 
 	private static final byte[] FILECONTENT = "This is the default normal file content".getBytes();
 
@@ -77,9 +76,6 @@ public class ClientFileConnectorTest {
 			}
 			// This causes the mocked PropertiesManager to always return the test Data directory:
 			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
-
-			File keyfile = new File(testDataDir, KEYFILELOCATION);
-			FileUtils.writeStringToFile(keyfile, KEYFILECONTENT);
 		} catch (Exception e) {
 			fail("Unexpected error in setUp: " + e.getMessage());
 		}
@@ -122,7 +118,7 @@ public class ClientFileConnectorTest {
 
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertArrayEquals(FILECONTENT, Files.readAllBytes(newFile.toPath()));
-			assertTrue(response.contains("\"successful\":true"));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -161,7 +157,7 @@ public class ClientFileConnectorTest {
 			// Test if file contents changed
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertArrayEquals(updatedFileContent, Files.readAllBytes(existingFile.toPath()));
-			assertTrue(response.contains("\"successful\":true"));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -187,7 +183,7 @@ public class ClientFileConnectorTest {
 
 			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
-			assertTrue(response.contains("\"successful\":false"));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(response.contains("User didn't include a filelocation to upload to"));
 		} catch (Exception e) {
 			fail(e.getMessage());
@@ -213,7 +209,7 @@ public class ClientFileConnectorTest {
 
 			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
-			assertTrue(response.contains("\"successful\":false"));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(response.contains("User didn't include a filelocation to upload to"));
 		} catch (Exception e) {
 			fail(e.getMessage());
@@ -252,7 +248,7 @@ public class ClientFileConnectorTest {
 
 			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
-			assertTrue(response.contains("\"successful\":false"));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(response.contains("User doesn't own a file on that location"));
 
 			// Make sure the file didn't get updated.
@@ -289,7 +285,7 @@ public class ClientFileConnectorTest {
 			// Check if the correct error was returned
 			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
-			assertTrue(response.contains("\"successful\":false"));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(response.contains("File could not be found on the server"));
 
 			// Make sure the file didn't get created.
@@ -329,7 +325,7 @@ public class ClientFileConnectorTest {
 			// First read the JsonResponse to see if the request is successful
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":true"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":true"));
 
 			// Read the rest of the stream to check if the file was correctly downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -359,7 +355,7 @@ public class ClientFileConnectorTest {
 			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(downloadResponse.toString().contains("User didn't include a file to download"));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
@@ -389,7 +385,7 @@ public class ClientFileConnectorTest {
 			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(downloadResponse.toString().contains("User didn't include a file to download"));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
@@ -432,7 +428,7 @@ public class ClientFileConnectorTest {
 			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(downloadResponse.toString().contains("Requested file does not belong to the user"));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
@@ -469,7 +465,7 @@ public class ClientFileConnectorTest {
 			// TODO: Use variables for errormessage
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(downloadResponse.toString().contains("Requested file could not be found"));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
@@ -519,7 +515,7 @@ public class ClientFileConnectorTest {
 			// First read the JsonResponse to see if the request is successful
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":true"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":true"));
 
 			// Read the rest of the stream to check if the file was correctly downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -580,7 +576,7 @@ public class ClientFileConnectorTest {
 			// First read the JsonResponse to see if the request is successful
 			in = new DataInputStream(new ByteArrayInputStream(downloadOutputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
-			assertTrue(downloadResponse.toString().contains("\"successful\":true"));
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":true"));
 
 			// Read the rest of the stream to check if the file was correctly downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -595,20 +591,92 @@ public class ClientFileConnectorTest {
 	 * Tests the keyfile upload
 	 */
 	@Test
-	public void testKeyFileUpload() {
-		// Test for temporary file:
-		// If it's created
-		// If it's filled
-		// If it's copied
-		// If it's deleted
+	public void testKeyFileUpdate() {
+		try {
+			// Create a keyfile that belongs to the user.
+			String keyFileLocation = "UploadKeyFile";
+			File keyFile = new File(testDataDir, keyFileLocation);
+			assertFalse(keyFile.exists());
+			keyFile.createNewFile();
+			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
+
+			// Fill the keyfile with some default content
+			OutputStream existingKeyFileOut = new FileOutputStream(keyFile);
+			existingKeyFileOut.write(KEYFILECONTENT);
+			existingKeyFileOut.flush();
+			existingKeyFileOut.close();
+
+			// Create an empty file to use for the temporary keyfile and make the 'createFile' return that file.
+			String tempFileLocation = "TemporaryKeyFile";
+			File tempKeyFile = new File(testDataDir, tempFileLocation);
+			assertFalse(tempKeyFile.exists());
+			tempKeyFile.createNewFile();
+			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(tempFileLocation);
+			// Prevent the keyfile from getting deleted.
+			PowerMockito.stub(PowerMockito.method(FileManager.class, "removeFile")).toReturn(true);
+
+			// Create the streams to use for the update and the update's response.
+			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+			in = new DataInputStream(new ByteArrayInputStream(updatedKeyFileContent));
+
+			// Update the keyfilefile
+			assertTrue(connector.updateKeyFile(in, out));
+			in.close();
+
+			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
+			assertArrayEquals(updatedKeyFileContent, Files.readAllBytes(tempKeyFile.toPath()));
+			assertArrayEquals(updatedKeyFileContent, Files.readAllBytes(keyFile.toPath()));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
-	 * Tests if the keyfile upload fails correctly if the keyfile doesn't exist.
+	 * Tests if the temporary file gets deleted when uploading the keyfile
 	 */
 	@Test
-	public void testKeyFileUploadNotExisting() {
+	public void testKeyFileUpdateTempDeleted() {
+		try {
+			// Create a keyfile that belongs to the user.
+			String keyFileLocation = "UploadTempKeyFile";
+			File keyFile = new File(testDataDir, keyFileLocation);
+			assertFalse(keyFile.exists());
+			keyFile.createNewFile();
+			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
+			// Fill the keyfile with some default content
+			OutputStream existingKeyFileOut = new FileOutputStream(keyFile);
+			existingKeyFileOut.write(KEYFILECONTENT);
+			existingKeyFileOut.flush();
+			existingKeyFileOut.close();
+
+			// Create an empty file to use for the temporary keyfile and make the 'createFile' return that file.
+			String tempFileLocation = "TemporaryToDeleteKeyFile";
+			File tempKeyFile = new File(testDataDir, tempFileLocation);
+			assertFalse(tempKeyFile.exists());
+			tempKeyFile.createNewFile();
+			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(tempFileLocation);
+
+			// Create the streams to use for the update and the update's response.
+			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+			in = new DataInputStream(new ByteArrayInputStream(updatedKeyFileContent));
+
+			// Update the keyfilefile
+			assertTrue(connector.updateKeyFile(in, out));
+			in.close();
+
+			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
+			assertArrayEquals(updatedKeyFileContent, Files.readAllBytes(keyFile.toPath()));
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
+			assertFalse(tempKeyFile.exists());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
@@ -616,23 +684,38 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testKeyFileDownload() {
+		try {
+			// Create a keyfile that belongs to the user.
+			String keyFileLocation = "DownloadKeyFile";
+			File keyFile = new File(testDataDir, keyFileLocation);
+			assertFalse(keyFile.exists());
+			keyFile.createNewFile();
+			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
-	}
+			// Fill the keyfile with some default content
+			OutputStream existingKeyFileOut = new FileOutputStream(keyFile);
+			existingKeyFileOut.write(KEYFILECONTENT);
+			existingKeyFileOut.flush();
+			existingKeyFileOut.close();
 
-	/**
-	 * Tests if the keyfile download fails correctly if the keyfile doesn't exist.
-	 */
-	@Test
-	public void testKeyFileDownloadNotExisting() {
+			// Create the stream to use for the download's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+			assertTrue(connector.downloadKeyFile(out));
 
-	}
+			// First read the JsonResponse to see if the request is successful
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":true"));
 
-	/**
-	 * Test if the Keyfile Upload and Download work well together.
-	 */
-	@Test
-	public void testKeyFilUploadDownload() {
+			// Read the rest of the stream to check if the file was correctly downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertArrayEquals(KEYFILECONTENT, fileResponseStream.toByteArray());
 
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**

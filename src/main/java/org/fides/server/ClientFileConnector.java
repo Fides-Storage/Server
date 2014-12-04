@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -144,7 +145,7 @@ public class ClientFileConnector {
 				IOUtils.copy(inputStream, fileOutputStream);
 				fileOutputStream.flush();
 				fileOutputStream.close();
-				
+
 				// TODO: check of bestand goed is aangekomen
 				userFile.addFile(location);
 				return true;
@@ -214,7 +215,8 @@ public class ClientFileConnector {
 			if (FileManager.copyStreamToFile(inputStream, tempFile, outputStream)) {
 				try {
 					// Try to copy the temporary file to the real keyfile.
-					Files.copy(tempFile.toPath(), keyFile.toPath());
+					// TODO: First make sure the upload succeeded
+					Files.copy(tempFile.toPath(), keyFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					return true;
 				} catch (IOException e) {
 					log.error(e.getMessage());
