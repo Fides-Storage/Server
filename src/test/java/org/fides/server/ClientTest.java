@@ -13,6 +13,7 @@ import java.io.IOException;
 
 import javax.net.ssl.SSLSocket;
 
+import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.Actions;
@@ -32,7 +33,7 @@ import com.google.gson.JsonObject;
  * This unittest tests the Client class
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(UserManager.class)
+@PrepareForTest({ UserManager.class, FileManager.class })
 public class ClientTest {
 
 	private SSLSocket mockedSSLSocket = mock(SSLSocket.class);
@@ -42,11 +43,15 @@ public class ClientTest {
 	 */
 	@Before
 	public void disableUserManager() {
+		PowerMockito.mockStatic(FileManager.class);
 		PowerMockito.mockStatic(UserManager.class);
+		Mockito.when(FileManager.createFile()).thenReturn("KeyFile");
+
 		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
 		Mockito.when(UserManager.checkIfUserExists("authenticatedUsername")).thenReturn(true);
-		Mockito.when(UserManager.unlockUserFile("authenticatedUsername", "Thisisapassword")).thenReturn(new UserFile("authenticatedUsername", "Thisisapassword"));
+		UserFile userfile = new UserFile("authenticatedUsername", "Thisisapassword");
+		Mockito.when(UserManager.unlockUserFile("authenticatedUsername", "Thisisapassword")).thenReturn(userfile);
 	}
 
 	/**
