@@ -1,6 +1,10 @@
 package org.fides.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,6 +18,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.tools.PropertiesManager;
@@ -27,6 +32,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 /**
@@ -110,6 +116,9 @@ public class ClientFileConnectorTest {
 			// Upload the file
 			assertTrue(connector.uploadFile(in, out));
 			in.close();
+
+			// Make sure the connector tried adding the new file to the userfile.
+			Mockito.verify(mockedUserFile, Mockito.times(1)).addFile(newFileLocation);
 
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertArrayEquals(FILECONTENT, Files.readAllBytes(newFile.toPath()));
@@ -259,7 +268,7 @@ public class ClientFileConnectorTest {
 	@Test
 	public void testFileUpdateNotExisting() {
 		try {
-			// Create an existing file for the user to update.
+			// Create a non-existing file for the user to update.
 			String notExistingFileLocation = "TestFileNotExisting";
 			File notExistingFile = new File(testDataDir, notExistingFileLocation);
 			Mockito.when(mockedUserFile.checkOwned(notExistingFileLocation)).thenReturn(true);
@@ -271,12 +280,13 @@ public class ClientFileConnectorTest {
 			out = new DataOutputStream(outputStream);
 			in = new DataInputStream(new ByteArrayInputStream(updatedFileContent));
 
-			// The update
+			// The update of the non-existing file.
 			JsonObject updateRequest = new JsonObject();
 			updateRequest.addProperty("location", notExistingFileLocation);
 			assertFalse(connector.updateFile(in, updateRequest, out));
 			in.close();
 
+			// Check if the correct error was returned
 			// TODO: Use variables for errormessage
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"successful\":false"));
@@ -307,16 +317,24 @@ public class ClientFileConnectorTest {
 			existingFileOut.flush();
 			existingFileOut.close();
 
-			// Create the streams to use for the update and the update's response.
+			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
-			
+
+			// The actual download request
 			JsonObject fileRequest = new JsonObject();
 			fileRequest.addProperty("location", downloadFileLocation);
 			assertTrue(connector.downloadFile(fileRequest, out));
-			
-			
-			
+
+			// First read the JsonResponse to see if the request is successful
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":true"));
+
+			// Read the rest of the stream to check if the file was correctly downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertArrayEquals(FILECONTENT, fileResponseStream.toByteArray());
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -327,7 +345,30 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testFileDownloadEmptyLocation() {
+		try {
+			// Create the stream to use for the download's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
 
+			// The actual download request
+			JsonObject fileRequest = new JsonObject();
+			fileRequest.addProperty("location", "");
+			assertFalse(connector.downloadFile(fileRequest, out));
+
+			// First read the JsonResponse to see if the request was unsuccessful
+			// TODO: Use variables for errormessage
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("User didn't include a file to download"));
+
+			// Read the rest of the stream to check if indeed no file was downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertEquals(0, fileResponseStream.toByteArray().length);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
@@ -335,7 +376,29 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testFileDownloadNoLocation() {
+		try {
+			// Create the stream to use for the download's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
 
+			// The actual download request
+			JsonObject fileRequest = new JsonObject();
+			assertFalse(connector.downloadFile(fileRequest, out));
+
+			// First read the JsonResponse to see if the request was unsuccessful
+			// TODO: Use variables for errormessage
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("User didn't include a file to download"));
+
+			// Read the rest of the stream to check if indeed no file was downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertEquals(0, fileResponseStream.toByteArray().length);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
@@ -343,7 +406,42 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testFileDownloadNotOwned() {
+		try {
+			// Create an existing file that the user doesn't own.
+			String notOwnedFileLocation = "DownloadFileNotOwned";
+			File existingFile = new File(testDataDir, notOwnedFileLocation);
+			Mockito.when(mockedUserFile.checkOwned(notOwnedFileLocation)).thenReturn(false);
+			assertFalse(existingFile.exists());
 
+			// Fill the existing file with some default content
+			OutputStream existingFileOut = new FileOutputStream(existingFile);
+			existingFileOut.write(FILECONTENT);
+			existingFileOut.flush();
+			existingFileOut.close();
+
+			// Create the stream to use for the download's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+
+			// The actual download request
+			JsonObject fileRequest = new JsonObject();
+			fileRequest.addProperty("location", notOwnedFileLocation);
+			assertFalse(connector.downloadFile(fileRequest, out));
+
+			// First read the JsonResponse to see if the request was unsuccessful
+			// TODO: Use variables for errormessage
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("Requested file does not belong to the user"));
+
+			// Read the rest of the stream to check if indeed no file was downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertEquals(0, fileResponseStream.toByteArray().length);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
@@ -351,7 +449,36 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testFileDownloadNotExisting() {
+		try {
+			// Create a non-existing file for the user to update.
+			String notExistingFileLocation = "TestFileNotExisting";
+			File notExistingFile = new File(testDataDir, notExistingFileLocation);
+			Mockito.when(mockedUserFile.checkOwned(notExistingFileLocation)).thenReturn(true);
+			assertFalse(notExistingFile.exists());
 
+			// Create the stream to use for the download's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+
+			// The actual download request
+			JsonObject fileRequest = new JsonObject();
+			fileRequest.addProperty("location", notExistingFileLocation);
+			assertFalse(connector.downloadFile(fileRequest, out));
+
+			// First read the JsonResponse to see if the request was unsuccessful
+			// TODO: Use variables for errormessage
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":false"));
+			assertTrue(downloadResponse.toString().contains("Requested file could not be found"));
+
+			// Read the rest of the stream to check if indeed no file was downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertEquals(0, fileResponseStream.toByteArray().length);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
@@ -359,7 +486,48 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testFileUploadDownload() {
+		try {
+			// Create an empty file and make the 'createFile' return that file.
+			String newFileLocation = "UploadDownloadTestFile";
+			File newFile = new File(testDataDir, newFileLocation);
+			assertFalse(newFile.exists());
+			newFile.createNewFile();
+			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
+			// Create the streams to use for the upload and the upload's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+			in = new DataInputStream(new ByteArrayInputStream(FILECONTENT));
+
+			// Upload the file
+			connector.uploadFile(in, out);
+			in.close();
+
+			// Make sure the connector tried adding the new file to the userfile.
+			Mockito.verify(mockedUserFile, Mockito.times(1)).addFile(newFileLocation);
+			Mockito.when(mockedUserFile.checkOwned(newFileLocation)).thenReturn(true);
+
+			// Create the stream to use for the download's response.
+			outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+
+			// The download request
+			JsonObject fileRequest = new JsonObject();
+			fileRequest.addProperty("location", newFileLocation);
+			connector.downloadFile(fileRequest, out);
+
+			// First read the JsonResponse to see if the request is successful
+			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":true"));
+
+			// Read the rest of the stream to check if the file was correctly downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertArrayEquals(FILECONTENT, fileResponseStream.toByteArray());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
@@ -367,7 +535,60 @@ public class ClientFileConnectorTest {
 	 */
 	@Test
 	public void testFileUploadUpdateDownload() {
+		try {
+			// Create an empty file and make the 'createFile' return that file.
+			String newFileLocation = "UploadUpdateDownloadTestFile";
+			File newFile = new File(testDataDir, newFileLocation);
+			assertFalse(newFile.exists());
+			newFile.createNewFile();
+			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
+			// Create the streams to use for the upload and the upload's response.
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+			in = new DataInputStream(new ByteArrayInputStream(FILECONTENT));
+
+			// Upload the file
+			connector.uploadFile(in, out);
+			in.close();
+
+			// Make sure the connector tried adding the new file to the userfile.
+			Mockito.verify(mockedUserFile, Mockito.times(1)).addFile(newFileLocation);
+			Mockito.when(mockedUserFile.checkOwned(newFileLocation)).thenReturn(true);
+
+			// Create the streams to use for the update and the update's response.
+			byte[] updatedFileContent = "This is an updated file content".getBytes();
+			ByteArrayOutputStream updateOutputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(updateOutputStream);
+			in = new DataInputStream(new ByteArrayInputStream(updatedFileContent));
+
+			// The update
+			JsonObject updateRequest = new JsonObject();
+			updateRequest.addProperty("location", newFileLocation);
+			assertTrue(connector.updateFile(in, updateRequest, out));
+			in.close();
+
+			// Create the stream to use for the download's response.
+			ByteArrayOutputStream downloadOutputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(downloadOutputStream);
+
+			// The download request
+			JsonObject fileRequest = new JsonObject();
+			fileRequest.addProperty("location", newFileLocation);
+			connector.downloadFile(fileRequest, out);
+
+			// First read the JsonResponse to see if the request is successful
+			in = new DataInputStream(new ByteArrayInputStream(downloadOutputStream.toByteArray()));
+			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			assertTrue(downloadResponse.toString().contains("\"successful\":true"));
+
+			// Read the rest of the stream to check if the file was correctly downloaded
+			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
+			IOUtils.copy(in, fileResponseStream);
+			assertArrayEquals(updatedFileContent, fileResponseStream.toByteArray());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	/**
