@@ -24,7 +24,7 @@ import com.google.gson.JsonObject;
 
 /**
  * Runnable to create a thread for the handling of a client
- *
+ * 
  * @author Niels
  * @author Jesse
  */
@@ -41,8 +41,9 @@ public class Client implements Runnable {
 
 	/**
 	 * Constructor for client connection
-	 *
-	 * @param server socket for the connection with the client
+	 * 
+	 * @param server
+	 *            socket for the connection with the client
 	 */
 	public Client(SSLSocket server) {
 		this.server = server;
@@ -60,7 +61,7 @@ public class Client implements Runnable {
 			in = new DataInputStream(server.getInputStream());
 			out = new DataOutputStream(server.getOutputStream());
 
-			// first action needs to be create user or login
+			// While user is not logged in
 			while (userFile == null) {
 				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
@@ -74,7 +75,7 @@ public class Client implements Runnable {
 					authenticateUser(requestObject, out);
 					break;
 				default:
-					//TODO: ombouwen naar returnfunctie van Thijs
+					// TODO: Use the copyErrorToStream function that's currently in ClientFileConnector
 					JsonObject returnJobj = new JsonObject();
 					returnJobj.addProperty(Responses.SUCCESSFUL, false);
 					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
@@ -83,23 +84,35 @@ public class Client implements Runnable {
 				}
 			}
 
-			// While client is logged in
-			while (userFile != null) {
-				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
+			ClientFileConnector clientFileConnector = new ClientFileConnector(userFile);
 
-				String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
+			requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
-				switch (action) {
-				case Actions.GETKEYFILE:
-					// TODO: return keyFile
-					break;
-				default:
-					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
-					out.writeUTF(new Gson().toJson(returnJobj));
-					break;
-				}
+			String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
+
+			switch (action) {
+			case Actions.GETKEYFILE:
+				clientFileConnector.downloadKeyFile(out);
+				break;
+			case Actions.GETFILE:
+				clientFileConnector.downloadFile(requestObject, out);
+				break;
+			case Actions.UPDATEKEYFILE:
+				clientFileConnector.updateKeyFile(in, out);
+				break;
+			case Actions.UPDATEFILE:
+				clientFileConnector.updateFile(in, requestObject, out);
+				break;
+			case Actions.UPLOADFILE:
+				clientFileConnector.uploadFile(in, out);
+				break;
+			default:
+				JsonObject returnJobj = new JsonObject();
+				returnJobj.addProperty(Responses.SUCCESSFUL, false);
+				returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
+				out.writeUTF(new Gson().toJson(returnJobj));
+				out.close();
+				break;
 			}
 
 		} catch (EOFException e) {
@@ -110,16 +123,19 @@ public class Client implements Runnable {
 			IOUtils.closeQuietly(in);
 			IOUtils.closeQuietly(out);
 			IOUtils.closeQuietly(server);
-			// TODO: unlock and close userFile
+			// TODO: Unlock and close userFile
 		}
 	}
 
 	/**
 	 * Creates a user based on received json object
-	 *
-	 * @param userObject jsonObject containing username and password
-	 * @param out        outputstream to the client
-	 * @throws IOException if failed to write to outputstream
+	 * 
+	 * @param userObject
+	 *            jsonObject containing username and password
+	 * @param out
+	 *            outputstream to the client
+	 * @throws IOException
+	 *             if failed to write to outputstream
 	 */
 	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
@@ -153,11 +169,12 @@ public class Client implements Runnable {
 
 	/**
 	 * Authenticate user based on jsonobject with username and password
-	 *
-	 * @param userObject json object with at least username and password
-	 * @param out        output stream to client to write error message
+	 * 
+	 * @param userObject
+	 *            json object with at least username and password
+	 * @param out
+	 *            output stream to client to write error message
 	 * @return if user is authenticated or not
-	 * @throws IOException when trying to write to the client
 	 */
 	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
 		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);

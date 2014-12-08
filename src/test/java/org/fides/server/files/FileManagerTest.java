@@ -2,7 +2,6 @@ package org.fides.server.files;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -96,44 +95,6 @@ public class FileManagerTest {
 		} catch (Exception e) {
 			fail("An unexpected exception has occured: " + e.getMessage());
 		}
-	}
-
-	/**
-	 * Tests if updating an empty file fills the file with an inputstream.
-	 */
-	@Test
-	public void testUpdateEmptyFile() {
-		try {
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(MESSAGE);
-			assertTrue(FileManager.updateFile(inputStream, DEFAULTEMPTYFILELOCATION));
-			assertArrayEquals(MESSAGE, FileUtils.readFileToByteArray(new File(testDataDir, DEFAULTEMPTYFILELOCATION)));
-		} catch (Exception e) {
-			fail("An unexpected exception has occured: " + e.getMessage());
-		}
-	}
-
-	/**
-	 * Tests if updating a file which already has content overwrites the original content with the new inputstream.
-	 */
-	@Test
-	public void testUpdateFile() {
-		try {
-			byte[] newMessage = "This file has been updated correctly.".getBytes();
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(newMessage);
-			assertTrue(FileManager.updateFile(inputStream, DEFAULTFILELOCATION));
-			assertArrayEquals(newMessage, FileUtils.readFileToByteArray(new File(testDataDir, DEFAULTFILELOCATION)));
-		} catch (Exception e) {
-			fail("An unexpected exception has occured: " + e.getMessage());
-		}
-	}
-
-	/**
-	 * Tests if updating a non-existing file returns false.
-	 */
-	@Test
-	public void testUpdateNonExistingFile() {
-		ByteArrayInputStream inputStream = new ByteArrayInputStream(MESSAGE);
-		assertFalse(FileManager.updateFile(inputStream, "nonExistingFile.txt"));
 	}
 
 	/**
