@@ -3,6 +3,8 @@ package org.fides.server.files;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +20,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * 
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(UserManager.class)
+@PrepareForTest({ UserManager.class, FileManager.class })
 public class UserFileTest {
 
 	/**
@@ -28,8 +30,12 @@ public class UserFileTest {
 	public void disableUserManager() {
 		PowerMockito.mockStatic(UserManager.class);
 		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+
+		PowerMockito.mockStatic(FileManager.class);
+		String randomLocation = UUID.randomUUID().toString();
+		Mockito.when(FileManager.createFile()).thenReturn(randomLocation);
 	}
-	
+
 	/**
 	 * Checks whether the user file doesn't contain the given data
 	 */

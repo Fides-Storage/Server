@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.fides.server.tools.PropertiesManager;
@@ -25,11 +26,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * The JUnit Test Case for the UserManager
- *
+ * 
  * @author Niels and Jesse
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(PropertiesManager.class)
+@PrepareForTest({ PropertiesManager.class, FileManager.class })
 public class UserManagerTest {
 
 	/**
@@ -58,13 +59,17 @@ public class UserManagerTest {
 	/**
 	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager. This will cause the
 	 * FileManager to use a testfolder instead of the main folder.
-	 *
+	 * 
 	 * @throws IOException
 	 */
 	@Before
 	public void setUpMock() throws IOException {
 		PowerMockito.mockStatic(PropertiesManager.class);
 		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+
+		PowerMockito.mockStatic(FileManager.class);
+		String randomLocation = UUID.randomUUID().toString();
+		Mockito.when(FileManager.createFile()).thenReturn(randomLocation);
 	}
 
 	/**
