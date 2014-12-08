@@ -224,7 +224,7 @@ public class ClientFileConnector {
 
 						// Return the location on the server where the new file will be written
 						JsonObject returnJobj = new JsonObject();
-						returnJobj.addProperty(Responses.SUCCESSFUL, true);
+						returnJobj.addProperty(Responses.SUCCESSFUL, result);
 						outputStream.writeUTF(new Gson().toJson(returnJobj));
 
 						return result;
