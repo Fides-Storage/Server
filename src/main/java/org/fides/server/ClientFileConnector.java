@@ -26,9 +26,8 @@ import com.google.gson.JsonObject;
 
 /**
  * A class for handling the sending and receiving of files
- * 
+ *
  * @author Thijs
- * 
  */
 public class ClientFileConnector {
 
@@ -41,9 +40,8 @@ public class ClientFileConnector {
 
 	/**
 	 * Constructor for ClientFileConnector
-	 * 
-	 * @param userFile
-	 *            The logged in user's userFile
+	 *
+	 * @param userFile The logged in user's userFile
 	 */
 	public ClientFileConnector(UserFile userFile) {
 		this.userFile = userFile;
@@ -51,9 +49,8 @@ public class ClientFileConnector {
 
 	/**
 	 * Downloads the keyfile of the currently logged in user.
-	 * 
-	 * @param outputStream
-	 *            The stream which contains the keyfile.
+	 *
+	 * @param outputStream The stream which contains the keyfile.
 	 * @return Wether the writing of the keyfile to the stream was successful
 	 */
 	public boolean downloadKeyFile(DataOutputStream outputStream) {
@@ -73,11 +70,9 @@ public class ClientFileConnector {
 
 	/**
 	 * Downloads a file by writing it to the outputstream
-	 * 
-	 * @param fileRequest
-	 *            The Json request which contains the file's location
-	 * @param outputStream
-	 *            The stream which the file needs to be written to
+	 *
+	 * @param fileRequest  The Json request which contains the file's location
+	 * @param outputStream The stream which the file needs to be written to
 	 * @return Wether the download is successful
 	 */
 	public boolean downloadFile(JsonObject fileRequest, DataOutputStream outputStream) {
@@ -105,11 +100,9 @@ public class ClientFileConnector {
 
 	/**
 	 * Copies an errormessage to the outputstream
-	 * 
-	 * @param errorMessage
-	 *            The message to copy
-	 * @param outputStream
-	 *            The stream to copy the message to
+	 *
+	 * @param errorMessage The message to copy
+	 * @param outputStream The stream to copy the message to
 	 */
 	private void copyErrorToStream(String errorMessage, DataOutputStream outputStream) {
 		try {
@@ -125,11 +118,9 @@ public class ClientFileConnector {
 	/**
 	 * Uploads a new file with the inputStream as its content. Generates a new file on the server to fill with the
 	 * stream and returns the file's server location to the client through the outputstream.
-	 * 
-	 * @param inputStream
-	 *            The content of the file
-	 * @param outputStream
-	 *            The stream to write the response to
+	 *
+	 * @param inputStream  The content of the file
+	 * @param outputStream The stream to write the response to
 	 * @return Wether the upload was successful or not
 	 */
 	public boolean uploadFile(DataInputStream inputStream, DataOutputStream outputStream) {
@@ -165,13 +156,10 @@ public class ClientFileConnector {
 
 	/**
 	 * Update a file belonging to the user with the inputStream as its new contents
-	 * 
-	 * @param inputStream
-	 *            The contents to fill the file with.
-	 * @param updateRequest
-	 *            The request containing the location of the file that needs to be updated
-	 * @param outputStream
-	 *            The stream to write responses to
+	 *
+	 * @param inputStream   The contents to fill the file with.
+	 * @param updateRequest The request containing the location of the file that needs to be updated
+	 * @param outputStream  The stream to write responses to
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
@@ -197,12 +185,52 @@ public class ClientFileConnector {
 	}
 
 	/**
+	 * Remove a file belonging to the user
+	 *
+	 * @param removeRequest The request containing the location of the file that needs to be removed
+	 * @param outputStream  The stream to write responses to
+	 * @return wether the remove was successful or not
+	 */
+	public boolean removeFile(JsonObject removeRequest, DataOutputStream outputStream) {
+		try {
+			String location = JsonObjectHandler.getProperty(removeRequest, Actions.Properties.LOCATION);
+			// Check if the user sent a location
+			if (!StringUtils.isBlank(location)) {
+				// Check if the user owns the file on that location
+				if (userFile.checkOwned(location)) {
+					File file = new File(PropertiesManager.getInstance().getDataDir(), location);
+					// Check if the file exists
+					if (file.exists()) {
+
+						boolean result = FileManager.removeFile(location);
+
+						// Return the location on the server where the new file will be written
+						JsonObject returnJobj = new JsonObject();
+						returnJobj.addProperty(Responses.SUCCESSFUL, true);
+						outputStream.writeUTF(new Gson().toJson(returnJobj));
+
+						return result;
+					} else {
+						copyErrorToStream(Errors.FILENOTFOUND, outputStream);
+					}
+				} else {
+					copyErrorToStream(Errors.FILEWITHOUTOWNERSHIP, outputStream);
+				}
+			} else {
+				copyErrorToStream(Errors.NOFILELOCATION, outputStream);
+			}
+		} catch (IOException e) {
+			log.error(e.getMessage());
+			copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
+		}
+		return false;
+	}
+
+	/**
 	 * Updates the keyfile with the inputStream as its content.
-	 * 
-	 * @param inputStream
-	 *            The stream to fill the user's keyfile with
-	 * @param outputStream
-	 *            The stream used to return feedback to the client
+	 *
+	 * @param inputStream  The stream to fill the user's keyfile with
+	 * @param outputStream The stream used to return feedback to the client
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {
