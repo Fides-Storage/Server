@@ -201,8 +201,13 @@ public class ClientFileConnector {
 					File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 					// Check if the file exists
 					if (file.exists()) {
-
+						//Remove the file
 						boolean result = FileManager.removeFile(location);
+
+						if(result) {
+							//Remove file in UserFile
+							userFile.removeFile(location);
+						}
 
 						// Return the location on the server where the new file will be written
 						JsonObject returnJobj = new JsonObject();

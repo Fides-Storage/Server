@@ -108,7 +108,6 @@ public class Client implements Runnable {
 				break;
 			case Actions.REMOVEFILE:
 				clientFileConnector.removeFile(requestObject, out);
-				log.debug("Remove file action");
 				break;
 			default:
 				JsonObject returnJobj = new JsonObject();
