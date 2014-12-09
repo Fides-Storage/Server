@@ -74,6 +74,8 @@ public class Client implements Runnable {
 				case Actions.LOGIN:
 					authenticateUser(requestObject, out);
 					break;
+				case Actions.DISCONNECT:
+					return;
 				default:
 					// TODO: Use the copyErrorToStream function that's currently in ClientFileConnector
 					JsonObject returnJobj = new JsonObject();

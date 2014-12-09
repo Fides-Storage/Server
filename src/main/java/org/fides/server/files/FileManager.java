@@ -42,14 +42,31 @@ public final class FileManager {
 	 * @return The file's location.
 	 */
 	public static String createFile() {
+		return createFile(false);
+	}
+
+	/**
+	 * Creates a new file with a unique name. If the file is temporary, it ends with .tmp
+	 * 
+	 * @param temporary
+	 *            Wether the file is temporary or not
+	 * @return The file's location.
+	 */
+	public static String createFile(boolean temporary) {
 		PropertiesManager properties = PropertiesManager.getInstance();
 		String location = UUID.randomUUID().toString();
+		if (temporary) {
+			location += ".tmp";
+		}
 		File newFile = new File(properties.getDataDir(), location);
 
 		try {
 			int uniqueAttempts = 0;
 			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
 				location = UUID.randomUUID().toString();
+				if (temporary) {
+					location += ".tmp";
+				}
 				newFile = new File(properties.getDataDir(), location);
 			}
 		} catch (IOException e) {
@@ -72,7 +89,7 @@ public final class FileManager {
 	 */
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
 		// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
-		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile());
+		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile(true));
 		try (InputStream virtualIn = new VirtualInputStream(inputStream);) {
 			// Tell the cliënt he can start sending the file.
 			JsonObject successfulObj = new JsonObject();
