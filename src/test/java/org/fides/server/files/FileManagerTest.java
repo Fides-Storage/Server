@@ -1,6 +1,8 @@
 package org.fides.server.files;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,17 +33,17 @@ public class FileManagerTest {
 		+ "et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
 		+ "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
 		+ "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.").getBytes();
-	
+
 	private static final String DEFAULTEMPTYFILELOCATION = "defaultEmptyFile.txt";
 
 	private static final String DEFAULTFILELOCATION = "defaultFile.txt";
 
 	private static final String DEFAULTREMOVEFILELOCATION = "defaultRemoveFile.txt";
-	
+
 	private static File testDataDir;
-	
+
 	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
-	
+
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.
 	 */
@@ -54,7 +56,7 @@ public class FileManagerTest {
 			}
 			// This causes the mocked PropertiesManager to always return the test Data directory:
 			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
-			
+
 			File emptyFile = new File(testDataDir, DEFAULTEMPTYFILELOCATION);
 			emptyFile.createNewFile();
 
@@ -71,17 +73,17 @@ public class FileManagerTest {
 			fail("Unexpected error in setUp: " + e.getMessage());
 		}
 	}
-	
+
 	/**
-	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager.
-	 * This will cause the FileManager to use a testfolder instead of the main folder.
+	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager. This will cause the
+	 * FileManager to use a testfolder instead of the main folder.
 	 */
 	@Before
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
 		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
 	}
-	
+
 	/**
 	 * Tests if the manager correctly creates a new file.
 	 */
