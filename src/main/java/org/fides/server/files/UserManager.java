@@ -1,14 +1,18 @@
 package org.fides.server.files;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.security.Key;
+import java.security.Security;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -28,29 +32,48 @@ public final class UserManager {
 	 */
 	private static Logger log = LogManager.getLogger(UserManager.class);
 
+	// Add the Bouncycastle provider
+	static {
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+	}
+
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
 	 *
 	 * @param username
-	 *            the given user name
+	 * 			the given user name
 	 * @param passwordHash
-	 *            the given password hash
+	 * 			the given password hash
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
 
+		DataInputStream din = null;
+		ObjectInputStream inDecrypted = null;
+		InputStream in = null;
 		// Check if the username is in the folder
 		if (checkIfUserExists(username)) {
 			ObjectInputStream userFileObject = null;
 			try {
-				FileInputStream in = new FileInputStream(file.getPath());
+				in = new FileInputStream(file.getPath());
+				din = new DataInputStream(in);
 
-				// TODO: decrypt file
+				//Get salt and amount of rounds from the beginning of the file
+				byte[] saltBytes = new byte[EncryptionUtils.SALT_SIZE];
+				int pbkdf2Rounds = din.readInt();
+				din.read(saltBytes, 0, EncryptionUtils.SALT_SIZE);
 
-				userFileObject = new ObjectInputStream(in);
-				UserFile userFile = (UserFile) userFileObject.readObject();
+				//Generate Key bases on the users password
+				Key key = KeyGenerator.generateKey(passwordHash, saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
 
+				//Create the DecryptionStream
+				inDecrypted = new ObjectInputStream(EncryptionUtils.getDecryptionStream(din, key));
+
+				//Read the UserFile from the DecryptionStream
+				UserFile userFile = (UserFile) inDecrypted.readObject();
+
+				//Validate the password
 				if (userFile.checkPasswordHash(passwordHash)) {
 					return userFile;
 				}
@@ -63,6 +86,9 @@ public final class UserManager {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
 				IOUtils.closeQuietly(userFileObject);
+				IOUtils.closeQuietly(inDecrypted);
+				IOUtils.closeQuietly(din);
+				IOUtils.closeQuietly(in);
 			}
 		}
 		return null;
@@ -72,27 +98,40 @@ public final class UserManager {
 	 * Encrypts the user file and saves it in the user directory
 	 *
 	 * @param userFile
-	 *            the user file based on the user name
-	 * @return true if succeeded, false otherwise
+	 * 			the user file based on the user name
+	 * @return
+	 * 			true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
 		FileOutputStream fos = null;
+		DataOutputStream dout = null;
+			OutputStream outEncrypted = null;
 		try {
 			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
 
 			if (userFileLocation.getName().equals(userFile.getUsername())) {
 				fos = new FileOutputStream(userFileLocation);
-				OutputStream outEncrypted = null;
+				dout = new DataOutputStream(fos);
+
+				//Get salt and amount of rounds
 				byte[] saltBytes = KeyGenerator.getSalt(EncryptionUtils.SALT_SIZE);
 				int pbkdf2Rounds = KeyGenerator.getRounds();
-				Key key = KeyGenerator.generateKey(userFile.getUsername(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
-				fos.write(pbkdf2Rounds);
-				fos.write(saltBytes, 0, EncryptionUtils.SALT_SIZE);
 
-				outEncrypted = EncryptionUtils.getEncryptionStream(fos, key);
+				//Generate a Key bases on the user's password
+				Key key = KeyGenerator.generateKey(userFile.getPassword(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
+
+				//Write the salt and amount of rounds to the beginning of the file
+				dout.writeInt(pbkdf2Rounds);
+				dout.write(saltBytes, 0, EncryptionUtils.SALT_SIZE);
+
+				//Create an encryptionstream
+				outEncrypted = EncryptionUtils.getEncryptionStream(dout, key);
 				ObjectOutputStream objectOut = new ObjectOutputStream(outEncrypted);
 				objectOut.writeObject(userFile);
+
+				//Flush all streams
 				outEncrypted.flush();
+				dout.flush();
 				fos.flush();
 
 				return true;
@@ -103,6 +142,8 @@ public final class UserManager {
 		} catch (IOException e) {
 			log.error("IOException has occured", e);
 		} finally {
+			IOUtils.closeQuietly(outEncrypted);
+			IOUtils.closeQuietly(dout);
 			IOUtils.closeQuietly(fos);
 		}
 
@@ -113,8 +154,9 @@ public final class UserManager {
 	 * Checks if user name exists
 	 *
 	 * @param username
-	 *            the given user name
-	 * @return username exists or not
+	 * 			the given user name
+	 * @return
+	 * 			username exists or not
 	 */
 	public static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);

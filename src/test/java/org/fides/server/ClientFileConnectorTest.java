@@ -183,7 +183,7 @@ public class ClientFileConnectorTest {
 			existingFileOut.flush();
 			existingFileOut.close();
 
-			// create stream for the response
+			//create stream for the response
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 

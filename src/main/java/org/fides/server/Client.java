@@ -18,10 +18,10 @@ import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
-import org.fides.tools.HashUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.fides.tools.HashUtils;
 
 /**
  * Runnable to create a thread for the handling of a client
