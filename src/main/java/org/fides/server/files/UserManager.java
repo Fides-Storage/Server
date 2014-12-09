@@ -32,15 +32,18 @@ public final class UserManager {
 	 */
 	private static Logger log = LogManager.getLogger(UserManager.class);
 
-	static{
+	// Add the Bouncycastle provider
+	static {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 	}
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
 	 *
-	 * @param username     the given user name
-	 * @param passwordHash the given password hash
+	 * @param username
+	 * 			the given user name
+	 * @param passwordHash
+	 * 			the given password hash
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
@@ -56,20 +59,21 @@ public final class UserManager {
 				in = new FileInputStream(file.getPath());
 				din = new DataInputStream(in);
 
+				//Get salt and amount of rounds from the beginning of the file
 				byte[] saltBytes = new byte[EncryptionUtils.SALT_SIZE];
 				int pbkdf2Rounds = din.readInt();
 				din.read(saltBytes, 0, EncryptionUtils.SALT_SIZE);
 
+				//Generate Key bases on the users password
 				Key key = KeyGenerator.generateKey(passwordHash, saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
 
+				//Create the DecryptionStream
 				inDecrypted = new ObjectInputStream(EncryptionUtils.getDecryptionStream(din, key));
 
+				//Read the UserFile from the DecryptionStream
 				UserFile userFile = (UserFile) inDecrypted.readObject();
-				// TODO: decrypt file
 
-				//userFileObject = new ObjectInputStream(in);
-				//UserFile userFile = (UserFile) userFileObject.readObject();
-
+				//Validate the password
 				if (userFile.checkPasswordHash(passwordHash)) {
 					return userFile;
 				}
@@ -93,8 +97,10 @@ public final class UserManager {
 	/**
 	 * Encrypts the user file and saves it in the user directory
 	 *
-	 * @param userFile the user file based on the user name
-	 * @return true if succeeded, false otherwise
+	 * @param userFile
+	 * 			the user file based on the user name
+	 * @return
+	 * 			true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
 		FileOutputStream fos = null;
@@ -107,17 +113,23 @@ public final class UserManager {
 				fos = new FileOutputStream(userFileLocation);
 				dout = new DataOutputStream(fos);
 
+				//Get salt and amount of rounds
 				byte[] saltBytes = KeyGenerator.getSalt(EncryptionUtils.SALT_SIZE);
 				int pbkdf2Rounds = KeyGenerator.getRounds();
 
+				//Generate a Key bases on the user's password
 				Key key = KeyGenerator.generateKey(userFile.getPassword(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
 
+				//Write the salt and amount of rounds to the beginning of the file
 				dout.writeInt(pbkdf2Rounds);
 				dout.write(saltBytes, 0, EncryptionUtils.SALT_SIZE);
 
+				//Create an encryptionstream
 				outEncrypted = EncryptionUtils.getEncryptionStream(dout, key);
 				ObjectOutputStream objectOut = new ObjectOutputStream(outEncrypted);
 				objectOut.writeObject(userFile);
+
+				//Flush all streams
 				outEncrypted.flush();
 				dout.flush();
 				fos.flush();
@@ -141,8 +153,10 @@ public final class UserManager {
 	/**
 	 * Checks if user name exists
 	 *
-	 * @param username the given user name
-	 * @return username exists or not
+	 * @param username
+	 * 			the given user name
+	 * @return
+	 * 			username exists or not
 	 */
 	public static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
