@@ -161,14 +161,15 @@ public class Client implements Runnable {
 	 *             if failed to write to outputstream
 	 */
 	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
-
 		// Reads the data send by the client
 		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		JsonObject returnJobj = new JsonObject();
 
+		// Check if the username and password are valid
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
+			// Return unsuccessful and error when the user already exists
 			if (UserManager.checkIfUserExists(username)) {
 				returnJobj.addProperty(Responses.SUCCESSFUL, false);
 				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
