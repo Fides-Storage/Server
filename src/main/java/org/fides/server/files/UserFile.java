@@ -47,6 +47,15 @@ public class UserFile implements Serializable {
 	}
 
 	/**
+	 * Get the passwordhash
+	 * @return
+	 * 		the passwordhash
+	 */
+	public String getPassword() {
+		return passwordHash;
+	}
+
+	/**
 	 * Checks if given passwordHash matches passwordHash in file
 	 * 
 	 * @param testPasswordHash
