@@ -106,6 +106,9 @@ public class Client implements Runnable {
 				case Actions.UPLOADFILE:
 					clientFileConnector.uploadFile(in, out);
 					break;
+				case Actions.REMOVEFILE:
+					clientFileConnector.removeFile(requestObject, out);
+					break;
 				default:
 					JsonObject returnJobj = new JsonObject();
 					returnJobj.addProperty(Responses.SUCCESSFUL, false);
@@ -114,7 +117,6 @@ public class Client implements Runnable {
 					out.close();
 					break;
 				}
-
 				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 				action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 			}
