@@ -35,8 +35,6 @@ public class Client implements Runnable {
 	 */
 	private static Logger log = LogManager.getLogger(Client.class);
 
-	private UserFile userFile;
-
 	private Socket server;
 
 	/**
@@ -53,6 +51,7 @@ public class Client implements Runnable {
 	 * Runnable for client connection
 	 */
 	public void run() {
+		UserFile userFile = null;
 		DataInputStream in = null;
 		DataOutputStream out = null;
 		JsonObject requestObject;
@@ -69,10 +68,10 @@ public class Client implements Runnable {
 
 				switch (action) {
 				case Actions.CREATEUSER:
-					createUser(requestObject, out);
+					UserManager.createUser(requestObject, out);
 					break;
 				case Actions.LOGIN:
-					authenticateUser(requestObject, out);
+					userFile = UserManager.authenticateUser(requestObject, out);
 					break;
 				default:
 					// TODO: Use the copyErrorToStream function that's currently in ClientFileConnector
@@ -128,84 +127,5 @@ public class Client implements Runnable {
 			IOUtils.closeQuietly(server);
 			// TODO: Unlock and close userFile
 		}
-	}
-
-	/**
-	 * Creates a user based on received json object
-	 * 
-	 * @param userObject
-	 *            jsonObject containing username and password
-	 * @param out
-	 *            outputstream to the client
-	 * @throws IOException
-	 *             if failed to write to outputstream
-	 */
-	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
-
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
-		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
-
-		JsonObject returnJobj = new JsonObject();
-
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			if (UserManager.checkIfUserExists(username)) {
-				returnJobj.addProperty(Responses.SUCCESSFUL, false);
-				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
-
-			} else {
-				UserFile uf = new UserFile(username, passwordHash);
-				if (UserManager.saveUserFile(uf)) {
-					returnJobj.addProperty(Responses.SUCCESSFUL, true);
-				} else {
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.CANNOTSAVEUSERFILE);
-				}
-			}
-		} else {
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, Errors.USERNAMEORPASSWORDEMPTY);
-		}
-
-		out.writeUTF(new Gson().toJson(returnJobj));
-
-	}
-
-	/**
-	 * Authenticate user based on jsonobject with username and password
-	 * 
-	 * @param userObject
-	 *            json object with at least username and password
-	 * @param out
-	 *            output stream to client to write error message
-	 * @return if user is authenticated or not
-	 */
-	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
-		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
-
-		String errorMessage = null;
-
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			userFile = UserManager.unlockUserFile(username, passwordHash);
-			if (userFile == null) {
-				errorMessage = Errors.USERNAMEORPASSWORDINCORRECT;
-			}
-		} else {
-			errorMessage = Errors.USERNAMEORPASSWORDEMPTY;
-		}
-
-		if (StringUtils.isNotBlank(errorMessage)) {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, errorMessage);
-			out.writeUTF(new Gson().toJson(returnJobj));
-			return false;
-		} else {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			out.writeUTF(new Gson().toJson(returnJobj));
-			return true;
-		}
-
 	}
 }

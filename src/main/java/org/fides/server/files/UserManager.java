@@ -1,5 +1,6 @@
 package org.fides.server.files;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,9 +9,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fides.components.Actions;
+import org.fides.components.Responses;
+import org.fides.server.tools.Errors;
+import org.fides.server.tools.JsonObjectHandler;
 import org.fides.server.tools.PropertiesManager;
 
 /**
@@ -106,6 +114,85 @@ public final class UserManager {
 
 		// Check if username is in the folder
 		return userFile.exists() && userFile.getName().equals(username) && userFile.isFile();
+	}
+
+
+
+	/**
+	 * Creates a user based on received json object
+	 *
+	 * @param userObject
+	 *            jsonObject containing username and password
+	 * @param out
+	 *            outputstream to the client
+	 * @throws IOException
+	 *             if failed to write to outputstream
+	 */
+	public static void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
+		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
+
+		JsonObject returnJobj = new JsonObject();
+
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
+			if (UserManager.checkIfUserExists(username)) {
+				returnJobj.addProperty(Responses.SUCCESSFUL, false);
+				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
+
+			} else {
+				UserFile uf = new UserFile(username, passwordHash);
+				if (UserManager.saveUserFile(uf)) {
+					returnJobj.addProperty(Responses.SUCCESSFUL, true);
+				} else {
+					returnJobj.addProperty(Responses.SUCCESSFUL, false);
+					returnJobj.addProperty(Responses.ERROR, Errors.CANNOTSAVEUSERFILE);
+				}
+			}
+		} else {
+			returnJobj.addProperty(Responses.SUCCESSFUL, false);
+			returnJobj.addProperty(Responses.ERROR, Errors.USERNAMEORPASSWORDEMPTY);
+		}
+
+		out.writeUTF(new Gson().toJson(returnJobj));
+
+	}
+
+	/**
+	 * Authenticate user based on jsonobject with username and password
+	 *
+	 * @param userObject
+	 *            json object with at least username and password
+	 * @param out
+	 *            output stream to client to write error message
+	 * @return if user is authenticated or not
+	 */
+	public static UserFile authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
+		UserFile userFile = null;
+		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
+
+		String errorMessage = null;
+
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
+			userFile = UserManager.unlockUserFile(username, passwordHash);
+			if (userFile == null) {
+				errorMessage = Errors.USERNAMEORPASSWORDINCORRECT;
+			}
+		} else {
+			errorMessage = Errors.USERNAMEORPASSWORDEMPTY;
+		}
+
+		if (StringUtils.isNotBlank(errorMessage)) {
+			JsonObject returnJobj = new JsonObject();
+			returnJobj.addProperty(Responses.SUCCESSFUL, false);
+			returnJobj.addProperty(Responses.ERROR, errorMessage);
+			out.writeUTF(new Gson().toJson(returnJobj));
+		} else {
+			JsonObject returnJobj = new JsonObject();
+			returnJobj.addProperty(Responses.SUCCESSFUL, true);
+			out.writeUTF(new Gson().toJson(returnJobj));
+		}
+		return userFile;
 	}
 
 }
