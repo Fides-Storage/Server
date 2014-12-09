@@ -53,13 +53,16 @@ public final class FileManager {
 	 * @return The file's location.
 	 */
 	public static String createFile(boolean temporary) {
+		// Generate a random name for the createfile
 		PropertiesManager properties = PropertiesManager.getInstance();
 		String location = UUID.randomUUID().toString();
+		// If the user wants a temporary file, make the name end with .tmp
 		if (temporary) {
 			location += ".tmp";
 		}
 		File newFile = new File(properties.getDataDir(), location);
 
+		// Check if the filename is unique, there's a maximum number of attempts to prevent an overflow
 		try {
 			int uniqueAttempts = 0;
 			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
@@ -73,6 +76,7 @@ public final class FileManager {
 			log.error(e);
 			location = null;
 		}
+		// Return the location of the generated file
 		return location;
 	}
 
@@ -130,6 +134,7 @@ public final class FileManager {
 	 * @return Wether the copy was successful.
 	 */
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
+		// Open an inputstream to the file and a virtualoutputstream of the output
 		try (InputStream inStream = new FileInputStream(file);
 			VirtualOutputStream virtualOutStream = new VirtualOutputStream(outputStream)) {
 			// Tell the cliënt he can start downloading
