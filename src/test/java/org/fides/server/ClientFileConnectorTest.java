@@ -166,6 +166,54 @@ public class ClientFileConnectorTest {
 	}
 
 	/**
+	 * Tests removing an existing file
+	 */
+	@Test
+	public void testFileRemove() {
+		try {
+			// Create an existing file for the user to update.
+			String existingFileLocation = "RemoveTestFile";
+			File existingFile = new File(testDataDir, existingFileLocation);
+			Mockito.when(mockedUserFile.checkOwned(existingFileLocation)).thenReturn(true);
+			assertFalse(existingFile.exists());
+
+			// Fill the existing file with some default content
+			OutputStream existingFileOut = new FileOutputStream(existingFile);
+			existingFileOut.write(FILECONTENT);
+			existingFileOut.flush();
+			existingFileOut.close();
+
+			//create stream for the response
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			out = new DataOutputStream(outputStream);
+
+			// Remove the file
+			JsonObject updateRequest = new JsonObject();
+			updateRequest.addProperty(Actions.Properties.LOCATION, existingFileLocation);
+			assertTrue(connector.removeFile(updateRequest, out));
+
+			// Assert if the file was removed
+			assertFalse(existingFile.exists());
+			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
+
+			// Assert if the response contains successful:true
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
+
+			// Tests if the removal of a non existing file won't return a true
+			JsonObject removeIncorrectRequest = new JsonObject();
+			removeIncorrectRequest.addProperty(Actions.Properties.LOCATION, "incorrectLocaion");
+			assertFalse(connector.removeFile(removeIncorrectRequest, out));
+
+			// Assert if the response contains successful:false
+			response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
+			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
+
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+
+	/**
 	 * Tests if the file update fails correctly if no location is given.
 	 */
 	@Test
