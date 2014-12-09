@@ -7,10 +7,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.security.Key;
+import java.security.Security;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fides.encryption.EncryptionUtils;
+import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.PropertiesManager;
 
 /**
@@ -69,17 +74,27 @@ public final class UserManager {
 	 * @return true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
-		ObjectOutputStream out = null;
+		FileOutputStream fos = null;
 		try {
 			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
 
 			if (userFileLocation.getName().equals(userFile.getUsername())) {
-				FileOutputStream fos = new FileOutputStream(userFileLocation);
+				fos = new FileOutputStream(userFileLocation);
+				OutputStream outEncrypted = null;
 
-				// TODO: encrypt file
+				byte[] saltBytes = KeyGenerator.getSalt(EncryptionUtils.SALT_SIZE);
+				int pbkdf2Rounds = KeyGenerator.getRounds();
 
-				out = new ObjectOutputStream(fos);
-				out.writeObject(userFile);
+				Key key = KeyGenerator.generateKey(userFile.getUsername(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
+
+				fos.write(pbkdf2Rounds);
+				fos.write(saltBytes, 0, EncryptionUtils.SALT_SIZE);
+
+				outEncrypted = EncryptionUtils.getEncryptionStream(fos, key);
+				ObjectOutputStream objectOut = new ObjectOutputStream(outEncrypted);
+				objectOut.writeObject(userFile);
+				outEncrypted.flush();
+				fos.flush();
 
 				return true;
 			}
@@ -89,7 +104,7 @@ public final class UserManager {
 		} catch (IOException e) {
 			log.error("IOException has occured", e);
 		} finally {
-			IOUtils.closeQuietly(out);
+			IOUtils.closeQuietly(fos);
 		}
 
 		return false;
