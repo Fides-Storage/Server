@@ -18,7 +18,7 @@ public class UserFile implements Serializable {
 	 */
 	private static final long serialVersionUID = 4099951094350728444L;
 
-	private String username;
+	private String usernameHash;
 
 	private String passwordHash;
 
@@ -31,19 +31,19 @@ public class UserFile implements Serializable {
 	/**
 	 * Constructor for the user file
 	 * 
-	 * @param username
+	 * @param usernameHash
 	 *            the given user name
 	 * @param passwordHash
 	 *            the given password hash
 	 */
-	public UserFile(String username, String passwordHash) {
-		this.username = username;
+	public UserFile(String usernameHash, String passwordHash) {
+		this.usernameHash = usernameHash;
 		this.passwordHash = passwordHash;
 		this.keyFile = FileManager.createFile();
 	}
 
 	public String getUsername() {
-		return username;
+		return usernameHash;
 	}
 
 	/**
