@@ -48,8 +48,8 @@ public class UserFile implements Serializable {
 
 	/**
 	 * Get the passwordhash
-	 * @return
-	 * 		the passwordhash
+	 * 
+	 * @return the passwordhash
 	 */
 	public String getPassword() {
 		return passwordHash;
