@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -15,6 +17,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Responses;
+import org.fides.components.virtualstream.VirtualInputStream;
+import org.fides.components.virtualstream.VirtualOutputStream;
 import org.fides.server.tools.PropertiesManager;
 
 import com.google.gson.Gson;
@@ -67,19 +71,34 @@ public final class FileManager {
 	 * @return Wether the copy was successful or not
 	 */
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
+		// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
+		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile());
+		try (InputStream virtualIn = new VirtualInputStream(inputStream);) {
+			// Tell the cliënt he can start sending the file.
+			JsonObject successfulObj = new JsonObject();
+			successfulObj.addProperty(Responses.SUCCESSFUL, true);
+			outputStream.writeUTF(new Gson().toJson(successfulObj));
 
-		try {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			outputStream.writeUTF(new Gson().toJson(returnJobj));
-			OutputStream fileOutputStream = new FileOutputStream(file);
-			IOUtils.copy(inputStream, fileOutputStream);
+			// Put the stream into a temporary file
+			OutputStream fileOutputStream = new FileOutputStream(tempFile);
+			IOUtils.copy(virtualIn, fileOutputStream);
 			fileOutputStream.flush();
 			fileOutputStream.close();
-			// TODO: Make sure the upload was successful
+			virtualIn.close();
+
+			// Tell the cliënt the upload was successful
+			outputStream.writeUTF(new Gson().toJson(successfulObj));
+
+			// Copy the temporary file into the official file
+			Files.copy(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+			// Tell the cliënt the upload was successful
+			outputStream.writeUTF(new Gson().toJson(successfulObj));
 			return true;
 		} catch (IOException e) {
 			log.error(e.getMessage());
+		} finally {
+			tempFile.delete();
 		}
 		return false;
 	}
@@ -94,14 +113,18 @@ public final class FileManager {
 	 * @return Wether the copy was successful.
 	 */
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
-		try (InputStream inStream = new FileInputStream(file)) {
+		try (InputStream inStream = new FileInputStream(file);
+			VirtualOutputStream virtualOutStream = new VirtualOutputStream(outputStream)) {
+			// Tell the cliënt he can start downloading
 			JsonObject returnJobj = new JsonObject();
 			returnJobj.addProperty(Responses.SUCCESSFUL, true);
 			outputStream.writeUTF(new Gson().toJson(returnJobj));
 
-			IOUtils.copy(inStream, outputStream);
-			outputStream.flush();
-			outputStream.close();
+			// Copy the content of the file to the stream
+			IOUtils.copy(inStream, virtualOutStream);
+			virtualOutStream.flush();
+			virtualOutStream.close();
+
 			return true;
 		} catch (IOException e) {
 			log.error(e.getMessage());

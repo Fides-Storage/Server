@@ -89,32 +89,35 @@ public class Client implements Runnable {
 			requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 
 			String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
+			while (action != Actions.DISCONNECT) {
+				switch (action) {
+				case Actions.GETKEYFILE:
+					clientFileConnector.downloadKeyFile(out);
+					break;
+				case Actions.GETFILE:
+					clientFileConnector.downloadFile(requestObject, out);
+					break;
+				case Actions.UPDATEKEYFILE:
+					clientFileConnector.updateKeyFile(in, out);
+					break;
+				case Actions.UPDATEFILE:
+					clientFileConnector.updateFile(in, requestObject, out);
+					break;
+				case Actions.UPLOADFILE:
+					clientFileConnector.uploadFile(in, out);
+					break;
+				default:
+					JsonObject returnJobj = new JsonObject();
+					returnJobj.addProperty(Responses.SUCCESSFUL, false);
+					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
+					out.writeUTF(new Gson().toJson(returnJobj));
+					out.close();
+					break;
+				}
 
-			switch (action) {
-			case Actions.GETKEYFILE:
-				clientFileConnector.downloadKeyFile(out);
-				break;
-			case Actions.GETFILE:
-				clientFileConnector.downloadFile(requestObject, out);
-				break;
-			case Actions.UPDATEKEYFILE:
-				clientFileConnector.updateKeyFile(in, out);
-				break;
-			case Actions.UPDATEFILE:
-				clientFileConnector.updateFile(in, requestObject, out);
-				break;
-			case Actions.UPLOADFILE:
-				clientFileConnector.uploadFile(in, out);
-				break;
-			default:
-				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty(Responses.SUCCESSFUL, false);
-				returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
-				out.writeUTF(new Gson().toJson(returnJobj));
-				out.close();
-				break;
+				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
+				action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 			}
-
 		} catch (EOFException e) {
 			log.debug("Closed by client don't throw an error message");
 		} catch (IOException e) {

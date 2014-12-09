@@ -5,9 +5,8 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
 import org.fides.components.Responses;
+import org.fides.components.virtualstream.VirtualInputStream;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
 import org.fides.server.tools.Errors;
@@ -133,33 +133,42 @@ public class ClientFileConnector {
 	 * @return Wether the upload was successful or not
 	 */
 	public boolean uploadFile(DataInputStream inputStream, DataOutputStream outputStream) {
-		try {
-			String location = FileManager.createFile();
-			File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-			// Check if the file was created correctly (should always be true)
-			if (file.exists()) {
+		String location = FileManager.createFile();
+		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
+		// Check if the file was created correctly (should always be true)
+		if (file.exists()) {
+			try {
 				// Return the location on the server where the new file will be written
 				JsonObject returnJobj = new JsonObject();
 				returnJobj.addProperty(Responses.SUCCESSFUL, true);
 				returnJobj.addProperty(Actions.Properties.LOCATION, location);
 				outputStream.writeUTF(new Gson().toJson(returnJobj));
 
+				// Put the inputstream received from the user into a temporary file
+				InputStream virtualInputStream = new VirtualInputStream(inputStream);
 				OutputStream fileOutputStream = new FileOutputStream(file);
-				IOUtils.copy(inputStream, fileOutputStream);
+				IOUtils.copy(virtualInputStream, fileOutputStream);
 				fileOutputStream.flush();
 				fileOutputStream.close();
+				virtualInputStream.close();
 
-				// TODO: Make sure the upload was successful
+				// Tell the user his upload was successful
+				returnJobj = new JsonObject();
+				returnJobj.addProperty(Responses.SUCCESSFUL, true);
+				outputStream.writeUTF(new Gson().toJson(returnJobj));
+
+				// Add the file to the user
 				userFile.addFile(location);
 				return true;
-			} else {
-				log.error("A file generated with FileManager.createFile() was not generated correctly.");
+			} catch (IOException e) {
+				log.error(e.getMessage());
 				copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
 			}
-		} catch (IOException e) {
-			log.error(e.getMessage());
+		} else {
+			log.error("A file generated with FileManager.createFile() was not generated correctly.");
 			copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
 		}
+		file.delete();
 		return false;
 	}
 
@@ -208,33 +217,13 @@ public class ClientFileConnector {
 	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {
 		// Gets the keyfile from the user.
 		File keyFile = new File(PropertiesManager.getInstance().getDataDir(), userFile.getKeyFileLocation());
-		// If the keyfile exists, return a 'successful' and copy the inputstream to the keyfile.
+		// If the keyfile exists, copy the stream to the keyfile (via a temporary file)
 		if (keyFile.exists()) {
-			// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
-			String tempFileLocation = FileManager.createFile();
-			File tempFile = new File(PropertiesManager.getInstance().getDataDir(), tempFileLocation);
-			// Try to fill the temporary keyfile with the inputstream.
-			if (FileManager.copyStreamToFile(inputStream, tempFile, outputStream)) {
-				try {
-					// Try to copy the temporary file to the real keyfile.
-					// TODO: Make sure the upload was successful
-					Files.copy(tempFile.toPath(), keyFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					return true;
-				} catch (IOException e) {
-					log.error(e.getMessage());
-					copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
-				} finally {
-					FileManager.removeFile(tempFileLocation);
-				}
-			} else {
-				FileManager.removeFile(tempFileLocation);
-				copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
-			}
+			return FileManager.copyStreamToFile(inputStream, keyFile, outputStream);
 		} else {
 			log.error("User's keyfile doesn't exist");
 			copyErrorToStream("User keyfile could not be found (Please contact a server administrator)", outputStream);
 		}
 		return false;
 	}
-
 }
