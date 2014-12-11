@@ -37,6 +37,9 @@ public final class UserManager {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 	}
 
+	/** Size of the salt used in generating the master key, it should NEVER change */
+	public static final int SALT_SIZE = 16; // 128 bit
+
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
 	 *
@@ -56,13 +59,13 @@ public final class UserManager {
 		if (checkIfUserExists(username)) {
 			ObjectInputStream userFileObject = null;
 			try {
-				in = new FileInputStream(file.getPath());
+				in = new FileInputStream(file);
 				din = new DataInputStream(in);
 
 				// Get salt and amount of rounds from the beginning of the file
-				byte[] saltBytes = new byte[EncryptionUtils.SALT_SIZE];
+				byte[] saltBytes = new byte[SALT_SIZE];
 				int pbkdf2Rounds = din.readInt();
-				din.read(saltBytes, 0, EncryptionUtils.SALT_SIZE);
+				din.read(saltBytes, 0, SALT_SIZE);
 
 				// Generate Key bases on the users password
 				Key key = KeyGenerator.generateKey(passwordHash, saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
@@ -113,7 +116,7 @@ public final class UserManager {
 				dout = new DataOutputStream(fos);
 
 				// Get salt and amount of rounds
-				byte[] saltBytes = KeyGenerator.getSalt(EncryptionUtils.SALT_SIZE);
+				byte[] saltBytes = KeyGenerator.getSalt(SALT_SIZE);
 				int pbkdf2Rounds = KeyGenerator.getRounds();
 
 				// Generate a Key bases on the user's password
@@ -121,7 +124,7 @@ public final class UserManager {
 
 				// Write the salt and amount of rounds to the beginning of the file
 				dout.writeInt(pbkdf2Rounds);
-				dout.write(saltBytes, 0, EncryptionUtils.SALT_SIZE);
+				dout.write(saltBytes, 0, SALT_SIZE);
 
 				// Create an encryptionstream
 				outEncrypted = EncryptionUtils.getEncryptionStream(dout, key);
