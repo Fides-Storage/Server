@@ -63,7 +63,7 @@ public class UserManagerTest {
 	/**
 	 * Sets up the test class by creating the test User Directory and mocking getUserDir function.
 	 */
-//	@BeforeClass
+	@BeforeClass
 	public static void setUp() {
 		testUserDir = new File(PropertiesManager.getInstance().getUserDir(), "Test");
 		if (!testUserDir.exists()) {
@@ -79,16 +79,11 @@ public class UserManagerTest {
 	 * 
 	 * @throws IOException
 	 */
-//	@Before
+	@Before
 	public void setUpMock() throws IOException {
 		PowerMockito.mockStatic(PropertiesManager.class);
 		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
-	}
 
-	/**
-	 * Mocks the FileManager
-	 */
-	public void beforeUserFileTests() {
 		PowerMockito.mockStatic(FileManager.class);
 		String randomLocation = UUID.randomUUID().toString();
 		Mockito.when(FileManager.createFile()).thenReturn(randomLocation);
@@ -97,9 +92,8 @@ public class UserManagerTest {
 	/**
 	 * Tests whether the userfile is created at the given path
 	 */
-	//@Test
+	@Test
 	public void testSaveUserFile() {
-		beforeUserFileTests();
 		String username = "User1";
 		UserFile uf = new UserFile(username, "passwordHash");
 		uf.addFile("testFile");
@@ -114,9 +108,8 @@ public class UserManagerTest {
 	/**
 	 * Tests whether the file can correctly be opened
 	 */
-	//@Test
+	@Test
 	public void testUnlockUserFile() {
-		beforeUserFileTests();
 		String username = "User2";
 		String filename = "testFile";
 		String password = "passwordHash";
@@ -135,9 +128,8 @@ public class UserManagerTest {
 	/**
 	 * Tests whether the file cannot be opened with invalid password
 	 */
-	//@Test
+	@Test
 	public void testUnlockUserFileWithInvalidPassword() {
-		beforeUserFileTests();
 		String username = "User3";
 		String filename = "testFile";
 		String password = "passwordHash";
@@ -152,27 +144,16 @@ public class UserManagerTest {
 
 	}
 
-
-	private void beforeCreateAndAuthenticate() {
-		//Mocking the usermanager
-		PowerMockito.mockStatic(UserManager.class);
-		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
-		Mockito.when(UserManager.checkIfUserExists("authenticatedUsername")).thenReturn(true);
-		Mockito.when(UserManager.unlockUserFile("authenticatedUsername", "Thisisapassword")).thenReturn(new UserFile("authenticatedUsername", "Thisisapassword"));
-	}
-
 	/**
 	 * Tests whether a new user can be created that doesn't exists
 	 */
 	@Test
 	public void testCreateUser() {
-		beforeCreateAndAuthenticate();
-		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
-		user.addProperty(Actions.Properties.USERNAME, "createUsername");
-		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
+		user.addProperty(Actions.Properties.USERNAME, "createUser1");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "passwordHash");
 
 		try {
 			ByteArrayOutputStream mockedRegisterStream = new ByteArrayOutputStream();
@@ -197,13 +178,22 @@ public class UserManagerTest {
 	 */
 	@Test
 	public void testAuthenticateUser() {
-		beforeCreateAndAuthenticate();
-		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
+
+		String username = "authenticatedUsername";
+		String password = "passwordHash";
+		UserFile uf = new UserFile(username, password);
+		uf.addFile("testFile");
+
+		try {
+			assertTrue(Files.exists(Paths.get(testUserDir.getCanonicalPath(), username)));
+		} catch (IOException e) {
+			fail("IOException has occured: " + e.getMessage());
+		}
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsername");
-		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
+		user.addProperty(Actions.Properties.USERNAME, username);
+		user.addProperty(Actions.Properties.PASSWORD_HASH, password);
 
 		try {
 
@@ -229,8 +219,6 @@ public class UserManagerTest {
 	 */
 	@Test
 	public void testAuthenticateInvalidUser() {
-		beforeCreateAndAuthenticate();
-		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
@@ -261,12 +249,10 @@ public class UserManagerTest {
 	 */
 	@Test
 	public void testAuthenticateInvalidPassword() {
-		beforeCreateAndAuthenticate();
-		Mockito.when(UserManager.saveUserFile(Mockito.any(UserFile.class))).thenReturn(true);
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsername");
+		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsernameInvalidPassword");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "invalidPassword");
 
 		try {
@@ -292,8 +278,6 @@ public class UserManagerTest {
 	 */
 	@Test
 	public void testCreateStrangeUser() {
-		beforeCreateAndAuthenticate();
-
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
 		user.addProperty(Actions.Properties.USERNAME, "/../createUsername");

@@ -16,6 +16,7 @@ import org.fides.components.Actions;
 import org.fides.components.Responses;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
+import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
 
@@ -74,11 +75,7 @@ public class Client implements Runnable {
 					userFile = UserManager.authenticateUser(requestObject, out);
 					break;
 				default:
-					// TODO: Use the copyErrorToStream function that's currently in ClientFileConnector
-					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
-					out.writeUTF(new Gson().toJson(returnJobj));
+					CommunicationUtil.returnError(out, Errors.UNKNOWNACTION);
 					break;
 				}
 			}
@@ -109,10 +106,7 @@ public class Client implements Runnable {
 				clientFileConnector.removeFile(requestObject, out);
 				break;
 			default:
-				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty(Responses.SUCCESSFUL, false);
-				returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
-				out.writeUTF(new Gson().toJson(returnJobj));
+				CommunicationUtil.returnError(out, Errors.UNKNOWNACTION);
 				out.close();
 				break;
 			}

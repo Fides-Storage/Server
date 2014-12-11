@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +19,7 @@ import org.fides.components.Actions;
 import org.fides.components.Responses;
 import org.fides.server.files.FileManager;
 import org.fides.server.files.UserFile;
+import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
 import org.fides.server.tools.PropertiesManager;
@@ -42,7 +45,7 @@ public class ClientFileConnector {
 	 * Constructor for ClientFileConnector
 	 *
 	 * @param userFile
-	 *            The logged in user's userFile
+	 * 			The logged in user's userFile
 	 */
 	public ClientFileConnector(UserFile userFile) {
 		this.userFile = userFile;
@@ -52,7 +55,7 @@ public class ClientFileConnector {
 	 * Downloads the keyfile of the currently logged in user.
 	 *
 	 * @param outputStream
-	 *            The stream which contains the keyfile.
+	 * 			The stream which contains the keyfile.
 	 * @return Wether the writing of the keyfile to the stream was successful
 	 */
 	public boolean downloadKeyFile(DataOutputStream outputStream) {
@@ -63,7 +66,7 @@ public class ClientFileConnector {
 			return FileManager.copyFileToStream(keyFile, outputStream);
 		} else {
 			log.error("User's keyfile doesn't exist");
-			copyErrorToStream("User keyfile could not be found (Please contact a server administrator)", outputStream);
+			CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 		}
 		IOUtils.closeQuietly(outputStream);
 
@@ -74,9 +77,9 @@ public class ClientFileConnector {
 	 * Downloads a file by writing it to the outputstream
 	 *
 	 * @param fileRequest
-	 *            The Json request which contains the file's location
+	 * 			The Json request which contains the file's location
 	 * @param outputStream
-	 *            The stream which the file needs to be written to
+	 * 			The stream which the file needs to be written to
 	 * @return Wether the download is successful
 	 */
 	public boolean downloadFile(JsonObject fileRequest, DataOutputStream outputStream) {
@@ -90,35 +93,16 @@ public class ClientFileConnector {
 				if (file.exists()) {
 					return FileManager.copyFileToStream(file, outputStream);
 				} else {
-					copyErrorToStream(Errors.FILENOTFOUND, outputStream);
+					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);
 				}
 			} else {
-				copyErrorToStream(Errors.FILEWITHOUTOWNERSHIP, outputStream);
+				CommunicationUtil.returnError(outputStream, Errors.FILEWITHOUTOWNERSHIP);
 			}
 		} else {
-			copyErrorToStream(Errors.NOFILELOCATION, outputStream);
+			CommunicationUtil.returnError(outputStream, Errors.NOFILELOCATION);
 		}
 		IOUtils.closeQuietly(outputStream);
 		return false;
-	}
-
-	/**
-	 * Copies an errormessage to the outputstream
-	 *
-	 * @param errorMessage
-	 *            The message to copy
-	 * @param outputStream
-	 *            The stream to copy the message to
-	 */
-	private void copyErrorToStream(String errorMessage, DataOutputStream outputStream) {
-		try {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, errorMessage);
-			outputStream.writeUTF(new Gson().toJson(returnJobj));
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		}
 	}
 
 	/**
@@ -126,9 +110,9 @@ public class ClientFileConnector {
 	 * stream and returns the file's server location to the client through the outputstream.
 	 *
 	 * @param inputStream
-	 *            The content of the file
+	 * 			The content of the file
 	 * @param outputStream
-	 *            The stream to write the response to
+	 * 			The stream to write the response to
 	 * @return Wether the upload was successful or not
 	 */
 	public boolean uploadFile(DataInputStream inputStream, DataOutputStream outputStream) {
@@ -138,10 +122,9 @@ public class ClientFileConnector {
 			// Check if the file was created correctly (should always be true)
 			if (file.exists()) {
 				// Return the location on the server where the new file will be written
-				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty(Responses.SUCCESSFUL, true);
-				returnJobj.addProperty(Actions.Properties.LOCATION, location);
-				outputStream.writeUTF(new Gson().toJson(returnJobj));
+				Map<String, Object> properties = new HashMap<>();
+				properties.put(Actions.Properties.LOCATION, location);
+				CommunicationUtil.returnSuccessfulWithProperties(outputStream, properties);
 
 				OutputStream fileOutputStream = new FileOutputStream(file);
 				IOUtils.copy(inputStream, fileOutputStream);
@@ -153,11 +136,11 @@ public class ClientFileConnector {
 				return true;
 			} else {
 				log.error("A file generated with FileManager.createFile() was not generated correctly.");
-				copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
+				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 			}
 		} catch (IOException e) {
 			log.error(e.getMessage());
-			copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
+			CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 		}
 		return false;
 	}
@@ -166,11 +149,11 @@ public class ClientFileConnector {
 	 * Update a file belonging to the user with the inputStream as its new contents
 	 *
 	 * @param inputStream
-	 *            The contents to fill the file with.
+	 * 			The contents to fill the file with.
 	 * @param updateRequest
-	 *            The request containing the location of the file that needs to be updated
+	 * 			The request containing the location of the file that needs to be updated
 	 * @param outputStream
-	 *            The stream to write responses to
+	 * 			The stream to write responses to
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
@@ -184,13 +167,13 @@ public class ClientFileConnector {
 				if (file.exists()) {
 					return FileManager.copyStreamToFile(inputStream, file, outputStream);
 				} else {
-					copyErrorToStream(Errors.FILENOTFOUND, outputStream);
+					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);
 				}
 			} else {
-				copyErrorToStream(Errors.FILEWITHOUTOWNERSHIP, outputStream);
+				CommunicationUtil.returnError(outputStream, Errors.FILEWITHOUTOWNERSHIP);
 			}
 		} else {
-			copyErrorToStream(Errors.NOFILELOCATION, outputStream);
+			CommunicationUtil.returnError(outputStream, Errors.NOFILELOCATION);
 		}
 		return false;
 	}
@@ -199,47 +182,40 @@ public class ClientFileConnector {
 	 * Remove a file belonging to the user
 	 *
 	 * @param removeRequest
-	 *            The request containing the location of the file that needs to be removed
+	 * 			The request containing the location of the file that needs to be removed
 	 * @param outputStream
-	 *            The stream to write responses to
+	 * 			The stream to write responses to
 	 * @return wether the remove was successful or not
 	 */
 	public boolean removeFile(JsonObject removeRequest, DataOutputStream outputStream) {
-		try {
-			String location = JsonObjectHandler.getProperty(removeRequest, Actions.Properties.LOCATION);
-			// Check if the user sent a location
-			if (!StringUtils.isBlank(location)) {
-				// Check if the user owns the file on that location
-				if (userFile.checkOwned(location)) {
-					File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-					// Check if the file exists
-					if (file.exists()) {
-						// Remove the file
-						boolean result = FileManager.removeFile(location);
+		String location = JsonObjectHandler.getProperty(removeRequest, Actions.Properties.LOCATION);
+		// Check if the user sent a location
+		if (!StringUtils.isBlank(location)) {
+			// Check if the user owns the file on that location
+			if (userFile.checkOwned(location)) {
+				File file = new File(PropertiesManager.getInstance().getDataDir(), location);
+				// Check if the file exists
+				if (file.exists()) {
+					// Remove the file
+					boolean result = FileManager.removeFile(location);
 
-						if (result) {
-							// Remove file in UserFile
-							userFile.removeFile(location);
-						}
-
-						// Return the location on the server where the new file will be written
-						JsonObject returnJobj = new JsonObject();
-						returnJobj.addProperty(Responses.SUCCESSFUL, result);
-						outputStream.writeUTF(new Gson().toJson(returnJobj));
-
-						return result;
+					if (result) {
+						// Remove file in UserFile
+						userFile.removeFile(location);
+						CommunicationUtil.returnSuccessful(outputStream);
 					} else {
-						copyErrorToStream(Errors.FILENOTFOUND, outputStream);
+						CommunicationUtil.returnError(outputStream, Errors.FILENOTREMOVED);
 					}
+
+					return result;
 				} else {
-					copyErrorToStream(Errors.FILEWITHOUTOWNERSHIP, outputStream);
+					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);
 				}
 			} else {
-				copyErrorToStream(Errors.NOFILELOCATION, outputStream);
+				CommunicationUtil.returnError(outputStream, Errors.FILEWITHOUTOWNERSHIP);
 			}
-		} catch (IOException e) {
-			log.error(e.getMessage());
-			copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
+		} else {
+			CommunicationUtil.returnError(outputStream, Errors.NOFILELOCATION);
 		}
 		return false;
 	}
@@ -248,9 +224,9 @@ public class ClientFileConnector {
 	 * Updates the keyfile with the inputStream as its content.
 	 *
 	 * @param inputStream
-	 *            The stream to fill the user's keyfile with
+	 * 			The stream to fill the user's keyfile with
 	 * @param outputStream
-	 *            The stream used to return feedback to the client
+	 * 			The stream used to return feedback to the client
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {
@@ -270,17 +246,17 @@ public class ClientFileConnector {
 					return true;
 				} catch (IOException e) {
 					log.error(e.getMessage());
-					copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
+					CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 				} finally {
 					FileManager.removeFile(tempFileLocation);
 				}
 			} else {
 				FileManager.removeFile(tempFileLocation);
-				copyErrorToStream("Upload failed. Please contact your server's administrator.", outputStream);
+				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 			}
 		} else {
 			log.error("User's keyfile doesn't exist");
-			copyErrorToStream("User keyfile could not be found (Please contact a server administrator)", outputStream);
+			CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 		}
 		return false;
 	}

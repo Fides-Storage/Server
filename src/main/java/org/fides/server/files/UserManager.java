@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
 import org.fides.components.Responses;
+import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
 import org.fides.server.tools.PropertiesManager;
@@ -136,24 +137,20 @@ public final class UserManager {
 
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			if (UserManager.checkIfUserExists(username)) {
-				returnJobj.addProperty(Responses.SUCCESSFUL, false);
-				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
+				CommunicationUtil.returnError(out, Errors.USNERNAMEEXISTS);
 
 			} else {
 				UserFile uf = new UserFile(username, passwordHash);
 				if (UserManager.saveUserFile(uf)) {
-					returnJobj.addProperty(Responses.SUCCESSFUL, true);
+					CommunicationUtil.returnSuccessful(out);
 				} else {
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.CANNOTSAVEUSERFILE);
+					CommunicationUtil.returnError(out, Errors.CANNOTSAVEUSERFILE);
 				}
 			}
 		} else {
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, Errors.USERNAMEORPASSWORDEMPTY);
+			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
 		}
 
-		out.writeUTF(new Gson().toJson(returnJobj));
 
 	}
 
@@ -171,26 +168,15 @@ public final class UserManager {
 		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
-		String errorMessage = null;
-
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
 			userFile = UserManager.unlockUserFile(username, passwordHash);
-			if (userFile == null) {
-				errorMessage = Errors.USERNAMEORPASSWORDINCORRECT;
+			if (userFile != null) {
+				CommunicationUtil.returnSuccessful(out);
+			} else {
+				CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
 			}
 		} else {
-			errorMessage = Errors.USERNAMEORPASSWORDEMPTY;
-		}
-
-		if (StringUtils.isNotBlank(errorMessage)) {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, errorMessage);
-			out.writeUTF(new Gson().toJson(returnJobj));
-		} else {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			out.writeUTF(new Gson().toJson(returnJobj));
+			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
 		}
 		return userFile;
 	}
