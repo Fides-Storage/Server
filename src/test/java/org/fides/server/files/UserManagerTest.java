@@ -23,7 +23,9 @@ import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.fides.components.Actions;
 import org.fides.components.Responses;
+import org.fides.server.Client;
 import org.fides.server.tools.PropertiesManager;
+import org.fides.tools.HashUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -31,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -43,6 +46,7 @@ import javax.net.ssl.SSLSocket;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ PropertiesManager.class, FileManager.class, UserManager.class })
+@PowerMockIgnore("javax.crypto.*")
 public class UserManagerTest {
 
 	/**
@@ -121,7 +125,7 @@ public class UserManagerTest {
 
 		assertNotNull(loadedFile);
 
-		assertEquals(username, loadedFile.getUsername());
+		assertEquals(username, loadedFile.getUsernameHash());
 		assertTrue(loadedFile.checkOwned(filename));
 	}
 
@@ -149,11 +153,10 @@ public class UserManagerTest {
 	 */
 	@Test
 	public void testCreateUser() {
-
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
-		user.addProperty(Actions.Properties.USERNAME, "createUser1");
-		user.addProperty(Actions.Properties.PASSWORD_HASH, "passwordHash");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "createUsername");
+		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
 			ByteArrayOutputStream mockedRegisterStream = new ByteArrayOutputStream();
@@ -178,25 +181,23 @@ public class UserManagerTest {
 	 */
 	@Test
 	public void testAuthenticateUser() {
-
 		String username = "authenticatedUsername";
 		String password = "passwordHash";
-		UserFile uf = new UserFile(username, password);
+		UserFile uf = new UserFile(HashUtils.hash(username), password);
 		uf.addFile("testFile");
 
 		try {
-			assertTrue(Files.exists(Paths.get(testUserDir.getCanonicalPath(), username)));
+			assertTrue(Files.exists(Paths.get(testUserDir.getCanonicalPath(), HashUtils.hash(username))));
 		} catch (IOException e) {
 			fail("IOException has occured: " + e.getMessage());
 		}
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, username);
+		user.addProperty(Actions.Properties.USERNAME_HASH, username);
 		user.addProperty(Actions.Properties.PASSWORD_HASH, password);
 
 		try {
-
 			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
 			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
 			assertNotNull(UserManager.authenticateUser(user, mockedDataLoginStream));
@@ -222,11 +223,10 @@ public class UserManagerTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "invalidUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "invalidUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
-
 			ByteArrayOutputStream mockedLoginStream = new ByteArrayOutputStream();
 			DataOutputStream mockedDataLoginStream = new DataOutputStream(mockedLoginStream);
 			assertNull(UserManager.authenticateUser(user, mockedDataLoginStream));
@@ -252,7 +252,7 @@ public class UserManagerTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsernameInvalidPassword");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "authenticatedUsernameInvalidPassword");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "invalidPassword");
 
 		try {
@@ -280,7 +280,7 @@ public class UserManagerTest {
 	public void testCreateStrangeUser() {
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
-		user.addProperty(Actions.Properties.USERNAME, "/../createUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "/../createUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
@@ -293,7 +293,7 @@ public class UserManagerTest {
 
 			JsonObject jobj = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(jobj.has(Responses.SUCCESSFUL));
-			assertFalse(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
+			assertTrue(jobj.get(Responses.SUCCESSFUL).getAsBoolean());
 		} catch (IOException e) {
 			e.printStackTrace();
 			fail("IOException: " + e);

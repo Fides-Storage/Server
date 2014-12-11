@@ -222,7 +222,7 @@ public class ClientFileConnector {
 
 	/**
 	 * Updates the keyfile with the inputStream as its content.
-	 *
+	 * 
 	 * @param inputStream
 	 * 			The stream to fill the user's keyfile with
 	 * @param outputStream

@@ -19,6 +19,7 @@ import org.fides.server.files.UserManager;
 import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
+import org.fides.tools.HashUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

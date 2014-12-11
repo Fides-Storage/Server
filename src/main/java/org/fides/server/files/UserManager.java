@@ -1,26 +1,32 @@
 package org.fides.server.files;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.security.Key;
+import java.security.Security;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
-import org.fides.components.Responses;
 import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
+import org.fides.encryption.EncryptionUtils;
+import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.PropertiesManager;
+import org.fides.tools.HashUtils;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
@@ -33,27 +39,50 @@ public final class UserManager {
 	 */
 	private static Logger log = LogManager.getLogger(UserManager.class);
 
+	// Add the Bouncycastle provider
+	static {
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+	}
+
+	/** Size of the salt used in generating the master key, it should NEVER change */
+	private static final int SALT_SIZE = 16; // 128 bit
+
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
 	 *
-	 * @param username     the given user name
-	 * @param passwordHash the given password hash
+	 * @param username
+	 *            the given user name
+	 * @param passwordHash
+	 *            the given password hash
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
 
+		DataInputStream din = null;
+		ObjectInputStream inDecrypted = null;
+		InputStream in = null;
 		// Check if the username is in the folder
 		if (checkIfUserExists(username)) {
-			ObjectInputStream userFileObject = null;
 			try {
-				FileInputStream in = new FileInputStream(file.getPath());
+				in = new FileInputStream(file);
+				din = new DataInputStream(in);
 
-				// TODO: decrypt file
+				// Get salt and amount of rounds from the beginning of the file
+				byte[] saltBytes = new byte[SALT_SIZE];
+				int pbkdf2Rounds = din.readInt();
+				din.read(saltBytes, 0, SALT_SIZE);
 
-				userFileObject = new ObjectInputStream(in);
-				UserFile userFile = (UserFile) userFileObject.readObject();
+				// Generate Key bases on the users password
+				Key key = KeyGenerator.generateKey(passwordHash, saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
 
+				// Create the DecryptionStream
+				inDecrypted = new ObjectInputStream(EncryptionUtils.getDecryptionStream(din, key));
+
+				// Read the UserFile from the DecryptionStream
+				UserFile userFile = (UserFile) inDecrypted.readObject();
+
+				// Validate the password
 				if (userFile.checkPasswordHash(passwordHash)) {
 					return userFile;
 				}
@@ -65,7 +94,9 @@ public final class UserManager {
 			} catch (ClassNotFoundException e) {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
-				IOUtils.closeQuietly(userFileObject);
+				IOUtils.closeQuietly(inDecrypted);
+				IOUtils.closeQuietly(din);
+				IOUtils.closeQuietly(in);
 			}
 		}
 		return null;
@@ -74,21 +105,41 @@ public final class UserManager {
 	/**
 	 * Encrypts the user file and saves it in the user directory
 	 *
-	 * @param userFile the user file based on the user name
+	 * @param userFile
+	 *            the user file based on the user name
 	 * @return true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
-		ObjectOutputStream out = null;
+		FileOutputStream fos = null;
+		DataOutputStream dout = null;
+		OutputStream outEncrypted = null;
 		try {
-			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
+			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsernameHash());
 
-			if (userFileLocation.getName().equals(userFile.getUsername())) {
-				FileOutputStream fos = new FileOutputStream(userFileLocation);
+			if (userFileLocation.getName().equals(userFile.getUsernameHash())) {
+				fos = new FileOutputStream(userFileLocation);
+				dout = new DataOutputStream(fos);
 
-				// TODO: encrypt file
+				// Get salt and amount of rounds
+				byte[] saltBytes = KeyGenerator.getSalt(SALT_SIZE);
+				int pbkdf2Rounds = KeyGenerator.getRounds();
 
-				out = new ObjectOutputStream(fos);
-				out.writeObject(userFile);
+				// Generate a Key bases on the user's password
+				Key key = KeyGenerator.generateKey(userFile.getPasswordHash(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
+
+				// Write the salt and amount of rounds to the beginning of the file
+				dout.writeInt(pbkdf2Rounds);
+				dout.write(saltBytes, 0, SALT_SIZE);
+
+				// Create an encryptionstream
+				outEncrypted = EncryptionUtils.getEncryptionStream(dout, key);
+				ObjectOutputStream objectOut = new ObjectOutputStream(outEncrypted);
+				objectOut.writeObject(userFile);
+
+				// Flush all streams
+				outEncrypted.flush();
+				dout.flush();
+				fos.flush();
 
 				return true;
 			}
@@ -98,7 +149,9 @@ public final class UserManager {
 		} catch (IOException e) {
 			log.error("IOException has occured", e);
 		} finally {
-			IOUtils.closeQuietly(out);
+			IOUtils.closeQuietly(outEncrypted);
+			IOUtils.closeQuietly(dout);
+			IOUtils.closeQuietly(fos);
 		}
 
 		return false;
@@ -107,7 +160,8 @@ public final class UserManager {
 	/**
 	 * Checks if user name exists
 	 *
-	 * @param username the given user name
+	 * @param username
+	 *            the given user name
 	 * @return username exists or not
 	 */
 	public static boolean checkIfUserExists(String username) {
@@ -130,17 +184,17 @@ public final class UserManager {
 	 *             if failed to write to outputstream
 	 */
 	public static void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		JsonObject returnJobj = new JsonObject();
 
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			if (UserManager.checkIfUserExists(username)) {
+		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
+			if (UserManager.checkIfUserExists(usernameHash)) {
 				CommunicationUtil.returnError(out, Errors.USNERNAMEEXISTS);
 
 			} else {
-				UserFile uf = new UserFile(username, passwordHash);
+				UserFile uf = new UserFile(usernameHash, passwordHash);
 				if (UserManager.saveUserFile(uf)) {
 					CommunicationUtil.returnSuccessful(out);
 				} else {
@@ -165,11 +219,11 @@ public final class UserManager {
 	 */
 	public static UserFile authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
 		UserFile userFile = null;
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			userFile = UserManager.unlockUserFile(username, passwordHash);
+		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
+			userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
 			if (userFile != null) {
 				CommunicationUtil.returnSuccessful(out);
 			} else {
