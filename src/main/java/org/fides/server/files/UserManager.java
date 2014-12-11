@@ -109,9 +109,9 @@ public final class UserManager {
 		DataOutputStream dout = null;
 		OutputStream outEncrypted = null;
 		try {
-			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsername());
+			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsernameHash());
 
-			if (userFileLocation.getName().equals(userFile.getUsername())) {
+			if (userFileLocation.getName().equals(userFile.getUsernameHash())) {
 				fos = new FileOutputStream(userFileLocation);
 				dout = new DataOutputStream(fos);
 
@@ -120,7 +120,7 @@ public final class UserManager {
 				int pbkdf2Rounds = KeyGenerator.getRounds();
 
 				// Generate a Key bases on the user's password
-				Key key = KeyGenerator.generateKey(userFile.getPassword(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
+				Key key = KeyGenerator.generateKey(userFile.getPasswordHash(), saltBytes, pbkdf2Rounds, EncryptionUtils.KEY_SIZE);
 
 				// Write the salt and amount of rounds to the beginning of the file
 				dout.writeInt(pbkdf2Rounds);

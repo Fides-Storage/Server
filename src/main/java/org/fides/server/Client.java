@@ -143,7 +143,7 @@ public class Client implements Runnable {
 	 */
 	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
-		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME));
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		JsonObject returnJobj = new JsonObject();
@@ -172,22 +172,22 @@ public class Client implements Runnable {
 	}
 
 	/**
-	 * Authenticate user based on jsonobject with username and password
+	 * Authenticate user based on jsonobject with usernameHash and passwordHash
 	 * 
 	 * @param userObject
-	 *            json object with at least username and password
+	 *            json object with at least usernameHash and passwordHash
 	 * @param out
 	 *            output stream to client to write error message
 	 * @return if user is authenticated or not
 	 */
 	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		String username = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME));
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		String errorMessage = null;
 
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			userFile = UserManager.unlockUserFile(username, passwordHash);
+		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
+			userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
 			if (userFile == null) {
 				errorMessage = Errors.USERNAMEORPASSWORDINCORRECT;
 			}

@@ -106,7 +106,7 @@ public class UserManagerTest {
 
 		assertNotNull(loadedFile);
 
-		assertEquals(username, loadedFile.getUsername());
+		assertEquals(username, loadedFile.getUsernameHash());
 		assertTrue(loadedFile.checkOwned(filename));
 	}
 

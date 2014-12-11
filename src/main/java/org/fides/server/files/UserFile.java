@@ -42,7 +42,7 @@ public class UserFile implements Serializable {
 		this.keyFile = FileManager.createFile();
 	}
 
-	public String getUsername() {
+	public String getUsernameHash() {
 		return usernameHash;
 	}
 
@@ -51,7 +51,7 @@ public class UserFile implements Serializable {
 	 * 
 	 * @return the passwordhash
 	 */
-	public String getPassword() {
+	public String getPasswordHash() {
 		return passwordHash;
 	}
 

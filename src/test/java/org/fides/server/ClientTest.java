@@ -38,7 +38,7 @@ public class ClientTest {
 
 	private SSLSocket mockedSSLSocket = mock(SSLSocket.class);
 
-	private final String authenticatedUsername = HashUtils.hash("authenticatedUsername");
+	private final String authenticatedUsernameHash = HashUtils.hash("authenticatedUsername");
 
 	/**
 	 * Disables the static UserManager to prevent the creation of userfiles.
@@ -47,8 +47,8 @@ public class ClientTest {
 	public void disableUserManager() {
 		PowerMockito.mockStatic(UserManager.class);
 		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
-		Mockito.when(UserManager.checkIfUserExists(authenticatedUsername)).thenReturn(true);
-		Mockito.when(UserManager.unlockUserFile(authenticatedUsername, "Thisisapassword")).thenReturn(new UserFile(authenticatedUsername, "Thisisapassword"));
+		Mockito.when(UserManager.checkIfUserExists(authenticatedUsernameHash)).thenReturn(true);
+		Mockito.when(UserManager.unlockUserFile(authenticatedUsernameHash, "Thisisapassword")).thenReturn(new UserFile(authenticatedUsernameHash, "Thisisapassword"));
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class ClientTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
-		user.addProperty(Actions.Properties.USERNAME, "createUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "createUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
@@ -92,7 +92,7 @@ public class ClientTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "authenticatedUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
@@ -124,7 +124,7 @@ public class ClientTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "invalidUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "invalidUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
@@ -156,7 +156,7 @@ public class ClientTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.LOGIN);
-		user.addProperty(Actions.Properties.USERNAME, "authenticatedUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "authenticatedUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "invalidPassword");
 
 		try {
@@ -187,7 +187,7 @@ public class ClientTest {
 
 		JsonObject user = new JsonObject();
 		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
-		user.addProperty(Actions.Properties.USERNAME, "/../createUsername");
+		user.addProperty(Actions.Properties.USERNAME_HASH, "/../createUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
 		try {
