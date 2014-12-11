@@ -58,14 +58,13 @@ public class Server implements Runnable {
 
 			// Create the SSLServerSocket from the factory on the given port
 			sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(propertiesManager.getPort());
+
+			log.debug("Server started on port: " + propertiesManager.getPort());
+			log.debug("Using user directory: " + propertiesManager.getUserDir());
+			log.debug("Using data directory: " + propertiesManager.getDataDir());
 		} catch (Exception e) {
 			log.error(e);
 		}
-
-		log.debug("Server started on port: " + propertiesManager.getPort());
-		log.debug("Using user directory: " + propertiesManager.getUserDir());
-		log.debug("Using data directory: " + propertiesManager.getDataDir());
-
 	}
 
 	/**
