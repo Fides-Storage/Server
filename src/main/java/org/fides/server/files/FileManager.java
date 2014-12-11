@@ -94,14 +94,14 @@ public final class FileManager {
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
 		// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
 		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile(true));
-		try (InputStream virtualIn = new VirtualInputStream(inputStream);) {
+		try (InputStream virtualIn = new VirtualInputStream(inputStream);
+			OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
 			// Tell the cliënt he can start sending the file.
 			JsonObject successfulObj = new JsonObject();
 			successfulObj.addProperty(Responses.SUCCESSFUL, true);
 			outputStream.writeUTF(new Gson().toJson(successfulObj));
 
 			// Put the stream into a temporary file
-			OutputStream fileOutputStream = new FileOutputStream(tempFile);
 			IOUtils.copy(virtualIn, fileOutputStream);
 			fileOutputStream.flush();
 			fileOutputStream.close();
@@ -111,7 +111,7 @@ public final class FileManager {
 			outputStream.writeUTF(new Gson().toJson(successfulObj));
 
 			// Copy the temporary file into the official file
-			Files.copy(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
 			// Tell the cliënt the upload was successful
 			outputStream.writeUTF(new Gson().toJson(successfulObj));
