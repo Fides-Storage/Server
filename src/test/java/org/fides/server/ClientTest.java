@@ -17,6 +17,7 @@ import org.fides.components.Actions;
 import org.fides.components.Responses;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
+import org.fides.tools.HashUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +38,8 @@ public class ClientTest {
 
 	private SSLSocket mockedSSLSocket = mock(SSLSocket.class);
 
+	private final String authenticatedUsername = HashUtils.hash("authenticatedUsername");
+
 	/**
 	 * Disables the static UserManager to prevent the creation of userfiles.
 	 */
@@ -44,8 +47,8 @@ public class ClientTest {
 	public void disableUserManager() {
 		PowerMockito.mockStatic(UserManager.class);
 		Mockito.when(UserManager.checkIfUserExists("createUsername")).thenReturn(false);
-		Mockito.when(UserManager.checkIfUserExists("authenticatedUsername")).thenReturn(true);
-		Mockito.when(UserManager.unlockUserFile("authenticatedUsername", "Thisisapassword")).thenReturn(new UserFile("authenticatedUsername", "Thisisapassword"));
+		Mockito.when(UserManager.checkIfUserExists(authenticatedUsername)).thenReturn(true);
+		Mockito.when(UserManager.unlockUserFile(authenticatedUsername, "Thisisapassword")).thenReturn(new UserFile(authenticatedUsername, "Thisisapassword"));
 	}
 
 	/**

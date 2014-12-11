@@ -18,6 +18,7 @@ import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
+import org.fides.tools.HashUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -142,18 +143,18 @@ public class Client implements Runnable {
 	 */
 	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
 
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		JsonObject returnJobj = new JsonObject();
 
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			if (UserManager.checkIfUserExists(username)) {
+		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
+			if (UserManager.checkIfUserExists(usernameHash)) {
 				returnJobj.addProperty(Responses.SUCCESSFUL, false);
 				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
 
 			} else {
-				UserFile uf = new UserFile(username, passwordHash);
+				UserFile uf = new UserFile(usernameHash, passwordHash);
 				if (UserManager.saveUserFile(uf)) {
 					returnJobj.addProperty(Responses.SUCCESSFUL, true);
 				} else {
@@ -180,7 +181,7 @@ public class Client implements Runnable {
 	 * @return if user is authenticated or not
 	 */
 	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
+		String username = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		String errorMessage = null;
