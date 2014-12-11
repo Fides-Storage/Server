@@ -14,12 +14,19 @@ import java.io.OutputStream;
 import java.security.Key;
 import java.security.Security;
 
+import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fides.components.Actions;
+import org.fides.server.tools.CommunicationUtil;
+import org.fides.server.tools.Errors;
+import org.fides.server.tools.JsonObjectHandler;
 import org.fides.encryption.EncryptionUtils;
 import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.PropertiesManager;
+import org.fides.tools.HashUtils;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
@@ -38,7 +45,7 @@ public final class UserManager {
 	}
 
 	/** Size of the salt used in generating the master key, it should NEVER change */
-	public static final int SALT_SIZE = 16; // 128 bit
+	private static final int SALT_SIZE = 16; // 128 bit
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
@@ -57,7 +64,6 @@ public final class UserManager {
 		InputStream in = null;
 		// Check if the username is in the folder
 		if (checkIfUserExists(username)) {
-			ObjectInputStream userFileObject = null;
 			try {
 				in = new FileInputStream(file);
 				din = new DataInputStream(in);
@@ -88,7 +94,6 @@ public final class UserManager {
 			} catch (ClassNotFoundException e) {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
-				IOUtils.closeQuietly(userFileObject);
 				IOUtils.closeQuietly(inDecrypted);
 				IOUtils.closeQuietly(din);
 				IOUtils.closeQuietly(in);
@@ -164,6 +169,70 @@ public final class UserManager {
 
 		// Check if username is in the folder
 		return userFile.exists() && userFile.getName().equals(username) && userFile.isFile();
+	}
+
+
+
+	/**
+	 * Creates a user based on received json object
+	 *
+	 * @param userObject
+	 *            jsonObject containing username and password
+	 * @param out
+	 *            outputstream to the client
+	 * @throws IOException
+	 *             if failed to write to outputstream
+	 */
+	public static void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
+		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
+
+		JsonObject returnJobj = new JsonObject();
+
+		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
+			if (UserManager.checkIfUserExists(usernameHash)) {
+				CommunicationUtil.returnError(out, Errors.USNERNAMEEXISTS);
+
+			} else {
+				UserFile uf = new UserFile(usernameHash, passwordHash);
+				if (UserManager.saveUserFile(uf)) {
+					CommunicationUtil.returnSuccessful(out);
+				} else {
+					CommunicationUtil.returnError(out, Errors.CANNOTSAVEUSERFILE);
+				}
+			}
+		} else {
+			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
+		}
+
+
+	}
+
+	/**
+	 * Authenticate user based on jsonobject with username and password
+	 *
+	 * @param userObject
+	 *            json object with at least username and password
+	 * @param out
+	 *            output stream to client to write error message
+	 * @return if user is authenticated or not
+	 */
+	public static UserFile authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
+		UserFile userFile = null;
+		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
+		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
+
+		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
+			userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
+			if (userFile != null) {
+				CommunicationUtil.returnSuccessful(out);
+			} else {
+				CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
+			}
+		} else {
+			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
+		}
+		return userFile;
 	}
 
 }

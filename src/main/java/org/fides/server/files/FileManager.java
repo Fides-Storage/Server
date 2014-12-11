@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Responses;
+import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.PropertiesManager;
 
 import com.google.gson.Gson;
@@ -69,9 +70,7 @@ public final class FileManager {
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
 
 		try {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			outputStream.writeUTF(new Gson().toJson(returnJobj));
+			CommunicationUtil.returnSuccessful(outputStream);
 			OutputStream fileOutputStream = new FileOutputStream(file);
 			IOUtils.copy(inputStream, fileOutputStream);
 			fileOutputStream.flush();
@@ -95,9 +94,7 @@ public final class FileManager {
 	 */
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
 		try (InputStream inStream = new FileInputStream(file)) {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			outputStream.writeUTF(new Gson().toJson(returnJobj));
+			CommunicationUtil.returnSuccessful(outputStream);
 
 			IOUtils.copy(inStream, outputStream);
 			outputStream.flush();

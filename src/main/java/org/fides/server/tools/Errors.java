@@ -44,4 +44,10 @@ public class Errors {
 	 * File could not be found
 	 */
 	public static final String FILENOTFOUND = "File could not be found on the server";
+
+	/**
+	 * File could not be removed
+	 */
+	public static final String FILENOTREMOVED = "File could not be removed on the server";
 }
+
