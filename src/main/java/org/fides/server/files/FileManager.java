@@ -107,9 +107,6 @@ public final class FileManager {
 			fileOutputStream.close();
 			virtualIn.close();
 
-			// Tell the cliënt the upload was successful
-			outputStream.writeUTF(new Gson().toJson(successfulObj));
-
 			// Copy the temporary file into the official file
 			Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
