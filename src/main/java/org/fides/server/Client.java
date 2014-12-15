@@ -19,6 +19,7 @@ import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
+import org.fides.server.tools.UserLocker;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -54,14 +55,9 @@ public class Client implements Runnable {
 	 * Runnable for client connection
 	 */
 	public void run() {
-		DataInputStream in = null;
-		DataOutputStream out = null;
 		JsonObject requestObject;
-		try {
-			// Get input from the client
-			in = new DataInputStream(server.getInputStream());
-			out = new DataOutputStream(server.getOutputStream());
-
+		try (DataInputStream in = new DataInputStream(server.getInputStream());
+			DataOutputStream out = new DataOutputStream(server.getOutputStream());) {
 			// While user is not logged in
 			while (userFile == null) {
 				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
@@ -96,10 +92,7 @@ public class Client implements Runnable {
 		} catch (IOException e) {
 			log.error("IOException on server socket listen", e);
 		} finally {
-			IOUtils.closeQuietly(in);
-			IOUtils.closeQuietly(out);
 			IOUtils.closeQuietly(server);
-			// TODO: Unlock and close userFile
 		}
 	}
 
@@ -119,7 +112,7 @@ public class Client implements Runnable {
 		try {
 			JsonObject requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
-			while (action != Actions.DISCONNECT) {
+			while (!action.equals(Actions.DISCONNECT)) {
 				switch (action) {
 				case Actions.GETKEYFILE:
 					clientFileConnector.downloadKeyFile(out);
@@ -152,6 +145,8 @@ public class Client implements Runnable {
 			}
 		} catch (SocketException e) {
 			log.debug("Closed by client don't throw an error message");
+		} finally {
+			UserLocker.unlock(userFile.getUsername());
 		}
 	}
 
@@ -228,11 +223,18 @@ public class Client implements Runnable {
 			out.writeUTF(new Gson().toJson(returnJobj));
 			return false;
 		} else {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			out.writeUTF(new Gson().toJson(returnJobj));
-			return true;
+			boolean successful = false;
+			try {
+				JsonObject returnJobj = new JsonObject();
+				returnJobj.addProperty(Responses.SUCCESSFUL, true);
+				out.writeUTF(new Gson().toJson(returnJobj));
+				successful = true;
+			} finally {
+				if (!successful) {
+					UserLocker.unlock(userFile.getUsername());
+				}
+			}
+			return successful;
 		}
-
 	}
 }

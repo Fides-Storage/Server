@@ -12,10 +12,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.PropertiesManager;
+import org.fides.server.tools.UserLocker;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
- *
+ * 
  * @author Niels and Jesse
  */
 public final class UserManager {
@@ -26,24 +27,27 @@ public final class UserManager {
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
-	 *
-	 * @param username     the given user name
-	 * @param passwordHash the given password hash
+	 * 
+	 * @param username
+	 *            the given user name
+	 * @param passwordHash
+	 *            the given password hash
 	 * @return the user file
 	 */
 	public static UserFile unlockUserFile(String username, String passwordHash) {
 		File file = new File(PropertiesManager.getInstance().getUserDir(), username);
 
-		// Check if the username is in the folder
-		if (checkIfUserExists(username)) {
+		// Check if the username is in the folder and if the file isn't locked
+		if (checkIfUserExists(username) && UserLocker.lock(username)) {
 			ObjectInputStream userFileObject = null;
-			try {
-				FileInputStream in = new FileInputStream(file.getPath());
+			UserFile userFile = null;
+			try (
+				FileInputStream in = new FileInputStream(file)) {
 
 				// TODO: decrypt file
 
 				userFileObject = new ObjectInputStream(in);
-				UserFile userFile = (UserFile) userFileObject.readObject();
+				userFile = (UserFile) userFileObject.readObject();
 
 				if (userFile.checkPasswordHash(passwordHash)) {
 					return userFile;
@@ -57,6 +61,9 @@ public final class UserManager {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
 				IOUtils.closeQuietly(userFileObject);
+				if (userFile == null) {
+					UserLocker.unlock(username);
+				}
 			}
 		}
 		return null;
@@ -64,8 +71,9 @@ public final class UserManager {
 
 	/**
 	 * Encrypts the user file and saves it in the user directory
-	 *
-	 * @param userFile the user file based on the user name
+	 * 
+	 * @param userFile
+	 *            the user file based on the user name
 	 * @return true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
@@ -97,9 +105,10 @@ public final class UserManager {
 
 	/**
 	 * Checks if user name exists
-	 *
-	 * @param username the given user name
-	 * @return username exists or not
+	 * 
+	 * @param username
+	 *            the given user name
+	 * @return wether the username exists or not
 	 */
 	public static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);

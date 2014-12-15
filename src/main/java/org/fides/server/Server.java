@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.PropertiesManager;
+import org.fides.server.tools.UserLocker;
 
 /**
  * @author Niels en Jesse
@@ -39,7 +40,7 @@ public class Server implements Runnable {
 
 		// Instantiating the propertiesmanager
 		PropertiesManager propertiesManager = PropertiesManager.getInstance();
-
+		UserLocker.clearAllLocks();
 		try {
 			// Set up the key manager for server authentication
 			SSLContext sslContext = SSLContext.getInstance("TLS");
