@@ -48,7 +48,7 @@ public final class FileManager {
 	 * Creates a new file with a unique name. If the file is temporary, it ends with .tmp
 	 * 
 	 * @param temporary
-	 *            Wether the file is temporary or not
+	 *            Whether the file is temporary or not
 	 * @return The file's location.
 	 */
 	public static String createFile(boolean temporary) {
@@ -59,20 +59,25 @@ public final class FileManager {
 		if (temporary) {
 			location += ".tmp";
 		}
-		File newFile = new File(properties.getDataDir(), location);
+		String dataDir = PropertiesManager.getInstance().getDataDir();
+		if (StringUtils.isNotEmpty(dataDir)) {
+			File newFile = new File(dataDir, location);
 
-		// Check if the filename is unique, there's a maximum number of attempts to prevent an overflow
-		try {
-			int uniqueAttempts = 0;
-			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
-				location = UUID.randomUUID().toString();
-				if (temporary) {
-					location += ".tmp";
+			// Check if the filename is unique, there's a maximum number of attempts to prevent an overflow
+			try {
+				int uniqueAttempts = 0;
+				while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
+					location = UUID.randomUUID().toString();
+					if (temporary) {
+						location += ".tmp";
+					}
+					newFile = new File(properties.getDataDir(), location);
 				}
-				newFile = new File(properties.getDataDir(), location);
+			} catch (IOException e) {
+				log.error(e);
+				location = null;
 			}
-		} catch (IOException e) {
-			log.error(e);
+		} else {
 			location = null;
 		}
 		// Return the location of the generated file
@@ -88,7 +93,7 @@ public final class FileManager {
 	 *            The file to fill with the inputstream
 	 * @param outputStream
 	 *            The outputstream to respond to the client
-	 * @return Wether the copy was successful or not
+	 * @return Whether the copy was successful or not
 	 */
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
@@ -129,7 +134,7 @@ public final class FileManager {
 	 *            The file to use
 	 * @param outputStream
 	 *            The stream to copy the file to
-	 * @return Wether the copy was successful.
+	 * @return Whether the copy was successful.
 	 */
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
 		// Open an inputstream to the file and a virtualoutputstream of the output
@@ -158,8 +163,12 @@ public final class FileManager {
 	 * @return If the file was successfully deleted. Returns false if the file doesn't exist.
 	 */
 	public static boolean removeFile(String location) {
-		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-		return file.delete();
+		String dataDir = PropertiesManager.getInstance().getDataDir();
+		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(location)) {
+			File file = new File(dataDir, location);
+			return file.delete();
+		}
+		return false;
 	}
 
 	/**
