@@ -1,6 +1,5 @@
 package org.fides.server.files;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,14 +15,10 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.fides.components.Responses;
 import org.fides.components.virtualstream.VirtualInputStream;
 import org.fides.components.virtualstream.VirtualOutputStream;
 import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.PropertiesManager;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 /**
  * This class is responsible for creating a file, removing a file and filling a file with an inputstream.
@@ -92,12 +87,12 @@ public final class FileManager {
 	 *            The outputstream to respond to the client
 	 * @return Wether the copy was successful or not
 	 */
-	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
+	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream) {
 		// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
 		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile(true));
 		try (InputStream virtualIn = new VirtualInputStream(inputStream);
 			OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-			// Tell the cli�nt he can start sending the file.
+			// Tell the client he can start sending the file.
 			CommunicationUtil.returnSuccessful(outputStream);
 
 			// Put the stream into a temporary file
@@ -107,9 +102,11 @@ public final class FileManager {
 			virtualIn.close();
 
 			// Copy the temporary file into the official file
+			System.out.println("MOVING FILE " + tempFile.getName());
 			Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			System.out.println("EXIST AFTER MOVE: " + tempFile.exists());
 
-			// Tell the cli�nt the upload was successful
+			// Tell the client the upload was successful
 			CommunicationUtil.returnSuccessful(outputStream);
 			return true;
 		} catch (IOException e) {

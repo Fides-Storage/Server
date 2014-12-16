@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,12 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.fides.components.Actions;
 import org.fides.components.Responses;
-import org.fides.server.Client;
 import org.fides.server.tools.PropertiesManager;
 import org.fides.tools.HashUtils;
 import org.junit.AfterClass;
@@ -37,7 +33,8 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import javax.net.ssl.SSLSocket;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * The JUnit Test Case for the UserManager
@@ -53,11 +50,6 @@ public class UserManagerTest {
 	 * A mocked PropertiesManager which should always return the test User Directory
 	 */
 	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
-
-	/**
-	 * A mocked version of the SSLSocket
-	 */
-	private SSLSocket mockedSSLSocket = mock(SSLSocket.class);
 
 	/**
 	 * The test User Directory

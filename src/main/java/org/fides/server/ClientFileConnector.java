@@ -1,6 +1,5 @@
 package org.fides.server;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -161,7 +160,7 @@ public class ClientFileConnector {
 	 *            The stream to write responses to
 	 * @return Wether the update was successful or not
 	 */
-	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
+	public boolean updateFile(InputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
 		String location = JsonObjectHandler.getProperty(updateRequest, Actions.Properties.LOCATION);
 		// Check if the user sent a location
 		if (!StringUtils.isBlank(location)) {
@@ -234,7 +233,7 @@ public class ClientFileConnector {
 	 *            The stream used to return feedback to the client
 	 * @return Wether the update was successful or not
 	 */
-	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {
+	public boolean updateKeyFile(InputStream inputStream, DataOutputStream outputStream) {
 		// Gets the keyfile from the user.
 		File keyFile = new File(PropertiesManager.getInstance().getDataDir(), userFile.getKeyFileLocation());
 		// If the keyfile exists, copy the stream to the keyfile (via a temporary file)

@@ -14,20 +14,21 @@ import java.io.OutputStream;
 import java.security.Key;
 import java.security.Security;
 
-import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
+import org.fides.encryption.EncryptionUtils;
+import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
-import org.fides.encryption.EncryptionUtils;
-import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.PropertiesManager;
 import org.fides.server.tools.UserLocker;
 import org.fides.tools.HashUtils;
+
+import com.google.gson.JsonObject;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
@@ -50,6 +51,7 @@ public final class UserManager {
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
+	 * 
 	 * @param username
 	 *            the given user name
 	 * @param passwordHash
@@ -95,6 +97,7 @@ public final class UserManager {
 			} catch (ClassNotFoundException e) {
 				log.error("UserFile was not a UserFile", e);
 			} finally {
+				// If the userfile couldn't be loaded, the user should be unlocked.
 				if (userFile == null) {
 					UserLocker.unlock(username);
 				}
@@ -108,6 +111,7 @@ public final class UserManager {
 
 	/**
 	 * Encrypts the user file and saves it in the user directory
+	 * 
 	 * @param userFile
 	 *            the user file based on the user name
 	 * @return true if succeeded, false otherwise
@@ -174,11 +178,9 @@ public final class UserManager {
 		return userFile.exists() && userFile.getName().equals(username) && userFile.isFile();
 	}
 
-
-
 	/**
 	 * Creates a user based on received json object
-	 *
+	 * 
 	 * @param userObject
 	 *            jsonObject containing username and password
 	 * @param out
@@ -208,12 +210,11 @@ public final class UserManager {
 			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
 		}
 
-
 	}
 
 	/**
 	 * Authenticate user based on jsonobject with username and password
-	 *
+	 * 
 	 * @param userObject
 	 *            json object with at least username and password
 	 * @param out

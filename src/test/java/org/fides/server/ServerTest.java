@@ -1,5 +1,15 @@
 package org.fides.server;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Properties;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.fides.server.tools.PropertiesManager;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -10,15 +20,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.Properties;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * This unittest tests the Server class
@@ -44,7 +45,7 @@ public class ServerTest {
 	@BeforeClass
 	public static void setUp() {
 
-		//For testing purposes only
+		// For testing purposes only
 		Properties systemProps = System.getProperties();
 		systemProps.put("javax.net.ssl.trustStore", TRUSTSTOREPATH);
 		systemProps.put("javax.net.ssl.trustStorePassword", "");
@@ -61,8 +62,8 @@ public class ServerTest {
 	}
 
 	/**
-	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager. This
-	 * will cause the FileManager to use a testfolder instead of the main folder.
+	 * Mocks the PropertiesManager to always return a mocked version of the PropertiesManager. This will cause the
+	 * FileManager to use a testfolder instead of the main folder.
 	 */
 	@Before
 	public void setUpMock() {
@@ -78,19 +79,19 @@ public class ServerTest {
 
 		Server server = null;
 		try {
-			//Starting a Server
+			// Starting a Server
 			server = new Server();
 			Thread serverThread = new Thread(server);
 			serverThread.start();
 
-			//Starting the connection
+			// Starting the connection
 			SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 			SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket("localhost", PORT);
 
-			//Assert that the connection is active
+			// Assert that the connection is active
 			assertTrue(sslsocket.isConnected());
 
-			//Close connection
+			// Close connection
 			sslsocket.close();
 
 		} catch (UnknownHostException e) {
