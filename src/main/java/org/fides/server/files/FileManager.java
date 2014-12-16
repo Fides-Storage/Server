@@ -48,7 +48,7 @@ public final class FileManager {
 	 * Creates a new file with a unique name. If the file is temporary, it ends with .tmp
 	 * 
 	 * @param temporary
-	 *            Wether the file is temporary or not
+	 *            Whether the file is temporary or not
 	 * @return The file's location.
 	 */
 	public static String createFile(boolean temporary) {
@@ -88,7 +88,7 @@ public final class FileManager {
 	 *            The file to fill with the inputstream
 	 * @param outputStream
 	 *            The outputstream to respond to the client
-	 * @return Wether the copy was successful or not
+	 * @return Whether the copy was successful or not
 	 */
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
@@ -129,7 +129,7 @@ public final class FileManager {
 	 *            The file to use
 	 * @param outputStream
 	 *            The stream to copy the file to
-	 * @return Wether the copy was successful.
+	 * @return Whether the copy was successful.
 	 */
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
 		// Open an inputstream to the file and a virtualoutputstream of the output
