@@ -5,7 +5,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 /**
- * A static tool that can be used to lock a user on the server. TODO: Test
+ * A static tool that can be used to lock a user on the server.
  */
 public final class UserLocker {
 
