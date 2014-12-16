@@ -174,6 +174,36 @@ public class UserLockerTest {
 	}
 
 	/**
+	 * Tests if the user is locked
+	 */
+	@Test
+	public void testIsLocked() {
+		String username = "testLockCreateLockfile";
+		UserLocker.lock(username);
+		assertTrue(UserLocker.isLocked(username));
+	}
+
+	/**
+	 * Tests if the user is not locked
+	 */
+	@Test
+	public void testIsNotLocked() {
+		String username = "testLockCreateLockfile";
+		assertFalse(UserLocker.isLocked(username));
+	}
+
+	/**
+	 * Tests if the user is unlocked
+	 */
+	@Test
+	public void testIsUnlocked() {
+		String username = "testLockCreateLockfile";
+		UserLocker.lock(username);
+		UserLocker.unlock(username);
+		assertFalse(UserLocker.isLocked(username));
+	}
+
+	/**
 	 * Tears down the test class by clearing the test folder.
 	 */
 	@AfterClass
