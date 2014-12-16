@@ -24,7 +24,7 @@ public final class UserLocker {
 	/**
 	 * Tries to lock the user with the given username
 	 * 
-	 * @param username
+	 * @param usernameHash
 	 *            The user that tries to be locked
 	 * @return Whether the lock was possible and successful
 	 */
@@ -44,7 +44,7 @@ public final class UserLocker {
 	/**
 	 * Removes the lock of the user with the given username
 	 * 
-	 * @param username
+	 * @param usernameHash
 	 *            The user that can be unlocked
 	 */
 	public static void unlock(String usernameHash) {
@@ -72,7 +72,7 @@ public final class UserLocker {
 	/**
 	 * Checks whether the user with the given user name is locked or not
 	 * 
-	 * @param username
+	 * @param usernameHash
 	 *            the user that could be locked
 	 * @return true if the user is locked, false otherwise
 	 */
