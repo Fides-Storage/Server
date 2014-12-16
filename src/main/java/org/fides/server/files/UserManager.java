@@ -227,14 +227,20 @@ public final class UserManager {
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
-			userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
-			if (userFile != null) {
-				CommunicationUtil.returnSuccessful(out);
+			if (!UserLocker.isLocked(usernameHash)) {
+				userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
+
+				if (userFile != null) {
+					CommunicationUtil.returnSuccessful(out);
+				} else {
+					CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
+				}
 			} else {
-				CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
+				CommunicationUtil.returnError(out, Errors.SERVERCANNOTRESPOND);
 			}
 		} else {
 			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
+
 		}
 		return userFile;
 	}

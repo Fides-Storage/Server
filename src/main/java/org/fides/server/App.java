@@ -6,9 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * 
- * @author Niels and Jesse
- * 
+ * The main app to run
  */
 public class App {
 	/**

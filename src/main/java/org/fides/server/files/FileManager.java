@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.virtualstream.VirtualInputStream;
@@ -45,7 +46,7 @@ public final class FileManager {
 	 * Creates a new file with a unique name. If the file is temporary, it ends with .tmp
 	 * 
 	 * @param temporary
-	 *            Wether the file is temporary or not
+	 *            Whether the file is temporary or not
 	 * @return The file's location.
 	 */
 	public static String createFile(boolean temporary) {
@@ -56,20 +57,25 @@ public final class FileManager {
 		if (temporary) {
 			location += ".tmp";
 		}
-		File newFile = new File(properties.getDataDir(), location);
+		String dataDir = PropertiesManager.getInstance().getDataDir();
+		if (StringUtils.isNotEmpty(dataDir)) {
+			File newFile = new File(dataDir, location);
 
-		// Check if the filename is unique, there's a maximum number of attempts to prevent an overflow
-		try {
-			int uniqueAttempts = 0;
-			while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
-				location = UUID.randomUUID().toString();
-				if (temporary) {
-					location += ".tmp";
+			// Check if the filename is unique, there's a maximum number of attempts to prevent an overflow
+			try {
+				int uniqueAttempts = 0;
+				while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
+					location = UUID.randomUUID().toString();
+					if (temporary) {
+						location += ".tmp";
+					}
+					newFile = new File(properties.getDataDir(), location);
 				}
-				newFile = new File(properties.getDataDir(), location);
+			} catch (IOException e) {
+				log.error(e);
+				location = null;
 			}
-		} catch (IOException e) {
-			log.error(e);
+		} else {
 			location = null;
 		}
 		// Return the location of the generated file
@@ -85,34 +91,36 @@ public final class FileManager {
 	 *            The file to fill with the inputstream
 	 * @param outputStream
 	 *            The outputstream to respond to the client
-	 * @return Wether the copy was successful or not
+	 * @return Whether the copy was successful or not
 	 */
 	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream) {
-		// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
-		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile(true));
-		try (InputStream virtualIn = new VirtualInputStream(inputStream);
-			OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-			// Tell the client he can start sending the file.
-			CommunicationUtil.returnSuccessful(outputStream);
+		String dataDir = PropertiesManager.getInstance().getDataDir();
+		String tempFileName = createFile(true);
+		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(tempFileName)) {
+			// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
+			File tempFile = new File(dataDir, tempFileName);
+			try (InputStream virtualIn = new VirtualInputStream(inputStream);
+				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+				// Tell the cli�nt he can start sending the file.
+				CommunicationUtil.returnSuccessful(outputStream);
 
-			// Put the stream into a temporary file
-			IOUtils.copy(virtualIn, fileOutputStream);
-			fileOutputStream.flush();
-			fileOutputStream.close();
-			virtualIn.close();
+				// Put the stream into a temporary file
+				IOUtils.copy(virtualIn, fileOutputStream);
+				fileOutputStream.flush();
+				fileOutputStream.close();
+				virtualIn.close();
 
-			// Copy the temporary file into the official file
-			System.out.println("MOVING FILE " + tempFile.getName());
-			Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("EXIST AFTER MOVE: " + tempFile.exists());
+				// Copy the temporary file into the official file
+				Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-			// Tell the client the upload was successful
-			CommunicationUtil.returnSuccessful(outputStream);
-			return true;
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		} finally {
-			tempFile.delete();
+				// Tell the cli�nt the upload was successful
+				CommunicationUtil.returnSuccessful(outputStream);
+				return true;
+			} catch (IOException e) {
+				log.error(e.getMessage());
+			} finally {
+				tempFile.delete();
+			}
 		}
 		return false;
 	}
@@ -124,7 +132,7 @@ public final class FileManager {
 	 *            The file to use
 	 * @param outputStream
 	 *            The stream to copy the file to
-	 * @return Wether the copy was successful.
+	 * @return Whether the copy was successful.
 	 */
 	public static boolean copyFileToStream(File file, DataOutputStream outputStream) {
 		// Open an inputstream to the file and a virtualoutputstream of the output
@@ -153,8 +161,12 @@ public final class FileManager {
 	 * @return If the file was successfully deleted. Returns false if the file doesn't exist.
 	 */
 	public static boolean removeFile(String location) {
-		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
-		return file.delete();
+		String dataDir = PropertiesManager.getInstance().getDataDir();
+		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(location)) {
+			File file = new File(dataDir, location);
+			return file.delete();
+		}
+		return false;
 	}
 
 	/**
