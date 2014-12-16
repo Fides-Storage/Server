@@ -17,7 +17,7 @@ import org.fides.server.tools.PropertiesManager;
 import org.fides.server.tools.UserLocker;
 
 /**
- * @author Niels en Jesse
+ * This class represents the Server
  */
 public class Server implements Runnable {
 	/**
@@ -25,7 +25,6 @@ public class Server implements Runnable {
 	 */
 	private static Logger log = LogManager.getLogger(Server.class);
 
-	// private ServerSocket listener;
 	private SSLServerSocket sslServerSocket;
 
 	private volatile boolean isRunning = true;

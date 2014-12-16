@@ -25,9 +25,7 @@ import com.google.gson.JsonObject;
 
 /**
  * Runnable to create a thread for the handling of a client
- * 
- * @author Niels
- * @author Jesse
+ *
  */
 public class Client implements Runnable {
 

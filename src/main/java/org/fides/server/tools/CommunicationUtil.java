@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * This communicationUtil can copy succesful or error messages to the given streams
+ * This communicationUtil can copy successful or error messages to the given streams
  */
 public class CommunicationUtil {
 
