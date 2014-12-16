@@ -28,11 +28,11 @@ public final class UserLocker {
 	 *            The user that tries to be locked
 	 * @return Whether the lock was possible and successful
 	 */
-	public static boolean lock(String username) {
+	public static boolean lock(String usernameHash) {
 		String userDir = PropertiesManager.getInstance().getUserDir();
 		if (!StringUtils.isEmpty(userDir)) {
 			try {
-				File lockFile = new File(PropertiesManager.getInstance().getUserDir(), username + ".lock");
+				File lockFile = new File(PropertiesManager.getInstance().getUserDir(), usernameHash.concat(".lock"));
 				return lockFile.createNewFile();
 			} catch (IOException e) {
 				return false;
@@ -47,10 +47,10 @@ public final class UserLocker {
 	 * @param username
 	 *            The user that can be unlocked
 	 */
-	public static void unlock(String username) {
+	public static void unlock(String usernameHash) {
 		String userDir = PropertiesManager.getInstance().getUserDir();
 		if (!StringUtils.isEmpty(userDir)) {
-			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), username + ".lock");
+			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), usernameHash.concat(".lock"));
 			lockFile.delete();
 		}
 	}
@@ -67,5 +67,21 @@ public final class UserLocker {
 				file.delete();
 			}
 		}
+	}
+
+	/**
+	 * Checks whether the user with the given user name is locked or not
+	 * 
+	 * @param username
+	 *            the user that could be locked
+	 * @return true if the user is locked, false otherwise
+	 */
+	public static boolean isLocked(String usernameHash) {
+		String userDir = PropertiesManager.getInstance().getUserDir();
+		if (!StringUtils.isEmpty(userDir)) {
+			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), usernameHash.concat(".lock"));
+			return lockFile.exists();
+		}
+		return false;
 	}
 }

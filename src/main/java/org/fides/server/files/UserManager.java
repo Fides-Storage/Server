@@ -14,20 +14,21 @@ import java.io.OutputStream;
 import java.security.Key;
 import java.security.Security;
 
-import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
+import org.fides.encryption.EncryptionUtils;
+import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
-import org.fides.encryption.EncryptionUtils;
-import org.fides.encryption.KeyGenerator;
 import org.fides.server.tools.PropertiesManager;
 import org.fides.server.tools.UserLocker;
 import org.fides.tools.HashUtils;
+
+import com.google.gson.JsonObject;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
@@ -50,6 +51,7 @@ public final class UserManager {
 
 	/**
 	 * Opens the user file based on the user name and decrypts it based on the password hash
+	 * 
 	 * @param username
 	 *            the given user name
 	 * @param passwordHash
@@ -108,6 +110,7 @@ public final class UserManager {
 
 	/**
 	 * Encrypts the user file and saves it in the user directory
+	 * 
 	 * @param userFile
 	 *            the user file based on the user name
 	 * @return true if succeeded, false otherwise
@@ -174,8 +177,6 @@ public final class UserManager {
 		return userFile.exists() && userFile.getName().equals(username) && userFile.isFile();
 	}
 
-
-
 	/**
 	 * Creates a user based on received json object
 	 *
@@ -208,7 +209,6 @@ public final class UserManager {
 			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
 		}
 
-
 	}
 
 	/**
@@ -226,14 +226,20 @@ public final class UserManager {
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
 		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
-			userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
-			if (userFile != null) {
-				CommunicationUtil.returnSuccessful(out);
+			if (!UserLocker.isLocked(usernameHash)) {
+				userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
+
+				if (userFile != null) {
+					CommunicationUtil.returnSuccessful(out);
+				} else {
+					CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
+				}
 			} else {
-				CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
+				CommunicationUtil.returnError(out, Errors.SERVERCANNOTRESPOND);
 			}
 		} else {
 			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
+
 		}
 		return userFile;
 	}

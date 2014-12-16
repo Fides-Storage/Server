@@ -31,6 +31,11 @@ public class Errors {
 	public static final String USERNAMEORPASSWORDINCORRECT = "Username or password is incorrect";
 
 	/**
+	 * Server cannot respond when user is locked
+	 */
+	public static final String SERVERCANNOTRESPOND = "The server cannot respond right now, please try again later";
+
+	/**
 	 * The user didn't add a file location to the request where one was needed.
 	 */
 	public static final String NOFILELOCATION = "User didn't include a filelocation";
@@ -50,4 +55,3 @@ public class Errors {
 	 */
 	public static final String FILENOTREMOVED = "File could not be removed on the server";
 }
-
