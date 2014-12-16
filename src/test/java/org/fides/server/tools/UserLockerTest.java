@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -201,6 +202,18 @@ public class UserLockerTest {
 		UserLocker.lock(usernameUnLocked);
 		UserLocker.unlock(usernameUnLocked);
 		assertFalse(UserLocker.isLocked(usernameUnLocked));
+	}
+
+	/**
+	 * Empties the test folder to clear all locks
+	 */
+	@After
+	public static void cleanTestFolder() {
+		try {
+			FileUtils.cleanDirectory(testUserDir);
+		} catch (Exception e) {
+			fail("Unexpected error in tearDown: " + e.getMessage());
+		}
 	}
 
 	/**

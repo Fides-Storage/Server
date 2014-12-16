@@ -135,6 +135,8 @@ public class ClientFileConnector {
 				fileOutputStream.close();
 				virtualInputStream.close();
 
+				CommunicationUtil.returnSuccessful(outputStream);
+
 				// Add the file to the user
 				userFile.addFile(location);
 				uploadSuccessful = true;

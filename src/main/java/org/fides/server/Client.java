@@ -25,7 +25,7 @@ import com.google.gson.JsonObject;
 
 /**
  * Runnable to create a thread for the handling of a client
- *
+ * 
  */
 public class Client implements Runnable {
 
@@ -75,7 +75,6 @@ public class Client implements Runnable {
 					break;
 				}
 			}
-
 			// Start the reading and handling of user actions.
 			ClientFileConnector clientFileConnector = new ClientFileConnector(userFile);
 			handleActions(in, clientFileConnector, out);

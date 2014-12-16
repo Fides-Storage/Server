@@ -113,7 +113,7 @@ public final class FileManager {
 				// Copy the temporary file into the official file
 				Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-				// Tell the cli�nt the upload was successful
+				// Tell the client the upload was successful
 				CommunicationUtil.returnSuccessful(outputStream);
 				return true;
 			} catch (IOException e) {
