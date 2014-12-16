@@ -178,9 +178,9 @@ public class UserLockerTest {
 	 */
 	@Test
 	public void testIsLocked() {
-		String username = "testLockCreateLockfile";
-		UserLocker.lock(username);
-		assertTrue(UserLocker.isLocked(username));
+		String usernameLocked = "testUsernameLocked";
+		UserLocker.lock(usernameLocked);
+		assertTrue(UserLocker.isLocked(usernameLocked));
 	}
 
 	/**
@@ -188,8 +188,8 @@ public class UserLockerTest {
 	 */
 	@Test
 	public void testIsNotLocked() {
-		String username = "testLockCreateLockfile";
-		assertFalse(UserLocker.isLocked(username));
+		String usernameNotLocked = "testUsernameNotLocked";
+		assertFalse(UserLocker.isLocked(usernameNotLocked));
 	}
 
 	/**
@@ -197,10 +197,10 @@ public class UserLockerTest {
 	 */
 	@Test
 	public void testIsUnlocked() {
-		String username = "testLockCreateLockfile";
-		UserLocker.lock(username);
-		UserLocker.unlock(username);
-		assertFalse(UserLocker.isLocked(username));
+		String usernameUnLocked = "testUsernameUnLocked";
+		UserLocker.lock(usernameUnLocked);
+		UserLocker.unlock(usernameUnLocked);
+		assertFalse(UserLocker.isLocked(usernameUnLocked));
 	}
 
 	/**
