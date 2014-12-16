@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.fides.components.Responses;
 import org.fides.components.virtualstream.VirtualInputStream;
 import org.fides.components.virtualstream.VirtualOutputStream;
+import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.PropertiesManager;
 
 import com.google.gson.Gson;
@@ -96,10 +97,8 @@ public final class FileManager {
 		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile(true));
 		try (InputStream virtualIn = new VirtualInputStream(inputStream);
 			OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-			// Tell the cliënt he can start sending the file.
-			JsonObject successfulObj = new JsonObject();
-			successfulObj.addProperty(Responses.SUCCESSFUL, true);
-			outputStream.writeUTF(new Gson().toJson(successfulObj));
+			// Tell the cliï¿½nt he can start sending the file.
+			CommunicationUtil.returnSuccessful(outputStream);
 
 			// Put the stream into a temporary file
 			IOUtils.copy(virtualIn, fileOutputStream);
@@ -110,8 +109,8 @@ public final class FileManager {
 			// Copy the temporary file into the official file
 			Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-			// Tell the cliënt the upload was successful
-			outputStream.writeUTF(new Gson().toJson(successfulObj));
+			// Tell the cliï¿½nt the upload was successful
+			CommunicationUtil.returnSuccessful(outputStream);
 			return true;
 		} catch (IOException e) {
 			log.error(e.getMessage());
@@ -134,10 +133,8 @@ public final class FileManager {
 		// Open an inputstream to the file and a virtualoutputstream of the output
 		try (InputStream inStream = new FileInputStream(file);
 			VirtualOutputStream virtualOutStream = new VirtualOutputStream(outputStream)) {
-			// Tell the cliënt he can start downloading
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			outputStream.writeUTF(new Gson().toJson(returnJobj));
+			// Tell the cliï¿½nt he can start downloading
+			CommunicationUtil.returnSuccessful(outputStream);
 
 			// Copy the content of the file to the stream
 			IOUtils.copy(inStream, virtualOutStream);

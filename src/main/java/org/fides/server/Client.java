@@ -10,13 +10,12 @@ import java.net.SocketException;
 import javax.net.ssl.SSLSocket;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
-import org.fides.components.Responses;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
+import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.Errors;
 import org.fides.server.tools.JsonObjectHandler;
 import org.fides.server.tools.UserLocker;
@@ -37,9 +36,9 @@ public class Client implements Runnable {
 	 */
 	private static Logger log = LogManager.getLogger(Client.class);
 
-	private UserFile userFile;
-
 	private Socket server;
+
+	private UserFile userFile;
 
 	/**
 	 * Constructor for client connection
@@ -66,19 +65,15 @@ public class Client implements Runnable {
 
 				switch (action) {
 				case Actions.CREATEUSER:
-					createUser(requestObject, out);
+					UserManager.createUser(requestObject, out);
 					break;
 				case Actions.LOGIN:
-					authenticateUser(requestObject, out);
+					userFile = UserManager.authenticateUser(requestObject, out);
 					break;
 				case Actions.DISCONNECT:
 					return;
 				default:
-					// TODO: Use the copyErrorToStream function that's currently in ClientFileConnector
-					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
-					out.writeUTF(new Gson().toJson(returnJobj));
+					CommunicationUtil.returnError(out, Errors.UNKNOWNACTION);
 					break;
 				}
 			}
@@ -133,10 +128,7 @@ public class Client implements Runnable {
 					clientFileConnector.removeFile(requestObject, out);
 					break;
 				default:
-					JsonObject returnJobj = new JsonObject();
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.UNKNOWNACTION);
-					out.writeUTF(new Gson().toJson(returnJobj));
+					CommunicationUtil.returnError(out, Errors.UNKNOWNACTION);
 					out.close();
 					break;
 				}
@@ -146,95 +138,7 @@ public class Client implements Runnable {
 		} catch (SocketException e) {
 			log.debug("Closed by client don't throw an error message");
 		} finally {
-			UserLocker.unlock(userFile.getUsername());
-		}
-	}
-
-	/**
-	 * Creates a user based on received json object
-	 * 
-	 * @param userObject
-	 *            jsonObject containing username and password
-	 * @param out
-	 *            outputstream to the client
-	 * @throws IOException
-	 *             if failed to write to outputstream
-	 */
-	public void createUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		// Reads the data send by the client
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
-		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
-
-		JsonObject returnJobj = new JsonObject();
-
-		// Check if the username and password are valid
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			// Return unsuccessful and error when the user already exists
-			if (UserManager.checkIfUserExists(username)) {
-				returnJobj.addProperty(Responses.SUCCESSFUL, false);
-				returnJobj.addProperty(Responses.ERROR, Errors.USNERNAMEEXISTS);
-
-			} else {
-				UserFile uf = new UserFile(username, passwordHash);
-				if (UserManager.saveUserFile(uf)) {
-					returnJobj.addProperty(Responses.SUCCESSFUL, true);
-				} else {
-					returnJobj.addProperty(Responses.SUCCESSFUL, false);
-					returnJobj.addProperty(Responses.ERROR, Errors.CANNOTSAVEUSERFILE);
-				}
-			}
-		} else {
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, Errors.USERNAMEORPASSWORDEMPTY);
-		}
-
-		out.writeUTF(new Gson().toJson(returnJobj));
-
-	}
-
-	/**
-	 * Authenticate user based on jsonobject with username and password
-	 * 
-	 * @param userObject
-	 *            json object with at least username and password
-	 * @param out
-	 *            output stream to client to write error message
-	 * @return if user is authenticated or not
-	 */
-	public boolean authenticateUser(JsonObject userObject, DataOutputStream out) throws IOException {
-		String username = JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME);
-		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
-
-		String errorMessage = null;
-
-		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(passwordHash)) {
-			userFile = UserManager.unlockUserFile(username, passwordHash);
-			if (userFile == null) {
-				errorMessage = Errors.USERNAMEORPASSWORDINCORRECT;
-			}
-		} else {
-			errorMessage = Errors.USERNAMEORPASSWORDEMPTY;
-		}
-
-		if (StringUtils.isNotBlank(errorMessage)) {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, false);
-			returnJobj.addProperty(Responses.ERROR, errorMessage);
-			out.writeUTF(new Gson().toJson(returnJobj));
-			return false;
-		} else {
-			boolean successful = false;
-			try {
-				JsonObject returnJobj = new JsonObject();
-				returnJobj.addProperty(Responses.SUCCESSFUL, true);
-				out.writeUTF(new Gson().toJson(returnJobj));
-				successful = true;
-			} finally {
-				if (!successful) {
-					UserLocker.unlock(userFile.getUsername());
-				}
-			}
-			return successful;
+			UserLocker.unlock(userFile.getUsernameHash());
 		}
 	}
 }
