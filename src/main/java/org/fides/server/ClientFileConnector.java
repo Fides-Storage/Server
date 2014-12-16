@@ -43,7 +43,7 @@ public class ClientFileConnector {
 	 * Constructor for ClientFileConnector
 	 * 
 	 * @param userFile
-	 * 			The logged in user's userFile
+	 *            The logged in user's userFile
 	 */
 	public ClientFileConnector(UserFile userFile) {
 		this.userFile = userFile;
@@ -53,7 +53,7 @@ public class ClientFileConnector {
 	 * Downloads the keyfile of the currently logged in user.
 	 * 
 	 * @param outputStream
-	 * 			The stream which contains the keyfile.
+	 *            The stream which contains the keyfile.
 	 * @return Wether the writing of the keyfile to the stream was successful
 	 */
 	public boolean downloadKeyFile(DataOutputStream outputStream) {
@@ -75,9 +75,9 @@ public class ClientFileConnector {
 	 * Downloads a file by writing it to the outputstream
 	 * 
 	 * @param fileRequest
-	 * 			The Json request which contains the file's location
+	 *            The Json request which contains the file's location
 	 * @param outputStream
-	 * 			The stream which the file needs to be written to
+	 *            The stream which the file needs to be written to
 	 * @return Wether the download is successful
 	 */
 	public boolean downloadFile(JsonObject fileRequest, DataOutputStream outputStream) {
@@ -108,12 +108,12 @@ public class ClientFileConnector {
 	 * stream and returns the file's server location to the client through the outputstream.
 	 * 
 	 * @param inputStream
-	 * 			The content of the file
+	 *            The content of the file
 	 * @param outputStream
-	 * 			The stream to write the response to
+	 *            The stream to write the response to
 	 * @return Wether the upload was successful or not
 	 */
-	public boolean uploadFile(DataInputStream inputStream, DataOutputStream outputStream) {
+	public boolean uploadFile(InputStream inputStream, DataOutputStream outputStream) {
 		String location = FileManager.createFile();
 		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 		boolean uploadSuccessful = false;
@@ -154,11 +154,11 @@ public class ClientFileConnector {
 	 * Update a file belonging to the user with the inputStream as its new contents
 	 * 
 	 * @param inputStream
-	 * 			The contents to fill the file with.
+	 *            The contents to fill the file with.
 	 * @param updateRequest
-	 * 			The request containing the location of the file that needs to be updated
+	 *            The request containing the location of the file that needs to be updated
 	 * @param outputStream
-	 * 			The stream to write responses to
+	 *            The stream to write responses to
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
@@ -187,9 +187,9 @@ public class ClientFileConnector {
 	 * Remove a file belonging to the user
 	 * 
 	 * @param removeRequest
-	 * 			The request containing the location of the file that needs to be removed
+	 *            The request containing the location of the file that needs to be removed
 	 * @param outputStream
-	 * 			The stream to write responses to
+	 *            The stream to write responses to
 	 * @return wether the remove was successful or not
 	 */
 	public boolean removeFile(JsonObject removeRequest, DataOutputStream outputStream) {
@@ -229,9 +229,9 @@ public class ClientFileConnector {
 	 * Updates the keyfile with the inputStream as its content.
 	 * 
 	 * @param inputStream
-	 * 			The stream to fill the user's keyfile with
+	 *            The stream to fill the user's keyfile with
 	 * @param outputStream
-	 * 			The stream used to return feedback to the client
+	 *            The stream used to return feedback to the client
 	 * @return Wether the update was successful or not
 	 */
 	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {

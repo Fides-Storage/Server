@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * A static tool that can be used to lock a user on the server.
  */
@@ -27,12 +29,16 @@ public final class UserLocker {
 	 * @return Whether the lock was possible and successful
 	 */
 	public static boolean lock(String username) {
-		try {
-			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), username + ".lock");
-			return lockFile.createNewFile();
-		} catch (IOException e) {
-			return false;
+		String userDir = PropertiesManager.getInstance().getUserDir();
+		if (!StringUtils.isEmpty(userDir)) {
+			try {
+				File lockFile = new File(PropertiesManager.getInstance().getUserDir(), username + ".lock");
+				return lockFile.createNewFile();
+			} catch (IOException e) {
+				return false;
+			}
 		}
+		return false;
 	}
 
 	/**
@@ -42,18 +48,24 @@ public final class UserLocker {
 	 *            The user that can be unlocked
 	 */
 	public static void unlock(String username) {
-		File lockFile = new File(PropertiesManager.getInstance().getUserDir(), username + ".lock");
-		lockFile.delete();
+		String userDir = PropertiesManager.getInstance().getUserDir();
+		if (!StringUtils.isEmpty(userDir)) {
+			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), username + ".lock");
+			lockFile.delete();
+		}
 	}
 
 	/**
 	 * Clears all the available locks on the server. Should only be called on server startup.
 	 */
 	public static void clearAllLocks() {
-		File directory = new File(PropertiesManager.getInstance().getUserDir());
-		File[] lockFiles = directory.listFiles(LOCKFILTER);
-		for (File file : lockFiles) {
-			file.delete();
+		String userDir = PropertiesManager.getInstance().getUserDir();
+		if (!StringUtils.isEmpty(userDir)) {
+			File directory = new File(userDir);
+			File[] lockFiles = directory.listFiles(LOCKFILTER);
+			for (File file : lockFiles) {
+				file.delete();
+			}
 		}
 	}
 }
