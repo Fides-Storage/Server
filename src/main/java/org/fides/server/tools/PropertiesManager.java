@@ -12,8 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * 
- * @author Niels and Jesse
+ * This propertiesManager manages the application properties
  * 
  */
 public class PropertiesManager {
@@ -87,22 +86,47 @@ public class PropertiesManager {
 		return instance;
 	}
 
+	/**
+	 * Get the port where the application should run
+	 * @return
+	 * 		The port as int
+	 */
 	public int getPort() {
 		return port;
 	}
 
+	/**
+	 * Get the directory where the userfiles are located
+	 * @return
+	 * 		The user directory as String
+	 */
 	public String getUserDir() {
 		return userDir;
 	}
 
+	/**
+	 * Get the directory where the datafiles are located
+	 * @return
+	 * 		The data directory as String
+	 */
 	public String getDataDir() {
 		return dataDir;
 	}
 
+	/**
+	 * Get the path where the keystore is located
+	 * @return
+	 * 		The path of the keystore as String
+	 */
 	public String getKeystorePath() {
 		return keystorePath;
 	}
 
+	/**
+	 * Get the password of the keystore
+	 * @return
+	 * 		The password for the keystore as Char[]
+	 */
 	public char[] getKeystorePassword() {
 		return keystorePassword;
 	}

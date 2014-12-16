@@ -4,10 +4,6 @@ import com.google.gson.JsonObject;
 
 /**
  * Helper for jsonobject
- * 
- * @author niels
- * @author jesse
- *
  */
 public final class JsonObjectHandler {
 

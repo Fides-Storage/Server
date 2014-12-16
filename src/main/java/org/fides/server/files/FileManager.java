@@ -14,16 +14,14 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.fides.components.Responses;
 import org.fides.components.virtualstream.VirtualInputStream;
 import org.fides.components.virtualstream.VirtualOutputStream;
 import org.fides.server.tools.CommunicationUtil;
 import org.fides.server.tools.PropertiesManager;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 /**
  * This class is responsible for creating a file, removing a file and filling a file with an inputstream.
@@ -93,29 +91,33 @@ public final class FileManager {
 	 * @return Wether the copy was successful or not
 	 */
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream) {
-		// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
-		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), createFile(true));
-		try (InputStream virtualIn = new VirtualInputStream(inputStream);
-			OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-			// Tell the cli�nt he can start sending the file.
-			CommunicationUtil.returnSuccessful(outputStream);
+		String dataDir = PropertiesManager.getInstance().getDataDir();
+		String tempFileName = createFile(true);
+		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(tempFileName)) {
+			// Create a temporary file to prevent the keyfile from becoming corrupt when the stream closes too early
+			File tempFile = new File(dataDir, tempFileName);
+			try (InputStream virtualIn = new VirtualInputStream(inputStream);
+				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+				// Tell the cli�nt he can start sending the file.
+				CommunicationUtil.returnSuccessful(outputStream);
 
-			// Put the stream into a temporary file
-			IOUtils.copy(virtualIn, fileOutputStream);
-			fileOutputStream.flush();
-			fileOutputStream.close();
-			virtualIn.close();
+				// Put the stream into a temporary file
+				IOUtils.copy(virtualIn, fileOutputStream);
+				fileOutputStream.flush();
+				fileOutputStream.close();
+				virtualIn.close();
 
-			// Copy the temporary file into the official file
-			Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				// Copy the temporary file into the official file
+				Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-			// Tell the cli�nt the upload was successful
-			CommunicationUtil.returnSuccessful(outputStream);
-			return true;
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		} finally {
-			tempFile.delete();
+				// Tell the cli�nt the upload was successful
+				CommunicationUtil.returnSuccessful(outputStream);
+				return true;
+			} catch (IOException e) {
+				log.error(e.getMessage());
+			} finally {
+				tempFile.delete();
+			}
 		}
 		return false;
 	}
