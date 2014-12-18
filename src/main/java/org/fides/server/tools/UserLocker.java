@@ -5,11 +5,18 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A static tool that can be used to lock a user on the server.
  */
 public final class UserLocker {
+
+	/**
+	 * Log for this class
+	 */
+	private static Logger log = LogManager.getLogger(UserLocker.class);
 
 	private static final FilenameFilter LOCKFILTER = new FilenameFilter() {
 		@Override
@@ -30,15 +37,19 @@ public final class UserLocker {
 	 */
 	public static boolean lock(String usernameHash) {
 		String userDir = PropertiesManager.getInstance().getUserDir();
+		boolean locked = false;
 		if (!StringUtils.isEmpty(userDir)) {
 			try {
 				File lockFile = new File(PropertiesManager.getInstance().getUserDir(), usernameHash.concat(".lock"));
-				return lockFile.createNewFile();
+				locked = lockFile.createNewFile();
 			} catch (IOException e) {
-				return false;
+				locked = false;
 			}
 		}
-		return false;
+
+		log.trace("Lock(" + usernameHash + ") " + locked);
+
+		return locked;
 	}
 
 	/**
@@ -53,6 +64,7 @@ public final class UserLocker {
 			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), usernameHash.concat(".lock"));
 			lockFile.delete();
 		}
+		log.trace("Unlock(" + usernameHash + ") ");
 	}
 
 	/**

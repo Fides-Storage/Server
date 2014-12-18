@@ -105,6 +105,8 @@ public class Client implements Runnable {
 			JsonObject requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 			while (!action.equals(Actions.DISCONNECT)) {
+				log.trace("Action: " + action);
+
 				switch (action) {
 				case Actions.GETKEYFILE:
 					clientFileConnector.downloadKeyFile(out);

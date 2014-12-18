@@ -192,8 +192,6 @@ public final class UserManager {
 		String usernameHash = HashUtils.hash(JsonObjectHandler.getProperty(userObject, Actions.Properties.USERNAME_HASH));
 		String passwordHash = JsonObjectHandler.getProperty(userObject, Actions.Properties.PASSWORD_HASH);
 
-		JsonObject returnJobj = new JsonObject();
-
 		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
 			if (UserManager.checkIfUserExists(usernameHash)) {
 				CommunicationUtil.returnError(out, Errors.USNERNAMEEXISTS);
@@ -231,14 +229,18 @@ public final class UserManager {
 				userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
 
 				if (userFile != null) {
+					log.trace("AuthenticateUser Successful");
 					CommunicationUtil.returnSuccessful(out);
 				} else {
+					log.trace(Errors.USERNAMEORPASSWORDINCORRECT);
 					CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
 				}
 			} else {
+				log.trace(Errors.SERVERCANNOTRESPOND);
 				CommunicationUtil.returnError(out, Errors.SERVERCANNOTRESPOND);
 			}
 		} else {
+			log.trace(Errors.USERNAMEORPASSWORDEMPTY);
 			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
 
 		}
