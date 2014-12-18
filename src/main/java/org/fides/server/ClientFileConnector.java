@@ -210,13 +210,17 @@ public class ClientFileConnector {
 					boolean result = FileManager.removeFile(location);
 
 					if (result) {
+						try {
+							CommunicationUtil.returnSuccessful(outputStream);
+						} catch (IOException e) {
+							log.debug("IOException when returning the successful delete: ", e);
+						}
+
 						// Remove file in UserFile
 						userFile.removeFile(location);
-						CommunicationUtil.returnSuccessful(outputStream);
 					} else {
 						CommunicationUtil.returnError(outputStream, Errors.FILENOTREMOVED);
 					}
-
 					return result;
 				} else {
 					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);

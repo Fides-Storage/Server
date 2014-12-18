@@ -208,7 +208,7 @@ public class UserLockerTest {
 	 * Empties the test folder to clear all locks
 	 */
 	@After
-	public static void cleanTestFolder() {
+	public void cleanTestFolder() {
 		try {
 			FileUtils.cleanDirectory(testUserDir);
 		} catch (Exception e) {
