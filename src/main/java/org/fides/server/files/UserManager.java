@@ -232,18 +232,18 @@ public final class UserManager {
 					log.trace("AuthenticateUser Successful");
 					CommunicationUtil.returnSuccessful(out);
 				} else {
-					log.trace(Errors.USERNAMEORPASSWORDINCORRECT);
+					log.error(Errors.USERNAMEORPASSWORDINCORRECT);
 					CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
 				}
 			} else {
-				log.trace(Errors.SERVERCANNOTRESPOND);
+				log.error(Errors.SERVERCANNOTRESPOND);
 				CommunicationUtil.returnError(out, Errors.SERVERCANNOTRESPOND);
 			}
 		} else {
-			log.trace(Errors.USERNAMEORPASSWORDEMPTY);
+			log.error(Errors.USERNAMEORPASSWORDEMPTY);
 			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
-
 		}
+
 		return userFile;
 	}
 

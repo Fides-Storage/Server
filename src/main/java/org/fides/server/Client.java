@@ -139,5 +139,7 @@ public class Client implements Runnable {
 		} finally {
 			UserLocker.unlock(userFile.getUsernameHash());
 		}
+
+		log.trace("Action: " + Actions.DISCONNECT);
 	}
 }
