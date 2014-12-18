@@ -11,7 +11,7 @@ How to install
 ======
 In order to get the project running you need at least Java jre 7. You also need Maven to get the project running. If you haven't installed it yet, look at following link for more information about Maven: maven.apache.org/. To work with Maven within Eclipse, you have to install the Maven plugin called 'Maven integration for Eclipse' from the Eclipse Marketplace. After you've installed the Maven plugin you can clone all three Github repositories from Github.com/Fides-Storage/. In Eclipse you have to import the three repositories by selecting 'Existing Maven Projects'. Open the folder where all three repositories are cloned to and import them.
 
-<i>P.S. Administrator rights might be needed in order to create files</i>
+<i>P.S. Administrator rights might be needed in order to create files.</i>
 
 Checkstyle and Formatter
 ======
