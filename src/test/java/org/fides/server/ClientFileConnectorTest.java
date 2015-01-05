@@ -284,7 +284,7 @@ public class ClientFileConnectorTest {
 
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains(Errors.NOFILELOCATION));
+			assertTrue(response.contains(Errors.NO_FILE_LOCATION));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -309,7 +309,7 @@ public class ClientFileConnectorTest {
 
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains(Errors.NOFILELOCATION));
+			assertTrue(response.contains(Errors.NO_FILE_LOCATION));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -347,7 +347,7 @@ public class ClientFileConnectorTest {
 
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains(Errors.FILEWITHOUTOWNERSHIP));
+			assertTrue(response.contains(Errors.FILE_WITHOUT_OWNERSHIP));
 
 			// Make sure the file didn't get updated.
 			assertFalse(Arrays.equals(updatedFileContent, Files.readAllBytes(existingFile.toPath())));
@@ -383,7 +383,7 @@ public class ClientFileConnectorTest {
 			// Check if the correct error was returned
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(response.contains(Errors.FILENOTFOUND));
+			assertTrue(response.contains(Errors.FILE_NOT_FOUND));
 
 			// Make sure the file didn't get created.
 			assertFalse(notExistingFile.exists());
@@ -452,7 +452,7 @@ public class ClientFileConnectorTest {
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains(Errors.NOFILELOCATION));
+			assertTrue(downloadResponse.toString().contains(Errors.NO_FILE_LOCATION));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -481,7 +481,7 @@ public class ClientFileConnectorTest {
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains(Errors.NOFILELOCATION));
+			assertTrue(downloadResponse.toString().contains(Errors.NO_FILE_LOCATION));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -523,7 +523,7 @@ public class ClientFileConnectorTest {
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains(Errors.FILEWITHOUTOWNERSHIP));
+			assertTrue(downloadResponse.toString().contains(Errors.FILE_WITHOUT_OWNERSHIP));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
@@ -559,7 +559,7 @@ public class ClientFileConnectorTest {
 			in = new DataInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
 			JsonObject downloadResponse = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			assertTrue(downloadResponse.toString().contains("\"" + Responses.SUCCESSFUL + "\":false"));
-			assertTrue(downloadResponse.toString().contains(Errors.FILENOTFOUND));
+			assertTrue(downloadResponse.toString().contains(Errors.FILE_NOT_FOUND));
 
 			// Read the rest of the stream to check if indeed no file was downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();

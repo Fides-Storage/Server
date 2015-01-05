@@ -94,13 +94,13 @@ public class ClientFileConnector {
 				if (file.exists()) {
 					return FileManager.copyFileToStream(file, outputStream);
 				} else {
-					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);
+					CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_FOUND);
 				}
 			} else {
-				CommunicationUtil.returnError(outputStream, Errors.FILEWITHOUTOWNERSHIP);
+				CommunicationUtil.returnError(outputStream, Errors.FILE_WITHOUT_OWNERSHIP);
 			}
 		} else {
-			CommunicationUtil.returnError(outputStream, Errors.NOFILELOCATION);
+			CommunicationUtil.returnError(outputStream, Errors.NO_FILE_LOCATION);
 		}
 		IOUtils.closeQuietly(outputStream);
 		return false;
@@ -177,13 +177,13 @@ public class ClientFileConnector {
 				if (file.exists()) {
 					return FileManager.copyStreamToFile(inputStream, file, outputStream);
 				} else {
-					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);
+					CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_FOUND);
 				}
 			} else {
-				CommunicationUtil.returnError(outputStream, Errors.FILEWITHOUTOWNERSHIP);
+				CommunicationUtil.returnError(outputStream, Errors.FILE_WITHOUT_OWNERSHIP);
 			}
 		} else {
-			CommunicationUtil.returnError(outputStream, Errors.NOFILELOCATION);
+			CommunicationUtil.returnError(outputStream, Errors.NO_FILE_LOCATION);
 		}
 		return false;
 	}
@@ -219,17 +219,17 @@ public class ClientFileConnector {
 						// Remove file in UserFile
 						userFile.removeFile(location);
 					} else {
-						CommunicationUtil.returnError(outputStream, Errors.FILENOTREMOVED);
+						CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_REMOVED);
 					}
 					return result;
 				} else {
-					CommunicationUtil.returnError(outputStream, Errors.FILENOTFOUND);
+					CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_FOUND);
 				}
 			} else {
-				CommunicationUtil.returnError(outputStream, Errors.FILEWITHOUTOWNERSHIP);
+				CommunicationUtil.returnError(outputStream, Errors.FILE_WITHOUT_OWNERSHIP);
 			}
 		} else {
-			CommunicationUtil.returnError(outputStream, Errors.NOFILELOCATION);
+			CommunicationUtil.returnError(outputStream, Errors.NO_FILE_LOCATION);
 		}
 		return false;
 	}
