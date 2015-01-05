@@ -79,7 +79,6 @@ public class Server implements Runnable {
 				// Listens for a connection to be made to this socket and accepts
 				SSLSocket sslsocket = (SSLSocket) sslServerSocket.accept();
 
-				// TODO: Check if connection is correctly closed without a timeout
 				// Create a client object from the connection
 				Client client = new Client(sslsocket);
 				// Start a thread with the created Client

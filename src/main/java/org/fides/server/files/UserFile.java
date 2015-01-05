@@ -118,4 +118,12 @@ public class UserFile implements Serializable {
 		keyFile = location;
 	}
 
+	public GregorianCalendar getLastRefreshed() {
+		return lastRefreshed;
+	}
+
+	public void setLastRefreshed(GregorianCalendar lastRefreshed) {
+		this.lastRefreshed = lastRefreshed;
+	}
+
 }
