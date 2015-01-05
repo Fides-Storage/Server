@@ -31,7 +31,7 @@ public final class FileManager {
 	private static Logger log = LogManager.getLogger(FileManager.class);
 
 	/** The maximum number of attempts when trying to create a unique filename */
-	private static final int MAXUNIQUENAMEATTEMPTS = 10;
+	private static final int MAX_UNIQUE_NAME_ATTEMPTS = 10;
 
 	/**
 	 * Creates a new file with a unique name.
@@ -64,7 +64,7 @@ public final class FileManager {
 			// Check if the filename is unique, there's a maximum number of attempts to prevent an overflow
 			try {
 				int uniqueAttempts = 0;
-				while (!newFile.createNewFile() && ++uniqueAttempts <= MAXUNIQUENAMEATTEMPTS) {
+				while (!newFile.createNewFile() && ++uniqueAttempts <= MAX_UNIQUE_NAME_ATTEMPTS) {
 					location = UUID.randomUUID().toString();
 					if (temporary) {
 						location += ".tmp";

@@ -144,7 +144,7 @@ public class UserManagerTest {
 	@Test
 	public void testCreateUser() {
 		JsonObject user = new JsonObject();
-		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
+		user.addProperty(Actions.ACTION, Actions.CREATE_USER);
 		user.addProperty(Actions.Properties.USERNAME_HASH, "createUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 
@@ -269,7 +269,7 @@ public class UserManagerTest {
 	@Test
 	public void testCreateStrangeUser() {
 		JsonObject user = new JsonObject();
-		user.addProperty(Actions.ACTION, Actions.CREATEUSER);
+		user.addProperty(Actions.ACTION, Actions.CREATE_USER);
 		user.addProperty(Actions.Properties.USERNAME_HASH, "/../createUsername");
 		user.addProperty(Actions.Properties.PASSWORD_HASH, "Thisisapassword");
 

@@ -62,7 +62,7 @@ public class Client implements Runnable {
 				String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 
 				switch (action) {
-				case Actions.CREATEUSER:
+				case Actions.CREATE_USER:
 					UserManager.createUser(requestObject, out);
 					break;
 				case Actions.LOGIN:
@@ -71,7 +71,7 @@ public class Client implements Runnable {
 				case Actions.DISCONNECT:
 					return;
 				default:
-					CommunicationUtil.returnError(out, Errors.UNKNOWNACTION);
+					CommunicationUtil.returnError(out, Errors.UNKNOWN_ACTION);
 					break;
 				}
 			}
@@ -108,26 +108,26 @@ public class Client implements Runnable {
 				log.trace("Action: " + action);
 
 				switch (action) {
-				case Actions.GETKEYFILE:
+				case Actions.GET_KEY_FILE:
 					clientFileConnector.downloadKeyFile(out);
 					break;
-				case Actions.GETFILE:
+				case Actions.GET_FILE:
 					clientFileConnector.downloadFile(requestObject, out);
 					break;
-				case Actions.UPDATEKEYFILE:
+				case Actions.UPDATE_KEY_FILE:
 					clientFileConnector.updateKeyFile(in, out);
 					break;
-				case Actions.UPDATEFILE:
+				case Actions.UPDATE_FILE:
 					clientFileConnector.updateFile(in, requestObject, out);
 					break;
-				case Actions.UPLOADFILE:
+				case Actions.UPLOAD_FILE:
 					clientFileConnector.uploadFile(in, out);
 					break;
-				case Actions.REMOVEFILE:
+				case Actions.REMOVE_FILE:
 					clientFileConnector.removeFile(requestObject, out);
 					break;
 				default:
-					CommunicationUtil.returnError(out, Errors.UNKNOWNACTION);
+					CommunicationUtil.returnError(out, Errors.UNKNOWN_ACTION);
 					out.close();
 					break;
 				}

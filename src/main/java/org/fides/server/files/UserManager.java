@@ -192,18 +192,18 @@ public final class UserManager {
 
 		if (StringUtils.isNotBlank(usernameHash) && StringUtils.isNotBlank(passwordHash)) {
 			if (UserManager.checkIfUserExists(usernameHash)) {
-				CommunicationUtil.returnError(out, Errors.USNERNAMEEXISTS);
+				CommunicationUtil.returnError(out, Errors.USNERNAME_EXISTS);
 
 			} else {
 				UserFile uf = new UserFile(usernameHash, passwordHash);
 				if (UserManager.saveUserFile(uf)) {
 					CommunicationUtil.returnSuccessful(out);
 				} else {
-					CommunicationUtil.returnError(out, Errors.CANNOTSAVEUSERFILE);
+					CommunicationUtil.returnError(out, Errors.CANNOT_SAVE_USER_FILE);
 				}
 			}
 		} else {
-			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
+			CommunicationUtil.returnError(out, Errors.USERNAME_OR_PASSWORD_EMPTY);
 		}
 
 	}
@@ -230,16 +230,16 @@ public final class UserManager {
 					log.trace("AuthenticateUser Successful");
 					CommunicationUtil.returnSuccessful(out);
 				} else {
-					log.error(Errors.USERNAMEORPASSWORDINCORRECT);
-					CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDINCORRECT);
+					log.error(Errors.USERNAME_OR_PASSWORD_INCORRECT);
+					CommunicationUtil.returnError(out, Errors.USERNAME_OR_PASSWORD_INCORRECT);
 				}
 			} else {
-				log.error(Errors.SERVERCANNOTRESPOND);
-				CommunicationUtil.returnError(out, Errors.SERVERCANNOTRESPOND);
+				log.error(Errors.SERVER_CANNOT_RESPOND);
+				CommunicationUtil.returnError(out, Errors.SERVER_CANNOT_RESPOND);
 			}
 		} else {
-			log.error(Errors.USERNAMEORPASSWORDEMPTY);
-			CommunicationUtil.returnError(out, Errors.USERNAMEORPASSWORDEMPTY);
+			log.error(Errors.USERNAME_OR_PASSWORD_EMPTY);
+			CommunicationUtil.returnError(out, Errors.USERNAME_OR_PASSWORD_EMPTY);
 		}
 
 		return userFile;
