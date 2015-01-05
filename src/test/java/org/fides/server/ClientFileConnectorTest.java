@@ -46,8 +46,6 @@ import com.google.gson.JsonObject;
 /**
  * The tests for the ClientFileConnector class
  * 
- * @author Thijs
- * 
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ PropertiesManager.class, FileManager.class })

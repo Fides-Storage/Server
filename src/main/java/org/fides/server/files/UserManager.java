@@ -32,8 +32,6 @@ import com.google.gson.JsonObject;
 
 /**
  * This class manages the users using static functions. It can unlock and save user files.
- * 
- * @author Niels and Jesse
  */
 public final class UserManager {
 	/**

@@ -38,8 +38,6 @@ import com.google.gson.JsonObject;
 
 /**
  * The JUnit Test Case for the UserManager
- * 
- * @author Niels and Jesse
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ PropertiesManager.class, FileManager.class, UserManager.class })

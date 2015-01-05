@@ -8,8 +8,6 @@ import java.util.TreeSet;
 /**
  * This class is responsible for keeping track of the files that belong to a user.
  * 
- * @author Niels and Jesse
- * 
  */
 public class UserFile implements Serializable {
 

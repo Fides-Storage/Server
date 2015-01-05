@@ -36,7 +36,7 @@ public class PropertiesManager {
 	private char[] keystorePassword;
 
 	/**
-	 * Constructor of the properties manager
+	 * Constructor of the properties manager. Loads the properties file.
 	 */
 	protected PropertiesManager() {
 		Properties properties = new Properties();
@@ -88,8 +88,8 @@ public class PropertiesManager {
 
 	/**
 	 * Get the port where the application should run
-	 * @return
-	 * 		The port as int
+	 * 
+	 * @return The port as int
 	 */
 	public int getPort() {
 		return port;
@@ -97,8 +97,8 @@ public class PropertiesManager {
 
 	/**
 	 * Get the directory where the userfiles are located
-	 * @return
-	 * 		The user directory as String
+	 * 
+	 * @return The user directory as String
 	 */
 	public String getUserDir() {
 		return userDir;
@@ -106,8 +106,8 @@ public class PropertiesManager {
 
 	/**
 	 * Get the directory where the datafiles are located
-	 * @return
-	 * 		The data directory as String
+	 * 
+	 * @return The data directory as String
 	 */
 	public String getDataDir() {
 		return dataDir;
@@ -115,8 +115,8 @@ public class PropertiesManager {
 
 	/**
 	 * Get the path where the keystore is located
-	 * @return
-	 * 		The path of the keystore as String
+	 * 
+	 * @return The path of the keystore as String
 	 */
 	public String getKeystorePath() {
 		return keystorePath;
@@ -124,8 +124,8 @@ public class PropertiesManager {
 
 	/**
 	 * Get the password of the keystore
-	 * @return
-	 * 		The password for the keystore as Char[]
+	 * 
+	 * @return The password for the keystore as Char[]
 	 */
 	public char[] getKeystorePassword() {
 		return keystorePassword;
