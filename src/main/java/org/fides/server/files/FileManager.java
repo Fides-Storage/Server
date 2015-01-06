@@ -127,6 +127,7 @@ public final class FileManager {
 					if (isDataFile) {
 						userFile.removeAmountOfBytes(file.length());
 						userFile.addAmountOfBytes(bytesCoppied);
+						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					}
 
 					// Copy the temporary file into the official file

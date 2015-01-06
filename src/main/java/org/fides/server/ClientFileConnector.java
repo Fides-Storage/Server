@@ -141,6 +141,7 @@ public class ClientFileConnector {
 					// Add the file to the user
 					userFile.addFile(location);
 					userFile.addAmountOfBytes(bytesCoppied);
+					log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					uploadSuccessful = true;
 				} else {
 					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
@@ -217,6 +218,7 @@ public class ClientFileConnector {
 
 					if (result) {
 						try {
+							log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 							CommunicationUtil.returnSuccessful(outputStream);
 						} catch (IOException e) {
 							log.debug("IOException when returning the successful delete: ", e);
