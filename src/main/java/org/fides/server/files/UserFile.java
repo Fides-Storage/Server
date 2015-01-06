@@ -28,6 +28,8 @@ public class UserFile implements Serializable {
 
 	private GregorianCalendar lastRefreshed;
 
+	private long maxAmountOfUsedBytes;
+
 	private long amountOfUsedBytes;
 
 	/**
@@ -42,6 +44,7 @@ public class UserFile implements Serializable {
 		this.usernameHash = usernameHash;
 		this.passwordHash = passwordHash;
 		this.keyFile = FileManager.createFile();
+		this.maxAmountOfUsedBytes = PropertiesManager.getInstance().getMaxAmountOfBytesPerUser();
 		this.amountOfUsedBytes = 0;
 	}
 
@@ -129,8 +132,28 @@ public class UserFile implements Serializable {
 		this.lastRefreshed = lastRefreshed;
 	}
 
+	/**
+	 * Change the max amount of used bytes
+	 * 
+	 * @param newMaxAmountOfUsedBytes
+	 *            of bytes
+	 * @return if succeeded
+	 */
+	public boolean changeMaxAmountOfUsedBytes(long newMaxAmountOfUsedBytes) {
+		maxAmountOfUsedBytes = newMaxAmountOfUsedBytes;
+		return UserManager.saveUserFile(this);
+	}
+
+	/**
+	 * Getter for amount of free bytes
+	 * 
+	 * @return amount of free bytes
+	 */
 	public long getAmountOfFreeBytes() {
-		return PropertiesManager.getInstance().getMaxAmountOfBytesPerUser() - amountOfUsedBytes;
+		if (maxAmountOfUsedBytes - amountOfUsedBytes <= 0) {
+			return 0;
+		}
+		return maxAmountOfUsedBytes - amountOfUsedBytes;
 	}
 
 	/**
