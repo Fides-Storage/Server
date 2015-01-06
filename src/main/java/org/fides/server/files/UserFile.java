@@ -5,6 +5,8 @@ import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.fides.server.tools.PropertiesManager;
+
 /**
  * This class is responsible for keeping track of the files that belong to a user.
  * 
@@ -26,6 +28,8 @@ public class UserFile implements Serializable {
 
 	private GregorianCalendar lastRefreshed;
 
+	private long amountOfUsedBytes;
+
 	/**
 	 * Constructor for the user file
 	 * 
@@ -38,6 +42,7 @@ public class UserFile implements Serializable {
 		this.usernameHash = usernameHash;
 		this.passwordHash = passwordHash;
 		this.keyFile = FileManager.createFile();
+		this.amountOfUsedBytes = 0;
 	}
 
 	public String getUsernameHash() {
@@ -124,4 +129,29 @@ public class UserFile implements Serializable {
 		this.lastRefreshed = lastRefreshed;
 	}
 
+	public long getAmountOfFreeBytes() {
+		return PropertiesManager.getInstance().getMaxAmountOfBytesPerUser() - amountOfUsedBytes;
+	}
+
+	/**
+	 * Add amount of bytes to the used space
+	 * 
+	 * @param amountOfBytes
+	 *            of used space
+	 */
+	public void addAmountOfBytes(long amountOfBytes) {
+		amountOfUsedBytes += amountOfBytes;
+		UserManager.saveUserFile(this);
+	}
+
+	/**
+	 * Remove amount of bytes to the used space
+	 * 
+	 * @param amountOfBytes
+	 *            of used space
+	 */
+	public void removeAmountOfBytes(long amountOfBytes) {
+		amountOfUsedBytes -= amountOfBytes;
+		UserManager.saveUserFile(this);
+	}
 }

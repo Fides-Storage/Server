@@ -130,16 +130,22 @@ public class ClientFileConnector {
 				CommunicationUtil.returnSuccessfulWithProperties(outputStream, properties);
 
 				// Put the inputstream received from the user into a temporary file
-				IOUtils.copy(virtualInputStream, fileOutputStream);
+				long bytesCoppied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile, true);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualInputStream.close();
 
-				CommunicationUtil.returnSuccessful(outputStream);
+				if (bytesCoppied != -1) {
+					CommunicationUtil.returnSuccessful(outputStream);
 
-				// Add the file to the user
-				userFile.addFile(location);
-				uploadSuccessful = true;
+					// Add the file to the user
+					userFile.addFile(location);
+					userFile.addAmountOfBytes(bytesCoppied);
+					uploadSuccessful = true;
+				} else {
+					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
+				}
+
 			} catch (IOException e) {
 				log.error(e.getMessage());
 				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
@@ -175,7 +181,7 @@ public class ClientFileConnector {
 				File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 				// Check if the file exists
 				if (file.exists()) {
-					return FileManager.copyStreamToFile(inputStream, file, outputStream);
+					return FileManager.copyStreamToFile(inputStream, file, outputStream, userFile, true);
 				} else {
 					CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_FOUND);
 				}
@@ -207,7 +213,7 @@ public class ClientFileConnector {
 				// Check if the file exists
 				if (file.exists()) {
 					// Remove the file
-					boolean result = FileManager.removeFile(location);
+					boolean result = FileManager.removeFile(location, userFile);
 
 					if (result) {
 						try {
@@ -253,7 +259,7 @@ public class ClientFileConnector {
 			File keyFile = new File(PropertiesManager.getInstance().getDataDir(), userFile.getKeyFileLocation());
 			// If the keyfile exists, copy the stream to the keyfile (via a temporary file)
 			if (keyFile.exists()) {
-				return FileManager.copyStreamToFile(inputStream, keyFile, outputStream);
+				return FileManager.copyStreamToFile(inputStream, keyFile, outputStream, userFile, false);
 
 			} else {
 				log.error("User's keyfile doesn't exist");

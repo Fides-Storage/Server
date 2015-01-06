@@ -101,6 +101,7 @@ public class ClientFileConnectorTest {
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
 		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(mockedUserFile.getAmountOfFreeBytes()).thenReturn(10000000L);
 	}
 
 	/**
