@@ -64,7 +64,9 @@ public class PropertiesManager {
 		dataDir = properties.getProperty("dataDir");
 		keystorePath = properties.getProperty("keystorePath");
 		keystorePassword = properties.getProperty("keystorePassword").toCharArray();
-		maxAmountOfBytesPerUser = Long.parseLong(properties.getProperty("maxAmountOfBytesPerUser"));
+
+		// Converts amount of megabytes to bytes
+		maxAmountOfBytesPerUser = Long.parseLong(properties.getProperty("maxAmountOfMegabytesPerUser")) * 1048576L;
 
 		// Create the userDirectory and the dataDirectory if they don't exist.
 		File userFolder = new File(userDir);

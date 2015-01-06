@@ -145,6 +145,15 @@ public class UserFile implements Serializable {
 	}
 
 	/**
+	 * Getter for max amount of bytes
+	 * 
+	 * @return amount of max bytes
+	 */
+	public long getMaxAmountOfBytes() {
+		return maxAmountOfUsedBytes;
+	}
+
+	/**
 	 * Getter for amount of free bytes
 	 * 
 	 * @return amount of free bytes

@@ -232,6 +232,7 @@ public final class FileManager {
 
 		if (isDataFile) {
 			log.trace("Maximum amount of bytes allowed to copy: " + userFile.getAmountOfFreeBytes());
+			log.trace("Current max of bytes: " + userFile.getMaxAmountOfBytes());
 		}
 
 		long count = 0;
