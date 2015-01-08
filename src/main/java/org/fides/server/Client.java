@@ -54,7 +54,7 @@ public class Client implements Runnable {
 	public void run() {
 		JsonObject requestObject;
 		try (DataInputStream in = new DataInputStream(server.getInputStream());
-			DataOutputStream out = new DataOutputStream(server.getOutputStream());) {
+			DataOutputStream out = new DataOutputStream(server.getOutputStream())) {
 			// While user is not logged in
 			while (userFile == null) {
 				requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
