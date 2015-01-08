@@ -5,6 +5,8 @@ import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.fides.server.tools.PropertiesManager;
+
 /**
  * This class is responsible for keeping track of the files that belong to a user.
  * 
@@ -26,6 +28,10 @@ public class UserFile implements Serializable {
 
 	private GregorianCalendar lastRefreshed;
 
+	private long maxAmountOfUsedBytes;
+
+	private long amountOfUsedBytes;
+
 	/**
 	 * Constructor for the user file
 	 * 
@@ -38,6 +44,8 @@ public class UserFile implements Serializable {
 		this.usernameHash = usernameHash;
 		this.passwordHash = passwordHash;
 		this.keyFile = FileManager.createFile();
+		this.maxAmountOfUsedBytes = PropertiesManager.getInstance().getMaxAmountOfBytesPerUser();
+		this.amountOfUsedBytes = 0;
 	}
 
 	public String getUsernameHash() {
@@ -124,4 +132,58 @@ public class UserFile implements Serializable {
 		this.lastRefreshed = lastRefreshed;
 	}
 
+	/**
+	 * Change the max amount of used bytes
+	 * 
+	 * @param newMaxAmountOfUsedBytes
+	 *            of bytes
+	 * @return if succeeded
+	 */
+	public boolean changeMaxAmountOfUsedBytes(long newMaxAmountOfUsedBytes) {
+		maxAmountOfUsedBytes = newMaxAmountOfUsedBytes;
+		return UserManager.saveUserFile(this);
+	}
+
+	/**
+	 * Getter for max amount of bytes
+	 * 
+	 * @return amount of max bytes
+	 */
+	public long getMaxAmountOfBytes() {
+		return maxAmountOfUsedBytes;
+	}
+
+	/**
+	 * Getter for amount of free bytes
+	 * 
+	 * @return amount of free bytes
+	 */
+	public long getAmountOfFreeBytes() {
+		if (maxAmountOfUsedBytes - amountOfUsedBytes <= 0) {
+			return 0;
+		}
+		return maxAmountOfUsedBytes - amountOfUsedBytes;
+	}
+
+	/**
+	 * Add amount of bytes to the used space
+	 * 
+	 * @param amountOfBytes
+	 *            of used space
+	 */
+	public void addAmountOfBytes(long amountOfBytes) {
+		amountOfUsedBytes += amountOfBytes;
+		UserManager.saveUserFile(this);
+	}
+
+	/**
+	 * Remove amount of bytes to the used space
+	 * 
+	 * @param amountOfBytes
+	 *            of used space
+	 */
+	public void removeAmountOfBytes(long amountOfBytes) {
+		amountOfUsedBytes -= amountOfBytes;
+		UserManager.saveUserFile(this);
+	}
 }

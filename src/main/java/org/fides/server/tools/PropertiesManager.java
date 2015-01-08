@@ -35,6 +35,8 @@ public class PropertiesManager {
 
 	private char[] keystorePassword;
 
+	private long maxAmountOfBytesPerUser;
+
 	/**
 	 * Constructor of the properties manager. Loads the properties file.
 	 */
@@ -62,6 +64,9 @@ public class PropertiesManager {
 		dataDir = properties.getProperty("dataDir");
 		keystorePath = properties.getProperty("keystorePath");
 		keystorePassword = properties.getProperty("keystorePassword").toCharArray();
+
+		// Converts amount of megabytes to bytes
+		maxAmountOfBytesPerUser = Long.parseLong(properties.getProperty("maxAmountOfMegabytesPerUser")) * 1048576L;
 
 		// Create the userDirectory and the dataDirectory if they don't exist.
 		File userFolder = new File(userDir);
@@ -129,5 +134,9 @@ public class PropertiesManager {
 	 */
 	public char[] getKeystorePassword() {
 		return keystorePassword;
+	}
+
+	public long getMaxAmountOfBytesPerUser() {
+		return maxAmountOfBytesPerUser;
 	}
 }

@@ -62,6 +62,8 @@ public class Server implements Runnable {
 			log.debug("Server started on port: " + propertiesManager.getPort());
 			log.debug("Using user directory: " + propertiesManager.getUserDir());
 			log.debug("Using data directory: " + propertiesManager.getDataDir());
+			log.debug("Using max amount of bytes: " + propertiesManager.getMaxAmountOfBytesPerUser());
+
 		} catch (Exception e) {
 			log.error(e);
 		}

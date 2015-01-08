@@ -26,7 +26,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * The JUnit Test Case for the FileManager
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(PropertiesManager.class)
+@PrepareForTest({ PropertiesManager.class, UserFile.class })
 public class FileManagerTest {
 
 	private static final byte[] MESSAGE = ("DEFAULT MESSAGE: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore "
@@ -43,6 +43,8 @@ public class FileManagerTest {
 	private static File testDataDir;
 
 	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+
+	private static UserFile mockedUserFile = Mockito.mock(UserFile.class);
 
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.
@@ -106,7 +108,7 @@ public class FileManagerTest {
 	public void testRemoveFile() {
 		try {
 			assertTrue(Files.exists(Paths.get(testDataDir.getCanonicalPath(), DEFAULTREMOVEFILELOCATION)));
-			assertTrue(FileManager.removeFile(DEFAULTREMOVEFILELOCATION));
+			assertTrue(FileManager.removeFile(DEFAULTREMOVEFILELOCATION, mockedUserFile));
 			assertFalse(Files.exists(Paths.get(testDataDir.getCanonicalPath(), DEFAULTREMOVEFILELOCATION)));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -118,7 +120,7 @@ public class FileManagerTest {
 	 */
 	@Test
 	public void testRemoveNonExistingFile() {
-		assertFalse(FileManager.removeFile("nonExistingFile.txt"));
+		assertFalse(FileManager.removeFile("nonExistingFile.txt", mockedUserFile));
 	}
 
 	/**

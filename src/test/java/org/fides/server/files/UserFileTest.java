@@ -1,5 +1,6 @@
 package org.fides.server.files;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -65,4 +66,19 @@ public class UserFileTest {
 		assertFalse(userFile.checkOwned("testlocation"));
 	}
 
+	/**
+	 * Checks whether amount of free bytes is calculated correctly
+	 */
+	@Test
+	public void testAmountOfFreeBytes() {
+		UserFile userFile = new UserFile("userName4", "passwordHash");
+
+		long currentSize = userFile.getAmountOfFreeBytes();
+		userFile.addAmountOfBytes(currentSize - 10);
+		assertEquals(10, userFile.getAmountOfFreeBytes());
+
+		userFile.addAmountOfBytes(20);
+		assertEquals(0, userFile.getAmountOfFreeBytes());
+
+	}
 }

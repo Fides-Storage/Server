@@ -34,6 +34,13 @@ public final class FileManager {
 	private static final int MAX_UNIQUE_NAME_ATTEMPTS = 10;
 
 	/**
+	 * The default buffer size ({@value} ) to use for {@link #copyLarge(InputStream, OutputStream, UserFile, boolean)}
+	 */
+	private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+
+	private static final int EOF = -1;
+
+	/**
 	 * Creates a new file with a unique name.
 	 * 
 	 * @return The file's location.
@@ -91,9 +98,13 @@ public final class FileManager {
 	 *            The file to fill with the inputstream
 	 * @param outputStream
 	 *            The outputstream to respond to the client
+	 * @param userFile
+	 *            used to get amount of free space
+	 * @param isDataFile
+	 *            used to exclude the key file
 	 * @return Whether the copy was successful or not
 	 */
-	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream) {
+	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		String tempFileName = createFile(true);
 		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(tempFileName)) {
@@ -105,17 +116,29 @@ public final class FileManager {
 				CommunicationUtil.returnSuccessful(outputStream);
 
 				// Put the stream into a temporary file
-				IOUtils.copy(virtualIn, fileOutputStream);
+				long bytesCoppied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
 
-				// Copy the temporary file into the official file
-				Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				if (bytesCoppied != -1) {
 
-				// Tell the client the upload was successful
-				CommunicationUtil.returnSuccessful(outputStream);
-				return true;
+					// don't use key file
+					if (isDataFile) {
+						userFile.removeAmountOfBytes(file.length());
+						userFile.addAmountOfBytes(bytesCoppied);
+						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+					}
+
+					// Copy the temporary file into the official file
+					Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					CommunicationUtil.returnSuccessful(outputStream);
+					return true;
+				} else {
+					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
+					return false;
+				}
+
 			} catch (IOException e) {
 				log.error(e.getMessage());
 			} finally {
@@ -138,7 +161,7 @@ public final class FileManager {
 		// Open an inputstream to the file and a virtualoutputstream of the output
 		try (InputStream inStream = new FileInputStream(file);
 			VirtualOutputStream virtualOutStream = new VirtualOutputStream(outputStream)) {
-			// Tell the cli�nt he can start downloading
+			// Tell the client he can start downloading
 			CommunicationUtil.returnSuccessful(outputStream);
 
 			// Copy the content of the file to the stream
@@ -154,16 +177,19 @@ public final class FileManager {
 	}
 
 	/**
-	 * Removes a file
+	 * Removes a file, and clears the space in the user file
 	 * 
 	 * @param location
 	 *            The location of the file
+	 * @param userFile
+	 *            user file used to save removed amount of bytes if file is deleted
 	 * @return If the file was successfully deleted. Returns false if the file doesn't exist.
 	 */
-	public static boolean removeFile(String location) {
+	public static boolean removeFile(String location, UserFile userFile) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(location)) {
 			File file = new File(dataDir, location);
+			userFile.removeAmountOfBytes(file.length());
 			return file.delete();
 		}
 		return false;
@@ -179,4 +205,51 @@ public final class FileManager {
 
 	}
 
+	/**
+	 * Copy bytes from a large (over 2GB) <code>InputStream</code> to an <code>OutputStream</code>.
+	 * <p>
+	 * This method uses the provided buffer, so there is no need to use a <code>BufferedInputStream</code>.
+	 * <p>
+	 * 
+	 * Modified version of IOUtils of apache lib
+	 * 
+	 * @param input
+	 *            the <code>InputStream</code> to read from
+	 * @param output
+	 *            the <code>OutputStream</code> to write to
+	 * @param userFile
+	 *            used to get amount of free space
+	 * @param isDataFile
+	 *            used to exclude the key file
+	 * @return the number of bytes copied, -1 of not succeed
+	 * @throws NullPointerException
+	 *             if the input or output is null
+	 * @throws IOException
+	 *             if an I/O error occurs
+	 */
+	public static long copyLarge(InputStream input, OutputStream output, UserFile userFile, boolean isDataFile)
+		throws IOException {
+		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+
+		if (isDataFile) {
+			log.trace("Maximum amount of bytes allowed to copy: " + userFile.getAmountOfFreeBytes());
+			log.trace("Current max of bytes: " + userFile.getMaxAmountOfBytes());
+		}
+
+		long count = 0;
+		int n = 0;
+		while (EOF != (n = input.read(buffer)) && (count <= userFile.getAmountOfFreeBytes() || !isDataFile)) {
+			output.write(buffer, 0, n);
+			count += n;
+		}
+
+		if (count <= userFile.getAmountOfFreeBytes() || !isDataFile) {
+			log.trace("Copy amount of bytes: " + count + ", isDataFile: " + isDataFile);
+			return count;
+		} else {
+			log.trace("Copy amount of bytes: -1 , isDataFile: " + isDataFile);
+			return -1;
+		}
+
+	}
 }
