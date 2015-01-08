@@ -1,9 +1,10 @@
 package org.fides.server.files;
 
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * This class is responsible for keeping track of the files that belong to a user.
@@ -20,7 +21,7 @@ public class UserFile implements Serializable {
 
 	private String passwordHash;
 
-	private Set<String> userFiles = new TreeSet<>();
+	private Set<String> userFiles = new HashSet<>();
 
 	private String keyFile;
 
@@ -38,6 +39,7 @@ public class UserFile implements Serializable {
 		this.usernameHash = usernameHash;
 		this.passwordHash = passwordHash;
 		this.keyFile = FileManager.createFile();
+		this.lastRefreshed = new GregorianCalendar();
 	}
 
 	public String getUsernameHash() {
@@ -120,8 +122,36 @@ public class UserFile implements Serializable {
 		return lastRefreshed;
 	}
 
+	/**
+	 * Sets the last refreshed date
+	 * 
+	 * @param lastRefreshed
+	 *            as gregorian calendar
+	 */
 	public void setLastRefreshed(GregorianCalendar lastRefreshed) {
 		this.lastRefreshed = lastRefreshed;
+		UserManager.saveUserFile(this);
 	}
 
+	/**
+	 * Touch files
+	 */
+	public void touch() {
+		Calendar calendar = Calendar.getInstance();
+		GregorianCalendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+		if (lastRefreshed.before(thisMonth)) {
+			// Update this file
+			FileManager.updateUserFile(usernameHash);
+
+			// Update key file
+			FileManager.updateDataFile(getKeyFileLocation());
+
+			// Update all data files
+			for (String file : userFiles) {
+				FileManager.updateDataFile(file);
+			}
+			setLastRefreshed(thisMonth);
+		}
+
+	}
 }

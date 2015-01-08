@@ -75,6 +75,10 @@ public class Client implements Runnable {
 					break;
 				}
 			}
+
+			// Update timestamp of all files
+			userFile.touch();
+
 			// Start the reading and handling of user actions.
 			ClientFileConnector clientFileConnector = new ClientFileConnector(userFile);
 			handleActions(in, clientFileConnector, out);

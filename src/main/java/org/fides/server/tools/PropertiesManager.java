@@ -35,6 +35,8 @@ public class PropertiesManager {
 
 	private char[] keystorePassword;
 
+	private int experitionTimeInMonths;
+
 	/**
 	 * Constructor of the properties manager. Loads the properties file.
 	 */
@@ -62,6 +64,7 @@ public class PropertiesManager {
 		dataDir = properties.getProperty("dataDir");
 		keystorePath = properties.getProperty("keystorePath");
 		keystorePassword = properties.getProperty("keystorePassword").toCharArray();
+		experitionTimeInMonths = Integer.parseInt(properties.getProperty("experitionTimeInMonths"));
 
 		// Create the userDirectory and the dataDirectory if they don't exist.
 		File userFolder = new File(userDir);
@@ -129,5 +132,14 @@ public class PropertiesManager {
 	 */
 	public char[] getKeystorePassword() {
 		return keystorePassword;
+	}
+
+	/**
+	 * Get the expiration time in months
+	 * 
+	 * @return the expiration time in months
+	 */
+	public int getExpirationTimeInMonths() {
+		return experitionTimeInMonths;
 	}
 }

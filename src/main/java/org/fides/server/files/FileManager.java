@@ -9,11 +9,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Collection;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.virtualstream.VirtualInputStream;
@@ -113,6 +115,9 @@ public final class FileManager {
 				// Copy the temporary file into the official file
 				Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
+				// Set timestamp back to first of month
+				FileManager.touchFile(file);
+
 				// Tell the client the upload was successful
 				CommunicationUtil.returnSuccessful(outputStream);
 				return true;
@@ -170,13 +175,53 @@ public final class FileManager {
 	}
 
 	/**
-	 * Updates the timestamp in a list of files.
+	 * Updates the timestamp of the given usernameHash
 	 * 
-	 * @param fileLocations
-	 *            The list with the locations of the files to update.
+	 * @param usernameHash
+	 *            of the user to touch
 	 */
-	public static void updateTimestamps(Collection<String> fileLocations) {
-
+	public static void updateUserFile(String usernameHash) {
+		File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), usernameHash);
+		try {
+			touchFile(userFileLocation);
+		} catch (IOException e) {
+			log.error(e);
+		}
 	}
 
+	/**
+	 * Updates the timestamp of the given file name
+	 * 
+	 * @param fileName
+	 *            of the file to touch
+	 */
+	public static void updateDataFile(String fileName) {
+		File dataFileLocation = new File(PropertiesManager.getInstance().getDataDir(), fileName);
+		try {
+			touchFile(dataFileLocation);
+		} catch (IOException e) {
+			log.error(e);
+		}
+	}
+
+	/**
+	 * Touches the file with the current month
+	 * 
+	 * @param file
+	 *            to touch
+	 * @throws IOException
+	 *             if file doesn't exists or unable to set time
+	 */
+	public static void touchFile(File file) throws IOException {
+		if (!file.exists()) {
+			throw new IOException("File doesn't exists for " + file);
+		}
+
+		long time = DateUtils.truncate(new Date(), Calendar.MONTH).getTime();
+		boolean success = file.setLastModified(time);
+		if (!success) {
+			throw new IOException("Unable to set the last modification time for " + file);
+		}
+
+	}
 }

@@ -115,11 +115,15 @@ public final class UserManager {
 	 * @return true if succeeded, false otherwise
 	 */
 	public static boolean saveUserFile(UserFile userFile) {
+		boolean successful = false;
+
 		FileOutputStream fos = null;
 		DataOutputStream dout = null;
 		OutputStream outEncrypted = null;
+
+		File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsernameHash());
+
 		try {
-			File userFileLocation = new File(PropertiesManager.getInstance().getUserDir(), userFile.getUsernameHash());
 
 			if (userFileLocation.getName().equals(userFile.getUsernameHash())) {
 				fos = new FileOutputStream(userFileLocation);
@@ -146,7 +150,7 @@ public final class UserManager {
 				dout.flush();
 				fos.flush();
 
-				return true;
+				successful = true;
 			}
 
 		} catch (FileNotFoundException e) {
@@ -157,9 +161,19 @@ public final class UserManager {
 			IOUtils.closeQuietly(outEncrypted);
 			IOUtils.closeQuietly(dout);
 			IOUtils.closeQuietly(fos);
+
 		}
 
-		return false;
+		if (successful) {
+			// Set timestamp back to first of month
+			try {
+				FileManager.touchFile(userFileLocation);
+			} catch (IOException e) {
+				log.error(e);
+			}
+		}
+
+		return successful;
 	}
 
 	/**

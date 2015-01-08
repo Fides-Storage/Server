@@ -139,6 +139,10 @@ public class ClientFileConnector {
 
 				// Add the file to the user
 				userFile.addFile(location);
+
+				// Set timestamp back to first of month
+				FileManager.touchFile(file);
+
 				uploadSuccessful = true;
 			} catch (IOException e) {
 				log.error(e.getMessage());
