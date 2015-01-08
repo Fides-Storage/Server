@@ -130,17 +130,17 @@ public class ClientFileConnector {
 				CommunicationUtil.returnSuccessfulWithProperties(outputStream, properties);
 
 				// Put the inputstream received from the user into a temporary file
-				long bytesCoppied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile, true);
+				long bytesCopied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile, true);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualInputStream.close();
 
-				if (bytesCoppied != -1) {
+				if (bytesCopied != -1) {
 					CommunicationUtil.returnSuccessful(outputStream);
 
 					// Add the file to the user
 					userFile.addFile(location);
-					userFile.addAmountOfBytes(bytesCoppied);
+					userFile.addAmountOfBytes(bytesCopied);
 					log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					uploadSuccessful = true;
 				} else {

@@ -34,7 +34,7 @@ public final class FileManager {
 	private static final int MAX_UNIQUE_NAME_ATTEMPTS = 10;
 
 	/**
-	 * The default buffer size ({@value} ) to use for {@link #copyLarge(InputStream, OutputStream)}
+	 * The default buffer size ({@value} ) to use for {@link #copyLarge(InputStream, OutputStream, UserFile, boolean)}
 	 */
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 
