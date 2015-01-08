@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -117,13 +118,14 @@ public class ClientFileConnector {
 	 * @return Whether the upload was successful or not
 	 */
 	public boolean uploadFile(InputStream inputStream, DataOutputStream outputStream) {
+		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), FileManager.createFile(true));
 		String location = FileManager.createFile();
 		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 		boolean uploadSuccessful = false;
 		// Check if the file was created correctly (should always be true)
-		if (file.exists()) {
+		if (file.exists() && tempFile.exists()) {
 			try (InputStream virtualInputStream = new VirtualInputStream(inputStream);
-				OutputStream fileOutputStream = new FileOutputStream(file)) {
+				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
 				// Return the location on the server where the new file will be written
 				Map<String, Object> properties = new HashMap<>();
 				properties.put(Actions.Properties.LOCATION, location);
@@ -137,6 +139,8 @@ public class ClientFileConnector {
 
 				CommunicationUtil.returnSuccessful(outputStream);
 
+				FileUtils.moveFile(tempFile, file);
+
 				// Add the file to the user
 				userFile.addFile(location);
 				uploadSuccessful = true;
@@ -144,9 +148,7 @@ public class ClientFileConnector {
 				log.error(e.getMessage());
 				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 			} finally {
-				if (!uploadSuccessful) {
-					file.delete();
-				}
+				tempFile.delete();
 			}
 		} else {
 			log.error("A file generated with FileManager.createFile() was not generated correctly.");

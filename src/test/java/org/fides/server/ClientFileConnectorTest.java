@@ -81,16 +81,12 @@ public class ClientFileConnectorTest {
 	 */
 	@BeforeClass
 	public static void setUp() {
-		try {
-			testDataDir = new File(PropertiesManager.getInstance().getDataDir(), "Test");
-			if (!testDataDir.exists()) {
-				assertTrue(testDataDir.mkdirs());
-			}
-			// This causes the mocked PropertiesManager to always return the test Data directory:
-			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
-		} catch (Exception e) {
-			fail("Unexpected error in setUp: " + e.getMessage());
+		testDataDir = new File(PropertiesManager.getInstance().getDataDir(), "Test");
+		if (!testDataDir.exists()) {
+			assertTrue(testDataDir.mkdirs());
 		}
+		// This causes the mocked PropertiesManager to always return the test Data directory:
+		Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 	}
 
 	/**
@@ -121,6 +117,19 @@ public class ClientFileConnectorTest {
 		virtualOut.close();
 
 		return new ByteArrayInputStream(byteOut.toByteArray());
+	}
+
+	/**
+	 * Adds a spy to the outputstream which throws an exception when Close is called on that stream.
+	 * 
+	 * @param outputStream
+	 * @return
+	 * @throws IOException
+	 */
+	private DataOutputStream addCloseSpyToStream(DataOutputStream outputStream) throws IOException {
+		DataOutputStream spyOut = Mockito.spy(outputStream);
+		Mockito.doThrow(new RuntimeException("DataOutputStream was closed in ClientFileConnector")).when(spyOut).close();
+		return spyOut;
 	}
 
 	/**
@@ -157,7 +166,8 @@ public class ClientFileConnectorTest {
 
 			// Create the streams to use for the upload and the upload's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
+
 			InputStream inStream = byteArrayToDataStream(FILECONTENT);
 
 			// Upload the file
@@ -170,7 +180,7 @@ public class ClientFileConnectorTest {
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertArrayEquals(FILECONTENT, Files.readAllBytes(newFile.toPath()));
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -196,7 +206,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			InputStream inStream = byteArrayToDataStream(updatedFileContent);
 
 			// The update
@@ -209,7 +219,7 @@ public class ClientFileConnectorTest {
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertArrayEquals(updatedFileContent, Files.readAllBytes(existingFile.toPath()));
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -234,7 +244,7 @@ public class ClientFileConnectorTest {
 
 			// create stream for the response
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// Remove the file
 			JsonObject updateRequest = new JsonObject();
@@ -257,7 +267,7 @@ public class ClientFileConnectorTest {
 			response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -271,7 +281,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			in = new DataInputStream(new ByteArrayInputStream(updatedFileContent));
 
 			// The update
@@ -283,7 +293,7 @@ public class ClientFileConnectorTest {
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(response.contains(Errors.NO_FILE_LOCATION));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -297,7 +307,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			in = new DataInputStream(new ByteArrayInputStream(updatedFileContent));
 
 			// The update
@@ -308,7 +318,7 @@ public class ClientFileConnectorTest {
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":false"));
 			assertTrue(response.contains(Errors.NO_FILE_LOCATION));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -334,7 +344,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			in = new DataInputStream(new ByteArrayInputStream(updatedFileContent));
 
 			// The update
@@ -349,7 +359,7 @@ public class ClientFileConnectorTest {
 
 			// Make sure the file didn't get updated.
 			assertFalse(Arrays.equals(updatedFileContent, Files.readAllBytes(existingFile.toPath())));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -369,7 +379,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			in = new DataInputStream(new ByteArrayInputStream(updatedFileContent));
 
 			// The update of the non-existing file.
@@ -385,7 +395,7 @@ public class ClientFileConnectorTest {
 
 			// Make sure the file didn't get created.
 			assertFalse(notExistingFile.exists());
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -410,7 +420,7 @@ public class ClientFileConnectorTest {
 
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
@@ -426,7 +436,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertArrayEquals(FILECONTENT, byteDataStreamToByteArray(fileResponseStream));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -439,7 +449,7 @@ public class ClientFileConnectorTest {
 		try {
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
@@ -456,7 +466,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertEquals(0, fileResponseStream.toByteArray().length);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -469,7 +479,7 @@ public class ClientFileConnectorTest {
 		try {
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
@@ -485,7 +495,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertEquals(0, fileResponseStream.toByteArray().length);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -510,7 +520,7 @@ public class ClientFileConnectorTest {
 
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
@@ -527,7 +537,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertEquals(0, fileResponseStream.toByteArray().length);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -546,7 +556,7 @@ public class ClientFileConnectorTest {
 
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// The actual download request
 			JsonObject fileRequest = new JsonObject();
@@ -563,7 +573,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertEquals(0, fileResponseStream.toByteArray().length);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -583,7 +593,7 @@ public class ClientFileConnectorTest {
 
 			// Create the streams to use for the upload and the upload's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			InputStream inStream = byteArrayToDataStream(FILECONTENT);
 
 			// Upload the file
@@ -596,7 +606,7 @@ public class ClientFileConnectorTest {
 
 			// Create the stream to use for the download's response.
 			outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
 			// The download request
 			JsonObject fileRequest = new JsonObject();
@@ -612,7 +622,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertArrayEquals(FILECONTENT, byteDataStreamToByteArray(fileResponseStream));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -632,7 +642,7 @@ public class ClientFileConnectorTest {
 
 			// Create the streams to use for the upload and the upload's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			InputStream inStream = byteArrayToDataStream(FILECONTENT);
 
 			// Upload the file
@@ -646,7 +656,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream updateOutputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(updateOutputStream);
+			out = addCloseSpyToStream(new DataOutputStream(updateOutputStream));
 			inStream = byteArrayToDataStream(updatedFileContent);
 
 			// The update
@@ -657,7 +667,7 @@ public class ClientFileConnectorTest {
 
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream downloadOutputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(downloadOutputStream);
+			out = addCloseSpyToStream(new DataOutputStream(downloadOutputStream));
 
 			// The download request
 			JsonObject fileRequest = new JsonObject();
@@ -673,7 +683,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
 			assertArrayEquals(updatedFileContent, byteDataStreamToByteArray(fileResponseStream));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -707,7 +717,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			InputStream inStream = byteArrayToDataStream(updatedKeyFileContent);
 
 			// Update the keyfilefile
@@ -717,7 +727,7 @@ public class ClientFileConnectorTest {
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
 			assertArrayEquals(updatedKeyFileContent, Files.readAllBytes(keyFile.toPath()));
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -744,7 +754,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the update and the update's response.
 			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			InputStream inStream = byteArrayToDataStream(updatedKeyFileContent);
 
 			// Update the keyfilefile
@@ -759,7 +769,7 @@ public class ClientFileConnectorTest {
 			for (File file : lockFiles) {
 				fail("The temporary file " + file.getName() + " didn't get deleted after the update.");
 			}
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -785,7 +795,7 @@ public class ClientFileConnectorTest {
 
 			// Create the stream to use for the download's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			out = new DataOutputStream(outputStream);
+			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 			assertTrue(connector.downloadKeyFile(out));
 
 			// First read the JsonResponse to see if the request is successful
@@ -798,7 +808,7 @@ public class ClientFileConnectorTest {
 			IOUtils.copy(in, fileResponseStream);
 			assertArrayEquals(KEYFILECONTENT, byteDataStreamToByteArray(fileResponseStream));
 
-		} catch (Exception e) {
+		} catch (IOException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -811,7 +821,7 @@ public class ClientFileConnectorTest {
 		try {
 			Thread.sleep(1000);
 			FileUtils.deleteDirectory(testDataDir);
-		} catch (Exception e) {
+		} catch (InterruptedException | IOException e) {
 			fail("Unexpected error in tearDown: " + e.getMessage());
 		}
 	}
