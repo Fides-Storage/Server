@@ -148,6 +148,9 @@ public class ClientFileConnector {
 				log.error(e.getMessage());
 				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 			} finally {
+				if (!uploadSuccessful) {
+					file.delete();
+				}
 				tempFile.delete();
 			}
 		} else {
