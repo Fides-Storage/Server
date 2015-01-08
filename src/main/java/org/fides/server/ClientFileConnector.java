@@ -139,10 +139,10 @@ public class ClientFileConnector {
 				virtualInputStream.close();
 
 				if (bytesCopied != -1) {
-					CommunicationUtil.returnSuccessful(outputStream);
-
 					// Add the file to the user
 					Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					CommunicationUtil.returnSuccessful(outputStream);
+
 					userFile.addFile(location);
 
 					userFile.addAmountOfBytes(bytesCopied);

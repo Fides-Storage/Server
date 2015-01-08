@@ -112,7 +112,7 @@ public final class FileManager {
 			File tempFile = new File(dataDir, tempFileName);
 			try (InputStream virtualIn = new VirtualInputStream(inputStream);
 				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-				// Tell the cli�nt he can start sending the file.
+				// Tell the client he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
 				// Put the stream into a temporary file
