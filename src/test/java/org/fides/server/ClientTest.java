@@ -45,6 +45,12 @@ public class ClientTest {
 
 	private static ClientFileConnector clientFileConnector;
 
+	/**
+	 * This function is called before the beginning of this class. It makes sure that the handleActions and run function
+	 * is called by the real method and not the mocked one. It also sets the server variable in the client.
+	 *
+	 * @throws IOException
+	 */
 	@BeforeClass
 	public static void beforeClass() throws IOException {
 		// Setup client
@@ -55,6 +61,9 @@ public class ClientTest {
 		when(sslSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
 	}
 
+	/**
+	 * This function should be called before every test. It mocks the UserLocker, UserManager and ClientFileConnector.
+	 */
 	@Before
 	public void before() {
 		PowerMockito.mockStatic(UserLocker.class);
@@ -62,6 +71,14 @@ public class ClientTest {
 		clientFileConnector = mock(ClientFileConnector.class);
 	}
 
+	/**
+	 * This function should be called before testing anything from the run function. this will set the action of the
+	 * stream
+	 * 
+	 * @param action
+	 *            The action to set
+	 * @throws IOException
+	 */
 	private void beforeRun(String action) throws IOException {
 		// Create a action in json format
 		JsonObject actionRequest = new JsonObject();
@@ -86,6 +103,7 @@ public class ClientTest {
 
 	/**
 	 * This test will verify if the createuser function is called with the correct action
+	 * 
 	 * @throws Exception
 	 */
 	@Test
@@ -101,6 +119,7 @@ public class ClientTest {
 
 	/**
 	 * This test will verify if the authenticateuser function is called with the correct action
+	 * 
 	 * @throws Exception
 	 */
 	@Test
