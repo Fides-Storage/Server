@@ -6,10 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -141,8 +142,8 @@ public class ClientFileConnector {
 					CommunicationUtil.returnSuccessful(outputStream);
 
 					// Add the file to the user
+					Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					userFile.addFile(location);
-					FileUtils.moveFile(tempFile, file);
 
 					userFile.addAmountOfBytes(bytesCopied);
 					log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
