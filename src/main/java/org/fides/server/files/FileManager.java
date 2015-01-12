@@ -90,10 +90,36 @@ public final class FileManager {
 		return location;
 	}
 
+	/**
+	 * Copies an inputstream to fill a file.
+	 * 
+	 * @param inputStream
+	 *            The inputstream to copy to the file
+	 * @param file
+	 *            The file to fill with the inputstream
+	 * @param outputStream
+	 *            The outputstream to respond to the client
+	 * @param userFile
+	 *            used to get amount of free space
+	 * @return Whether the copy was successful or not
+	 */
 	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
 		return copyStreamToFile(inputStream, file, outputStream, userFile, true);
 	}
 
+	/**
+	 * Copies an inputstream to fill a keyfile.
+	 * 
+	 * @param inputStream
+	 *            The inputstream to copy to the file
+	 * @param file
+	 *            The file to fill with the inputstream
+	 * @param outputStream
+	 *            The outputstream to respond to the client
+	 * @param userFile
+	 *            used to get amount of free space
+	 * @return Whether the copy was successful or not
+	 */
 	public static boolean copyStreamToKeyFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
 		return copyStreamToFile(inputStream, file, outputStream, userFile, false);
 	}
@@ -124,7 +150,8 @@ public final class FileManager {
 				// Tell the client he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
-				// If current file is a data file (not key file) than amount of free bytes plus the size of the given file, 
+				// If current file is a data file (not key file) than amount of free bytes plus the size of the given
+				// file,
 				// else limit the key file to the max size of the data file
 				long allowedAmountOfBytes = 0;
 				if (isDataFile) {
@@ -257,7 +284,7 @@ public final class FileManager {
 		log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 
 		long count = 0;
-		int n = 0;
+		int n;
 		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy)) {
 			output.write(buffer, 0, n);
 			count += n;
