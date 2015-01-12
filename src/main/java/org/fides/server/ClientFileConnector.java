@@ -139,7 +139,7 @@ public class ClientFileConnector {
 				virtualInputStream.close();
 
 				if (bytesCopied != -1) {
-					// Check if the upload was succesful on the client side
+					// Check if the upload was successful on the client side
 					if (CommunicationUtil.uploadSuccessful(outputStream, inputStream)) {
 						Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
@@ -149,8 +149,12 @@ public class ClientFileConnector {
 						// Update the user's bytes left.
 						userFile.addAmountOfBytes(bytesCopied);
 						LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+
+						// Set timestamp back to first of month
+						FileManager.touchFile(file);
 						uploadSuccessful = true;
 					}
+
 				} else {
 					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
 				}

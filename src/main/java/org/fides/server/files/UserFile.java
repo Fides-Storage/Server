@@ -1,9 +1,10 @@
 package org.fides.server.files;
 
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.fides.server.tools.PropertiesManager;
 
@@ -22,9 +23,9 @@ public class UserFile implements Serializable {
 
 	private final String passwordHash;
 
-	private final Set<String> userFiles = new TreeSet<>();
+	private final Set<String> userFiles = new HashSet<>();
 
-	private final String keyFile;
+	private String keyFile;
 
 	private GregorianCalendar lastRefreshed;
 
@@ -46,6 +47,7 @@ public class UserFile implements Serializable {
 		this.keyFile = FileManager.createFile();
 		this.maxAmountOfUsedBytes = PropertiesManager.getInstance().getMaxAmountOfBytesPerUser();
 		this.amountOfUsedBytes = 0;
+		this.lastRefreshed = new GregorianCalendar();
 	}
 
 	public String getUsernameHash() {
@@ -114,16 +116,33 @@ public class UserFile implements Serializable {
 		return keyFile;
 	}
 
-	public GregorianCalendar getLastRefreshed() {
+	/**
+	 * Sets the location of the user's keyfile to the userfile.
+	 * 
+	 * @param location
+	 *            The location of the keyfile.
+	 */
+	public void setKeyFileLocation(String location) {
+		keyFile = location;
+	}
+
+	protected GregorianCalendar getLastRefreshed() {
 		return lastRefreshed;
 	}
 
-	public void setLastRefreshed(GregorianCalendar lastRefreshed) {
+	/**
+	 * Sets the last refreshed date
+	 * 
+	 * @param lastRefreshed
+	 *            as gregorian calendar
+	 */
+	protected void setLastRefreshed(GregorianCalendar lastRefreshed) {
 		this.lastRefreshed = lastRefreshed;
+		UserManager.saveUserFile(this);
 	}
 
 	/**
-	 * Change the max amount of used bytes
+	 * <<<<<<< HEAD Change the max amount of used bytes
 	 * 
 	 * @param newMaxAmountOfUsedBytes
 	 *            of bytes
@@ -175,5 +194,27 @@ public class UserFile implements Serializable {
 	public void removeAmountOfBytes(long amountOfBytes) {
 		amountOfUsedBytes -= amountOfBytes;
 		UserManager.saveUserFile(this);
+	}
+
+	/**
+	 * Touch files
+	 */
+	public void touch() {
+		Calendar calendar = Calendar.getInstance();
+		GregorianCalendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+		if (lastRefreshed.before(thisMonth)) {
+			// Update this file
+			FileManager.updateUserFile(usernameHash);
+
+			// Update key file
+			FileManager.updateDataFile(getKeyFileLocation());
+
+			// Update all data files
+			for (String file : userFiles) {
+				FileManager.updateDataFile(file);
+			}
+			setLastRefreshed(thisMonth);
+		}
+
 	}
 }
