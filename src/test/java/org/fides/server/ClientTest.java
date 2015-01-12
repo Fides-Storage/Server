@@ -81,7 +81,7 @@ public class ClientTest {
 	 */
 	private void beforeRun(String action) throws IOException {
 		// Set UserFile to null
-		Whitebox.setInternalState(CLIENT, "userFile", (UserFile) null);
+		Whitebox.setInternalState(client, "userFile", (UserFile) null);
 
 		// Create a action in json format
 		JsonObject actionRequest = new JsonObject();
