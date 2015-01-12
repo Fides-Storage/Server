@@ -227,8 +227,6 @@ public final class FileManager {
 	 *            the <code>OutputStream</code> to write to
 	 * @param bytesAllowedToCopy
 	 *            the amount of free space
-	 * @param isDataFile
-	 *            used to exclude the key file
 	 * @return the number of bytes copied, -1 of not succeed
 	 * @throws NullPointerException
 	 *             if the input or output is null
