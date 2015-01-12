@@ -16,7 +16,7 @@ public final class UserLocker {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(UserLocker.class);
+	private static final Logger LOG = LogManager.getLogger(UserLocker.class);
 
 	private static final FilenameFilter LOCKFILTER = new FilenameFilter() {
 		@Override
@@ -47,7 +47,7 @@ public final class UserLocker {
 			}
 		}
 
-		log.trace("Lock(" + usernameHash + ") " + locked);
+		LOG.trace("Lock(" + usernameHash + ") " + locked);
 
 		return locked;
 	}
@@ -64,7 +64,7 @@ public final class UserLocker {
 			File lockFile = new File(PropertiesManager.getInstance().getUserDir(), usernameHash.concat(".lock"));
 			lockFile.delete();
 		}
-		log.trace("Unlock(" + usernameHash + ") ");
+		LOG.trace("Unlock(" + usernameHash + ") ");
 	}
 
 	/**

@@ -37,7 +37,7 @@ public class ServerTest {
 
 	private static final char[] KEYSTOREPASSWORD = "12345678".toCharArray();
 
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.
