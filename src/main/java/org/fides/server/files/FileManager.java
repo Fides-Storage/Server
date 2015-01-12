@@ -112,9 +112,11 @@ public final class FileManager {
 			File tempFile = new File(dataDir, tempFileName);
 			try (InputStream virtualIn = new VirtualInputStream(inputStream);
 				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-				// Tell the cli�nt he can start sending the file.
+				// Tell the client he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
+				// If current file is a data file (not key file) than amount of free bytes plus the size of the given file, 
+				// else limit the key file to the max size of the data file
 				long allowedAmountOfBytes = 0;
 				if (isDataFile) {
 					allowedAmountOfBytes = userFile.getAmountOfFreeBytes() + file.length();
