@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -37,9 +36,9 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 @PrepareForTest({ UserLocker.class, UserManager.class })
 public class ClientTest {
 
-	private static final SSLSocket sslSocket = mock(SSLSocket.class);
+	private static final SSLSocket SSL_SOCKET = mock(SSLSocket.class);
 
-	private static final Client client = mock(Client.class);
+	private static final Client CLIENT = mock(Client.class);
 
 	private static DataInputStream dataInputStream = null;
 
@@ -54,11 +53,11 @@ public class ClientTest {
 	@BeforeClass
 	public static void beforeClass() throws IOException {
 		// Setup client
-		Mockito.doCallRealMethod().when(client).handleActions(Mockito.any(DataInputStream.class), Mockito.any(ClientFileConnector.class), Mockito.any(DataOutputStream.class));
-		Mockito.doCallRealMethod().when(client).run();
-		Whitebox.setInternalState(client, "server", sslSocket);
+		Mockito.doCallRealMethod().when(CLIENT).handleActions(Mockito.any(DataInputStream.class), Mockito.any(ClientFileConnector.class), Mockito.any(DataOutputStream.class));
+		Mockito.doCallRealMethod().when(CLIENT).run();
+		Whitebox.setInternalState(CLIENT, "server", SSL_SOCKET);
 
-		when(sslSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+		when(SSL_SOCKET.getOutputStream()).thenReturn(new ByteArrayOutputStream());
 	}
 
 	/**
@@ -98,7 +97,7 @@ public class ClientTest {
 
 		// Set the datainputstream to the new DataInputStream containing the action
 		dataInputStream = new DataInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-		when(sslSocket.getInputStream()).thenReturn(dataInputStream);
+		when(SSL_SOCKET.getInputStream()).thenReturn(dataInputStream);
 	}
 
 	/**
@@ -109,7 +108,7 @@ public class ClientTest {
 	@Test
 	public void runTestCreateUser() throws Exception {
 		beforeRun(Actions.CREATE_USER);
-		client.run();
+		CLIENT.run();
 
 		verifyStatic(Mockito.times(1));
 		UserManager.createUser(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
@@ -125,7 +124,7 @@ public class ClientTest {
 	@Test
 	public void runTestLogin() throws Exception {
 		beforeRun(Actions.LOGIN);
-		client.run();
+		CLIENT.run();
 
 		verifyStatic(Mockito.never());
 		UserManager.createUser(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
@@ -144,7 +143,7 @@ public class ClientTest {
 	private void beforeHandleAction(String action) throws IOException {
 		// Mock the UserFile
 		UserFile userFile = mock(UserFile.class);
-		Whitebox.setInternalState(client, "userFile", userFile);
+		Whitebox.setInternalState(CLIENT, "userFile", userFile);
 
 		// Create a action in json format
 		JsonObject actionRequest = new JsonObject();
@@ -174,7 +173,7 @@ public class ClientTest {
 	@Test
 	public void handleGetKeyFileAction() throws Exception {
 		beforeHandleAction(Actions.GET_KEY_FILE);
-		client.handleActions(dataInputStream, clientFileConnector, null);
+		CLIENT.handleActions(dataInputStream, clientFileConnector, null);
 
 		// Verify function calls
 		verify(clientFileConnector, Mockito.times(1)).downloadKeyFile(Mockito.any(DataOutputStream.class));
@@ -193,7 +192,7 @@ public class ClientTest {
 	@Test
 	public void handleDownloadFileAction() throws Exception {
 		beforeHandleAction(Actions.GET_FILE);
-		client.handleActions(dataInputStream, clientFileConnector, null);
+		CLIENT.handleActions(dataInputStream, clientFileConnector, null);
 
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
@@ -212,7 +211,7 @@ public class ClientTest {
 	@Test
 	public void handleUpdateKeyFileAction() throws Exception {
 		beforeHandleAction(Actions.UPDATE_KEY_FILE);
-		client.handleActions(dataInputStream, clientFileConnector, null);
+		CLIENT.handleActions(dataInputStream, clientFileConnector, null);
 
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
@@ -231,7 +230,7 @@ public class ClientTest {
 	@Test
 	public void handleUpdateFileAction() throws Exception {
 		beforeHandleAction(Actions.UPDATE_FILE);
-		client.handleActions(dataInputStream, clientFileConnector, null);
+		CLIENT.handleActions(dataInputStream, clientFileConnector, null);
 
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
@@ -250,7 +249,7 @@ public class ClientTest {
 	@Test
 	public void handleUploadFileAction() throws Exception {
 		beforeHandleAction(Actions.UPLOAD_FILE);
-		client.handleActions(dataInputStream, clientFileConnector, null);
+		CLIENT.handleActions(dataInputStream, clientFileConnector, null);
 
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
@@ -269,7 +268,7 @@ public class ClientTest {
 	@Test
 	public void handleRemoveFileAction() throws Exception {
 		beforeHandleAction(Actions.REMOVE_FILE);
-		client.handleActions(dataInputStream, clientFileConnector, null);
+		CLIENT.handleActions(dataInputStream, clientFileConnector, null);
 
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));

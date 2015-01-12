@@ -37,7 +37,7 @@ public class ServerTest {
 
 	private static final char[] KEYSTOREPASSWORD = "12345678".toCharArray();
 
-	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.
@@ -53,9 +53,9 @@ public class ServerTest {
 
 		try {
 			// This causes the mocked PropertiesManager to always return the test Data directory:
-			Mockito.when(mockedPropertiesManager.getPort()).thenReturn(PORT);
-			Mockito.when(mockedPropertiesManager.getKeystorePath()).thenReturn(KEYSTOREPATH);
-			Mockito.when(mockedPropertiesManager.getKeystorePassword()).thenReturn(KEYSTOREPASSWORD);
+			Mockito.when(MOCKED_PROPERTIES_MANAGER.getPort()).thenReturn(PORT);
+			Mockito.when(MOCKED_PROPERTIES_MANAGER.getKeystorePath()).thenReturn(KEYSTOREPATH);
+			Mockito.when(MOCKED_PROPERTIES_MANAGER.getKeystorePassword()).thenReturn(KEYSTOREPASSWORD);
 		} catch (Exception e) {
 			fail("Unexpected error in setUp: " + e.getMessage());
 		}
@@ -68,7 +68,7 @@ public class ServerTest {
 	@Before
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 	}
 
 	/**

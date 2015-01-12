@@ -30,7 +30,7 @@ public class UserLockerTest {
 	/**
 	 * A mocked PropertiesManager which should always return the test User Directory
 	 */
-	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * The test User Directory
@@ -49,7 +49,7 @@ public class UserLockerTest {
 			assertTrue(testUserDir.mkdirs());
 		}
 		// This causes the mocked PropertiesManager to always return the test Data directory:
-		Mockito.when(mockedPropertiesManager.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
+		Mockito.when(MOCKED_PROPERTIES_MANAGER.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class UserLockerTest {
 	@Before
 	public void setUpMock() throws IOException {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 	}
 
 	/**
