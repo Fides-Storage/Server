@@ -83,7 +83,7 @@ public class UserLockerTest {
 	public void testRemoveLockFile() throws IOException {
 		String username = "testRemoveLockFile";
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
-		testLockFile.createNewFile();
+		assertTrue(testLockFile.createNewFile());
 		assertTrue(testLockFile.exists());
 		UserLocker.unlock(username);
 		assertFalse(testLockFile.exists());
@@ -98,7 +98,7 @@ public class UserLockerTest {
 	public void testBlockingLockFile() throws IOException {
 		String username = "testBlockingLockFile";
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
-		testLockFile.createNewFile();
+		assertTrue(testLockFile.createNewFile());
 		assertTrue(testLockFile.exists());
 		assertFalse(UserLocker.lock(username));
 	}
@@ -141,8 +141,8 @@ public class UserLockerTest {
 		String username2 = "testClearAllLocks2";
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
 		File testLockFile2 = new File(testUserDir, username2.concat(".lock"));
-		testLockFile.createNewFile();
-		testLockFile2.createNewFile();
+		assertTrue(testLockFile.createNewFile());
+		assertTrue(testLockFile2.createNewFile());
 		assertTrue(testLockFile.exists());
 		assertTrue(testLockFile2.exists());
 		UserLocker.clearAllLocks();
@@ -162,9 +162,9 @@ public class UserLockerTest {
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
 		File testUserFile = new File(testUserDir, username);
 		File testUserFile2 = new File(testUserDir, username2);
-		testLockFile.createNewFile();
-		testUserFile.createNewFile();
-		testUserFile2.createNewFile();
+		assertTrue(testLockFile.createNewFile());
+		assertTrue(testUserFile.createNewFile());
+		assertTrue(testUserFile2.createNewFile());
 		assertTrue(testLockFile.exists());
 		assertTrue(testUserFile.exists());
 		assertTrue(testUserFile2.exists());

@@ -54,13 +54,13 @@ public class FileManagerTest {
 		try {
 			testDataDir = new File(PropertiesManager.getInstance().getDataDir(), "Test");
 			if (!testDataDir.exists()) {
-				testDataDir.mkdirs();
+				assertTrue(testDataDir.mkdirs());
 			}
 			// This causes the mocked PropertiesManager to always return the test Data directory:
 			Mockito.when(MOCKED_PROPERTIES_MANAGER.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 
 			File emptyFile = new File(testDataDir, DEFAULTEMPTYFILELOCATION);
-			emptyFile.createNewFile();
+			assertTrue(emptyFile.createNewFile());
 
 			File defaultFile = new File(testDataDir, DEFAULTFILELOCATION);
 			FileOutputStream outputStream = new FileOutputStream(defaultFile);

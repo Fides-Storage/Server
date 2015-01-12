@@ -176,7 +176,7 @@ public class ClientFileConnectorTest {
 			String newFileLocation = "UploadTestFile";
 			File newFile = new File(testDataDir, newFileLocation);
 			assertFalse(newFile.exists());
-			newFile.createNewFile();
+			assertTrue(newFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
 			// Create the streams to use for the upload and the upload's response.
@@ -603,7 +603,7 @@ public class ClientFileConnectorTest {
 			String newFileLocation = "UploadDownloadTestFile";
 			File newFile = new File(testDataDir, newFileLocation);
 			assertFalse(newFile.exists());
-			newFile.createNewFile();
+			assertTrue(newFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
 			// Create the streams to use for the upload and the upload's response.
@@ -652,7 +652,7 @@ public class ClientFileConnectorTest {
 			String newFileLocation = "UploadUpdateDownloadTestFile";
 			File newFile = new File(testDataDir, newFileLocation);
 			assertFalse(newFile.exists());
-			newFile.createNewFile();
+			assertTrue(newFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
 			// Create the streams to use for the upload and the upload's response.
@@ -713,7 +713,7 @@ public class ClientFileConnectorTest {
 			String keyFileLocation = "UploadKeyFile";
 			File keyFile = new File(testDataDir, keyFileLocation);
 			assertFalse(keyFile.exists());
-			keyFile.createNewFile();
+			assertTrue(keyFile.createNewFile());
 			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
 			// Fill the keyfile with some default content
@@ -726,7 +726,7 @@ public class ClientFileConnectorTest {
 			String tempFileLocation = "TemporaryKeyFile";
 			File tempKeyFile = new File(testDataDir, tempFileLocation);
 			assertFalse(tempKeyFile.exists());
-			tempKeyFile.createNewFile();
+			assertTrue(tempKeyFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(tempFileLocation);
 
 			// Create the streams to use for the update and the update's response.
@@ -757,7 +757,7 @@ public class ClientFileConnectorTest {
 			String keyFileLocation = "UploadTempKeyFile";
 			File keyFile = new File(testDataDir, keyFileLocation);
 			assertFalse(keyFile.exists());
-			keyFile.createNewFile();
+			assertTrue(keyFile.createNewFile());
 			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
 			// Fill the keyfile with some default content
@@ -799,7 +799,7 @@ public class ClientFileConnectorTest {
 			String keyFileLocation = "DownloadKeyFile";
 			File keyFile = new File(testDataDir, keyFileLocation);
 			assertFalse(keyFile.exists());
-			keyFile.createNewFile();
+			assertTrue(keyFile.createNewFile());
 			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
 			// Fill the keyfile with some default content
