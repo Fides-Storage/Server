@@ -100,7 +100,7 @@ public class Client implements Runnable {
 	 * @throws EOFException
 	 * @throws IOException
 	 */
-	private void handleActions(DataInputStream in, ClientFileConnector clientFileConnector, DataOutputStream out) throws IOException {
+	public void handleActions(DataInputStream in, ClientFileConnector clientFileConnector, DataOutputStream out) throws IOException {
 		try {
 			JsonObject requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);

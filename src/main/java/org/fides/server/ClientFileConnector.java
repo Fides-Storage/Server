@@ -36,9 +36,9 @@ public class ClientFileConnector {
 	/**
 	 * Logger for this class
 	 */
-	private static Logger log = LogManager.getLogger(ClientFileConnector.class);
+	private static final Logger LOG = LogManager.getLogger(ClientFileConnector.class);
 
-	private UserFile userFile;
+	private final UserFile userFile;
 
 	/**
 	 * Constructor for ClientFileConnector
@@ -68,7 +68,7 @@ public class ClientFileConnector {
 			if (keyFile.exists()) {
 				return FileManager.copyFileToStream(keyFile, outputStream);
 			} else {
-				log.error("User's keyfile doesn't exist");
+				LOG.error("User's keyfile doesn't exist");
 				CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 			}
 			IOUtils.closeQuietly(outputStream);
@@ -148,14 +148,14 @@ public class ClientFileConnector {
 
 						// Update the user's bytes left.
 						userFile.addAmountOfBytes(bytesCopied);
-						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+						LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 						uploadSuccessful = true;
 					}
 				} else {
 					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
 				}
 			} catch (IOException e) {
-				log.error(e.getMessage());
+				LOG.error(e.getMessage());
 				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 			} finally {
 				if (!uploadSuccessful) {
@@ -164,7 +164,7 @@ public class ClientFileConnector {
 				tempFile.delete();
 			}
 		} else {
-			log.error("A file generated with FileManager.createFile() was not generated correctly.");
+			LOG.error("A file generated with FileManager.createFile() was not generated correctly.");
 			CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 		}
 		return uploadSuccessful;
@@ -226,10 +226,10 @@ public class ClientFileConnector {
 
 					if (result) {
 						try {
-							log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+							LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 							CommunicationUtil.returnSuccessful(outputStream);
 						} catch (IOException e) {
-							log.debug("IOException when returning the successful delete: ", e);
+							LOG.debug("IOException when returning the successful delete: ", e);
 						}
 
 						// Remove file in UserFile
@@ -272,7 +272,7 @@ public class ClientFileConnector {
 				return FileManager.copyStreamToKeyFile(inputStream, keyFile, outputStream, userFile);
 
 			} else {
-				log.error("User's keyfile doesn't exist");
+				LOG.error("User's keyfile doesn't exist");
 				CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 			}
 		}

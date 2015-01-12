@@ -53,7 +53,7 @@ import com.google.gson.JsonObject;
 public class ClientFileConnectorTest {
 
 	/** A mocked PropertiesManager which should always return the test Data Directory */
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
 	/** The test User Directory */
 	private static File testDataDir;
@@ -73,9 +73,9 @@ public class ClientFileConnectorTest {
 
 	private DataOutputStream out;
 
-	private UserFile mockedUserFile = Mockito.mock(UserFile.class);
+	private final UserFile mockedUserFile = Mockito.mock(UserFile.class);
 
-	private ClientFileConnector connector = new ClientFileConnector(mockedUserFile);
+	private final ClientFileConnector connector = new ClientFileConnector(mockedUserFile);
 
 	/**
 	 * Sets up the test class by mocking the ClientFileConnector to return a testdatadir.
@@ -87,7 +87,7 @@ public class ClientFileConnectorTest {
 			assertTrue(testDataDir.mkdirs());
 		}
 		// This causes the mocked PropertiesManager to always return the test Data directory:
-		Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
+		Mockito.when(MOCKED_PROPERTIES_MANAGER.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class ClientFileConnectorTest {
 	@Before
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 		Mockito.when(mockedUserFile.getAmountOfFreeBytes()).thenReturn(10000000L);
 		Mockito.when(mockedUserFile.getMaxAmountOfBytes()).thenReturn(10000000L);
 	}

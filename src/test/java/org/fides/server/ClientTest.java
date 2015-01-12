@@ -37,9 +37,9 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 @PrepareForTest({ UserLocker.class, UserManager.class })
 public class ClientTest {
 
-	private static SSLSocket sslSocket = mock(SSLSocket.class);
+	private static final SSLSocket sslSocket = mock(SSLSocket.class);
 
-	private static Client client = mock(Client.class);
+	private static final Client client = mock(Client.class);
 
 	private static DataInputStream dataInputStream = null;
 
@@ -179,9 +179,9 @@ public class ClientTest {
 		// Verify function calls
 		verify(clientFileConnector, Mockito.times(1)).downloadKeyFile(Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(DataInputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 	}
 
@@ -198,9 +198,9 @@ public class ClientTest {
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.times(1)).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(DataInputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 	}
 
@@ -217,9 +217,9 @@ public class ClientTest {
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.times(1)).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.times(1)).updateKeyFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(DataInputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 	}
 
@@ -236,9 +236,9 @@ public class ClientTest {
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.times(1)).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.times(1)).updateFile(Mockito.any(DataInputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 	}
 
@@ -255,9 +255,9 @@ public class ClientTest {
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.times(1)).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(DataInputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.times(1)).uploadFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 	}
 
@@ -274,9 +274,9 @@ public class ClientTest {
 		// Verify function calls
 		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
-		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(DataInputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(DataInputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.times(1)).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 	}
 
