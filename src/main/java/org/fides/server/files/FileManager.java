@@ -116,17 +116,18 @@ public final class FileManager {
 				CommunicationUtil.returnSuccessful(outputStream);
 
 				// Put the stream into a temporary file
-				long bytesCoppied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
 
-				if (bytesCoppied != -1) {
+				// data is copied && if key file then key file can not be larger than data size
+				if (bytesCopied != -1 && (bytesCopied <= userFile.getMaxAmountOfBytes() || isDataFile)) {
 
 					// don't use key file
 					if (isDataFile) {
 						userFile.removeAmountOfBytes(file.length());
-						userFile.addAmountOfBytes(bytesCoppied);
+						userFile.addAmountOfBytes(bytesCopied);
 						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					}
 
