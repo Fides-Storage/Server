@@ -136,10 +136,6 @@ public class ClientFileConnectorTest {
 
 	/**
 	 * Adds a spy to the outputstream which throws an exception when Close is called on that stream.
-	 * 
-	 * @param outputStream
-	 * @return
-	 * @throws IOException
 	 */
 	private DataOutputStream addCloseSpyToStream(DataOutputStream outputStream) throws IOException {
 		DataOutputStream spyOut = Mockito.spy(outputStream);
