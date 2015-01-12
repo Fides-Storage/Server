@@ -24,7 +24,7 @@ public class UserFile implements Serializable {
 
 	private final Set<String> userFiles = new TreeSet<>();
 
-	private String keyFile;
+	private final String keyFile;
 
 	private GregorianCalendar lastRefreshed;
 

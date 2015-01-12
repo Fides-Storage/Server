@@ -28,7 +28,7 @@ public final class FileManager {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(FileManager.class);
+	private static final Logger LOG = LogManager.getLogger(FileManager.class);
 
 	/** The maximum number of attempts when trying to create a unique filename */
 	private static final int MAX_UNIQUE_NAME_ATTEMPTS = 10;
@@ -79,7 +79,7 @@ public final class FileManager {
 					newFile = new File(properties.getDataDir(), location);
 				}
 			} catch (IOException e) {
-				log.error(e);
+				LOG.error(e);
 				location = null;
 			}
 		} else {
@@ -137,7 +137,7 @@ public final class FileManager {
 					if (isDataFile) {
 						userFile.removeAmountOfBytes(file.length());
 						userFile.addAmountOfBytes(bytesCopied);
-						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+						LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					}
 
 					// Copy the temporary file into the official file
@@ -150,7 +150,7 @@ public final class FileManager {
 				}
 
 			} catch (IOException e) {
-				log.error(e.getMessage());
+				LOG.error(e.getMessage());
 			} finally {
 				tempFile.delete();
 			}
@@ -181,7 +181,7 @@ public final class FileManager {
 
 			return true;
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 		}
 		return false;
 	}
@@ -239,7 +239,7 @@ public final class FileManager {
 		throws IOException {
 		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
-		log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
+		LOG.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 
 		long count = 0;
 		int n = 0;
@@ -249,10 +249,10 @@ public final class FileManager {
 		}
 
 		if (count <= bytesAllowedToCopy) {
-			log.trace("Copy amount of bytes: " + count);
+			LOG.trace("Copy amount of bytes: " + count);
 			return count;
 		} else {
-			log.trace("Copy amount of bytes: -1");
+			LOG.trace("Copy amount of bytes: -1");
 			return -1;
 		}
 

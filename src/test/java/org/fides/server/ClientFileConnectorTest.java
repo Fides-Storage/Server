@@ -52,16 +52,16 @@ import com.google.gson.JsonObject;
 public class ClientFileConnectorTest {
 
 	/** A mocked PropertiesManager which should always return the test Data Directory */
-	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
 	/** The test User Directory */
 	private static File testDataDir;
 
-	private static final byte[] KEYFILECONTENT = "This is the default keyfile content".getBytes();
+	private static final byte[] KEYFILE_CONTENT = "This is the default KeyFile content".getBytes();
 
-	private static final byte[] FILECONTENT = "This is the default normal file content".getBytes();
+	private static final byte[] FILE_CONTENT = "This is the default normal file content".getBytes();
 
-	private static final FilenameFilter TEMPFILTER = new FilenameFilter() {
+	private static final FilenameFilter TEMP_FILTER = new FilenameFilter() {
 		@Override
 		public boolean accept(File dir, String name) {
 			return name.endsWith(".tmp");
@@ -77,7 +77,7 @@ public class ClientFileConnectorTest {
 	private final ClientFileConnector connector = new ClientFileConnector(mockedUserFile);
 
 	/**
-	 * Sets up the test class by mocking the ClientFileConnector to return a testdatadir.
+	 * Sets up the test class by mocking the ClientFileConnector to return a test data directory.
 	 */
 	@BeforeClass
 	public static void setUp() {
@@ -87,7 +87,7 @@ public class ClientFileConnectorTest {
 				assertTrue(testDataDir.mkdirs());
 			}
 			// This causes the mocked PropertiesManager to always return the test Data directory:
-			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
+			Mockito.when(MOCKED_PROPERTIES_MANAGER.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 		} catch (Exception e) {
 			fail("Unexpected error in setUp: " + e.getMessage());
 		}
@@ -100,18 +100,18 @@ public class ClientFileConnectorTest {
 	@Before
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 		Mockito.when(mockedUserFile.getAmountOfFreeBytes()).thenReturn(10000000L);
 		Mockito.when(mockedUserFile.getMaxAmountOfBytes()).thenReturn(10000000L);
 	}
 
 	/**
-	 * This emulates the client side of changing data to a virtualoutputstream which then gets send to the server as an
-	 * inputstream.
+	 * This emulates the client side of changing data to a VirtualOutputStream which then gets send to the server as an
+	 * InputStream.
 	 * 
 	 * @param data
-	 *            The bytearray to send to the inputstream
-	 * @return The inputstream with the data send through a virtualstream
+	 *            The byte array to send to the InputStream
+	 * @return The InputStream with the data send through a VirtualStream
 	 * @throws IOException
 	 */
 	private InputStream byteArrayToDataStream(byte[] data) throws IOException {
@@ -127,11 +127,11 @@ public class ClientFileConnectorTest {
 
 	/**
 	 * This emulates the client side of receiving the outputstream as inputstream, sending it through a
-	 * virtualinputstream and then reading the bytes.
+	 * VirtualIputStream and then reading the bytes.
 	 * 
 	 * @param outputStream
-	 *            The outputstream to read the bytes from
-	 * @return The bytes in the outputstream
+	 *            The OutputStream to read the bytes from
+	 * @return The bytes in the OutputStream
 	 * @throws IOException
 	 */
 	private byte[] byteDataStreamToByteArray(ByteArrayOutputStream outputStream) throws IOException {
@@ -154,23 +154,23 @@ public class ClientFileConnectorTest {
 			String newFileLocation = "UploadTestFile";
 			File newFile = new File(testDataDir, newFileLocation);
 			assertFalse(newFile.exists());
-			newFile.createNewFile();
+			assertTrue(newFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
-			// Create the streams to use for the upload and the upload's response.
+			// Create the streams to use for the upload and the uploads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
-			InputStream inStream = byteArrayToDataStream(FILECONTENT);
+			InputStream inStream = byteArrayToDataStream(FILE_CONTENT);
 
 			// Upload the file
 			assertTrue(connector.uploadFile(inStream, out));
 			inStream.close();
 
-			// Make sure the connector tried adding the new file to the userfile.
+			// Make sure the connector tried adding the new file to the UserFile.
 			Mockito.verify(mockedUserFile, Mockito.times(1)).addFile(newFileLocation);
 
 			String response = new String(outputStream.toByteArray(), StandardCharsets.UTF_8).replace("\\u0027", "'");
-			assertArrayEquals(FILECONTENT, Files.readAllBytes(newFile.toPath()));
+			assertArrayEquals(FILE_CONTENT, Files.readAllBytes(newFile.toPath()));
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
 		} catch (Exception e) {
 			fail(e.getMessage());
@@ -191,11 +191,11 @@ public class ClientFileConnectorTest {
 
 			// Fill the existing file with some default content
 			OutputStream existingFileOut = new FileOutputStream(existingFile);
-			existingFileOut.write(FILECONTENT);
+			existingFileOut.write(FILE_CONTENT);
 			existingFileOut.flush();
 			existingFileOut.close();
 
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
@@ -230,7 +230,7 @@ public class ClientFileConnectorTest {
 
 			// Fill the existing file with some default content
 			OutputStream existingFileOut = new FileOutputStream(existingFile);
-			existingFileOut.write(FILECONTENT);
+			existingFileOut.write(FILE_CONTENT);
 			existingFileOut.flush();
 			existingFileOut.close();
 
@@ -252,7 +252,7 @@ public class ClientFileConnectorTest {
 
 			// Tests if the removal of a non existing file won't return a true
 			JsonObject removeIncorrectRequest = new JsonObject();
-			removeIncorrectRequest.addProperty(Actions.Properties.LOCATION, "incorrectLocaion");
+			removeIncorrectRequest.addProperty(Actions.Properties.LOCATION, "incorrectLocation");
 			assertFalse(connector.removeFile(removeIncorrectRequest, out));
 
 			// Assert if the response contains successful:false
@@ -270,7 +270,7 @@ public class ClientFileConnectorTest {
 	@Test
 	public void testFileUpdateEmptyLocation() {
 		try {
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
@@ -296,7 +296,7 @@ public class ClientFileConnectorTest {
 	@Test
 	public void testFileUpdateNoLocation() {
 		try {
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
@@ -329,11 +329,11 @@ public class ClientFileConnectorTest {
 
 			// Fill the existing file with some default content
 			OutputStream existingFileOut = new FileOutputStream(existingFile);
-			existingFileOut.write(FILECONTENT);
+			existingFileOut.write(FILE_CONTENT);
 			existingFileOut.flush();
 			existingFileOut.close();
 
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
@@ -368,7 +368,7 @@ public class ClientFileConnectorTest {
 			Mockito.when(mockedUserFile.checkOwned(notExistingFileLocation)).thenReturn(true);
 			assertFalse(notExistingFile.exists());
 
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
@@ -406,11 +406,11 @@ public class ClientFileConnectorTest {
 
 			// Fill the existing file with some default content
 			OutputStream existingFileOut = new FileOutputStream(downloadFile);
-			existingFileOut.write(FILECONTENT);
+			existingFileOut.write(FILE_CONTENT);
 			existingFileOut.flush();
 			existingFileOut.close();
 
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 
@@ -427,7 +427,7 @@ public class ClientFileConnectorTest {
 			// Read the rest of the stream to check if the file was correctly downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
-			assertArrayEquals(FILECONTENT, byteDataStreamToByteArray(fileResponseStream));
+			assertArrayEquals(FILE_CONTENT, byteDataStreamToByteArray(fileResponseStream));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -439,7 +439,7 @@ public class ClientFileConnectorTest {
 	@Test
 	public void testFileDownloadEmptyLocation() {
 		try {
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 
@@ -469,7 +469,7 @@ public class ClientFileConnectorTest {
 	@Test
 	public void testFileDownloadNoLocation() {
 		try {
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 
@@ -506,11 +506,11 @@ public class ClientFileConnectorTest {
 
 			// Fill the existing file with some default content
 			OutputStream existingFileOut = new FileOutputStream(existingFile);
-			existingFileOut.write(FILECONTENT);
+			existingFileOut.write(FILE_CONTENT);
 			existingFileOut.flush();
 			existingFileOut.close();
 
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 
@@ -546,7 +546,7 @@ public class ClientFileConnectorTest {
 			Mockito.when(mockedUserFile.checkOwned(notExistingFileLocation)).thenReturn(true);
 			assertFalse(notExistingFile.exists());
 
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 
@@ -580,23 +580,23 @@ public class ClientFileConnectorTest {
 			String newFileLocation = "UploadDownloadTestFile";
 			File newFile = new File(testDataDir, newFileLocation);
 			assertFalse(newFile.exists());
-			newFile.createNewFile();
+			assertTrue(newFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
-			// Create the streams to use for the upload and the upload's response.
+			// Create the streams to use for the upload and the uploads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
-			InputStream inStream = byteArrayToDataStream(FILECONTENT);
+			InputStream inStream = byteArrayToDataStream(FILE_CONTENT);
 
 			// Upload the file
 			connector.uploadFile(inStream, out);
 			inStream.close();
 
-			// Make sure the connector tried adding the new file to the userfile.
+			// Make sure the connector tried adding the new file to the UserFile.
 			Mockito.verify(mockedUserFile, Mockito.times(1)).addFile(newFileLocation);
 			Mockito.when(mockedUserFile.checkOwned(newFileLocation)).thenReturn(true);
 
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 
@@ -613,7 +613,7 @@ public class ClientFileConnectorTest {
 			// Read the rest of the stream to check if the file was correctly downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
-			assertArrayEquals(FILECONTENT, byteDataStreamToByteArray(fileResponseStream));
+			assertArrayEquals(FILE_CONTENT, byteDataStreamToByteArray(fileResponseStream));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -629,23 +629,23 @@ public class ClientFileConnectorTest {
 			String newFileLocation = "UploadUpdateDownloadTestFile";
 			File newFile = new File(testDataDir, newFileLocation);
 			assertFalse(newFile.exists());
-			newFile.createNewFile();
+			assertTrue(newFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(newFileLocation);
 
-			// Create the streams to use for the upload and the upload's response.
+			// Create the streams to use for the upload and the uploads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
-			InputStream inStream = byteArrayToDataStream(FILECONTENT);
+			InputStream inStream = byteArrayToDataStream(FILE_CONTENT);
 
 			// Upload the file
 			connector.uploadFile(inStream, out);
 			inStream.close();
 
-			// Make sure the connector tried adding the new file to the userfile.
+			// Make sure the connector tried adding the new file to the UserFile.
 			Mockito.verify(mockedUserFile, Mockito.times(1)).addFile(newFileLocation);
 			Mockito.when(mockedUserFile.checkOwned(newFileLocation)).thenReturn(true);
 
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream updateOutputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(updateOutputStream);
@@ -657,7 +657,7 @@ public class ClientFileConnectorTest {
 			assertTrue(connector.updateFile(inStream, updateRequest, out));
 			inStream.close();
 
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream downloadOutputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(downloadOutputStream);
 
@@ -690,12 +690,12 @@ public class ClientFileConnectorTest {
 			String keyFileLocation = "UploadKeyFile";
 			File keyFile = new File(testDataDir, keyFileLocation);
 			assertFalse(keyFile.exists());
-			keyFile.createNewFile();
+			assertTrue(keyFile.createNewFile());
 			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
 			// Fill the keyfile with some default content
 			OutputStream existingKeyFileOut = new FileOutputStream(keyFile);
-			existingKeyFileOut.write(KEYFILECONTENT);
+			existingKeyFileOut.write(KEYFILE_CONTENT);
 			existingKeyFileOut.flush();
 			existingKeyFileOut.close();
 
@@ -703,16 +703,16 @@ public class ClientFileConnectorTest {
 			String tempFileLocation = "TemporaryKeyFile";
 			File tempKeyFile = new File(testDataDir, tempFileLocation);
 			assertFalse(tempKeyFile.exists());
-			tempKeyFile.createNewFile();
+			assertTrue(tempKeyFile.createNewFile());
 			PowerMockito.stub(PowerMockito.method(FileManager.class, "createFile")).toReturn(tempFileLocation);
 
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 			InputStream inStream = byteArrayToDataStream(updatedKeyFileContent);
 
-			// Update the keyfilefile
+			// Update the KeyFile
 			assertTrue(connector.updateKeyFile(inStream, out));
 			inStream.close();
 
@@ -734,22 +734,22 @@ public class ClientFileConnectorTest {
 			String keyFileLocation = "UploadTempKeyFile";
 			File keyFile = new File(testDataDir, keyFileLocation);
 			assertFalse(keyFile.exists());
-			keyFile.createNewFile();
+			assertTrue(keyFile.createNewFile());
 			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
 			// Fill the keyfile with some default content
 			OutputStream existingKeyFileOut = new FileOutputStream(keyFile);
-			existingKeyFileOut.write(KEYFILECONTENT);
+			existingKeyFileOut.write(KEYFILE_CONTENT);
 			existingKeyFileOut.flush();
 			existingKeyFileOut.close();
 
-			// Create the streams to use for the update and the update's response.
+			// Create the streams to use for the update and the updates response.
 			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 			InputStream inStream = byteArrayToDataStream(updatedKeyFileContent);
 
-			// Update the keyfilefile
+			// Update the KeyFile
 			assertTrue(connector.updateKeyFile(inStream, out));
 			inStream.close();
 
@@ -757,7 +757,7 @@ public class ClientFileConnectorTest {
 			assertArrayEquals(updatedKeyFileContent, Files.readAllBytes(keyFile.toPath()));
 			assertTrue(response.contains("\"" + Responses.SUCCESSFUL + "\":true"));
 
-			File[] lockFiles = testDataDir.listFiles(TEMPFILTER);
+			File[] lockFiles = testDataDir.listFiles(TEMP_FILTER);
 			for (File file : lockFiles) {
 				fail("The temporary file " + file.getName() + " didn't get deleted after the update.");
 			}
@@ -776,16 +776,16 @@ public class ClientFileConnectorTest {
 			String keyFileLocation = "DownloadKeyFile";
 			File keyFile = new File(testDataDir, keyFileLocation);
 			assertFalse(keyFile.exists());
-			keyFile.createNewFile();
+			assertTrue(keyFile.createNewFile());
 			Mockito.when(mockedUserFile.getKeyFileLocation()).thenReturn(keyFileLocation);
 
 			// Fill the keyfile with some default content
 			OutputStream existingKeyFileOut = new FileOutputStream(keyFile);
-			existingKeyFileOut.write(KEYFILECONTENT);
+			existingKeyFileOut.write(KEYFILE_CONTENT);
 			existingKeyFileOut.flush();
 			existingKeyFileOut.close();
 
-			// Create the stream to use for the download's response.
+			// Create the stream to use for the downloads response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = new DataOutputStream(outputStream);
 			assertTrue(connector.downloadKeyFile(out));
@@ -798,7 +798,7 @@ public class ClientFileConnectorTest {
 			// Read the rest of the stream to check if the file was correctly downloaded
 			ByteArrayOutputStream fileResponseStream = new ByteArrayOutputStream();
 			IOUtils.copy(in, fileResponseStream);
-			assertArrayEquals(KEYFILECONTENT, byteDataStreamToByteArray(fileResponseStream));
+			assertArrayEquals(KEYFILE_CONTENT, byteDataStreamToByteArray(fileResponseStream));
 
 		} catch (Exception e) {
 			fail(e.getMessage());
