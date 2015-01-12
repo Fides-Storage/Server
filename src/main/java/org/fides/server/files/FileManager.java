@@ -116,7 +116,7 @@ public final class FileManager {
 				CommunicationUtil.returnSuccessful(outputStream);
 
 				// Put the stream into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, (userFile.getAmountOfFreeBytes() + file.length()), isDataFile);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
@@ -228,23 +228,22 @@ public final class FileManager {
 	 * @throws IOException
 	 *             if an I/O error occurs
 	 */
-	public static long copyLarge(InputStream input, OutputStream output, UserFile userFile, boolean isDataFile)
+	public static long copyLarge(InputStream input, OutputStream output, long bytesAllowedToCopy, boolean isDataFile)
 		throws IOException {
 		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
 		if (isDataFile) {
-			log.trace("Maximum amount of bytes allowed to copy: " + userFile.getAmountOfFreeBytes());
-			log.trace("Current max of bytes: " + userFile.getMaxAmountOfBytes());
+			log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 		}
 
 		long count = 0;
 		int n = 0;
-		while (EOF != (n = input.read(buffer)) && (count <= userFile.getAmountOfFreeBytes() || !isDataFile)) {
+		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy || !isDataFile)) {
 			output.write(buffer, 0, n);
 			count += n;
 		}
 
-		if (count <= userFile.getAmountOfFreeBytes() || !isDataFile) {
+		if (count <= bytesAllowedToCopy || !isDataFile) {
 			log.trace("Copy amount of bytes: " + count + ", isDataFile: " + isDataFile);
 			return count;
 		} else {
