@@ -42,9 +42,9 @@ public class FileManagerTest {
 
 	private static File testDataDir;
 
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
 
-	private static UserFile mockedUserFile = Mockito.mock(UserFile.class);
+	private static final UserFile mockedUserFile = Mockito.mock(UserFile.class);
 
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.

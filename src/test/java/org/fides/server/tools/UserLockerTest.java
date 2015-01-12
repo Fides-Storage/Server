@@ -30,7 +30,7 @@ public class UserLockerTest {
 	/**
 	 * A mocked PropertiesManager which should always return the test User Directory
 	 */
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * The test User Directory

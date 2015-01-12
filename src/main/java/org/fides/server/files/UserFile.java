@@ -18,11 +18,11 @@ public class UserFile implements Serializable {
 	 */
 	private static final long serialVersionUID = 4099951094350728444L;
 
-	private String usernameHash;
+	private final String usernameHash;
 
-	private String passwordHash;
+	private final String passwordHash;
 
-	private Set<String> userFiles = new TreeSet<>();
+	private final Set<String> userFiles = new TreeSet<>();
 
 	private String keyFile;
 
@@ -112,16 +112,6 @@ public class UserFile implements Serializable {
 	 */
 	public String getKeyFileLocation() {
 		return keyFile;
-	}
-
-	/**
-	 * Sets the location of the user's keyfile to the userfile.
-	 * 
-	 * @param location
-	 *            The location of the keyfile.
-	 */
-	public void setKeyFileLocation(String location) {
-		keyFile = location;
 	}
 
 	public GregorianCalendar getLastRefreshed() {

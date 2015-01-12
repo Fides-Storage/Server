@@ -52,7 +52,7 @@ import com.google.gson.JsonObject;
 public class ClientFileConnectorTest {
 
 	/** A mocked PropertiesManager which should always return the test Data Directory */
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
 
 	/** The test User Directory */
 	private static File testDataDir;
@@ -72,9 +72,9 @@ public class ClientFileConnectorTest {
 
 	private DataOutputStream out;
 
-	private UserFile mockedUserFile = Mockito.mock(UserFile.class);
+	private final UserFile mockedUserFile = Mockito.mock(UserFile.class);
 
-	private ClientFileConnector connector = new ClientFileConnector(mockedUserFile);
+	private final ClientFileConnector connector = new ClientFileConnector(mockedUserFile);
 
 	/**
 	 * Sets up the test class by mocking the ClientFileConnector to return a testdatadir.

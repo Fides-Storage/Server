@@ -19,7 +19,7 @@ public final class CommunicationUtil {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(CommunicationUtil.class);
+	private static final Logger LOG = LogManager.getLogger(CommunicationUtil.class);
 
 	private CommunicationUtil() {
 	}
@@ -81,7 +81,7 @@ public final class CommunicationUtil {
 			returnJobj.addProperty(Responses.ERROR, errorMessage);
 			outputStream.writeUTF(new Gson().toJson(returnJobj));
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 		}
 	}
 }

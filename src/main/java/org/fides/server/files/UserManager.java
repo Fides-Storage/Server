@@ -37,9 +37,9 @@ public final class UserManager {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(UserManager.class);
+	private static final Logger LOG = LogManager.getLogger(UserManager.class);
 
-	// Add the Bouncycastle provider
+	// Add the BouncyCastleProvider
 	static {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 	}
@@ -89,11 +89,11 @@ public final class UserManager {
 				}
 
 			} catch (FileNotFoundException e) {
-				log.debug("UserFile not found for username: " + username);
+				LOG.debug("UserFile not found for username: " + username);
 			} catch (IOException e) {
-				log.error("IOException has occured", e);
+				LOG.error("IOException has occured", e);
 			} catch (ClassNotFoundException e) {
-				log.error("UserFile was not a UserFile", e);
+				LOG.error("UserFile was not a UserFile", e);
 			} finally {
 				// If the userfile couldn't be loaded, the user should be unlocked.
 				if (userFile == null) {
@@ -150,9 +150,9 @@ public final class UserManager {
 			}
 
 		} catch (FileNotFoundException e) {
-			log.error("UserFile not found", e);
+			LOG.error("UserFile not found", e);
 		} catch (IOException e) {
-			log.error("IOException has occured", e);
+			LOG.error("IOException has occured", e);
 		} finally {
 			IOUtils.closeQuietly(outEncrypted);
 			IOUtils.closeQuietly(dout);
@@ -169,7 +169,7 @@ public final class UserManager {
 	 *            the given user name
 	 * @return whether the username exists or not
 	 */
-	public static boolean checkIfUserExists(String username) {
+	private static boolean checkIfUserExists(String username) {
 		File userFile = new File(PropertiesManager.getInstance().getUserDir(), username);
 
 		// Check if username is in the folder
@@ -227,18 +227,18 @@ public final class UserManager {
 				userFile = UserManager.unlockUserFile(usernameHash, passwordHash);
 
 				if (userFile != null) {
-					log.trace("AuthenticateUser Successful");
+					LOG.trace("AuthenticateUser Successful");
 					CommunicationUtil.returnSuccessful(out);
 				} else {
-					log.error(Errors.USERNAME_OR_PASSWORD_INCORRECT);
+					LOG.error(Errors.USERNAME_OR_PASSWORD_INCORRECT);
 					CommunicationUtil.returnError(out, Errors.USERNAME_OR_PASSWORD_INCORRECT);
 				}
 			} else {
-				log.error(Errors.SERVER_CANNOT_RESPOND);
+				LOG.error(Errors.SERVER_CANNOT_RESPOND);
 				CommunicationUtil.returnError(out, Errors.SERVER_CANNOT_RESPOND);
 			}
 		} else {
-			log.error(Errors.USERNAME_OR_PASSWORD_EMPTY);
+			LOG.error(Errors.USERNAME_OR_PASSWORD_EMPTY);
 			CommunicationUtil.returnError(out, Errors.USERNAME_OR_PASSWORD_EMPTY);
 		}
 
