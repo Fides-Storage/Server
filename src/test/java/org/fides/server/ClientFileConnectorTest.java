@@ -16,6 +16,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -120,6 +121,18 @@ public class ClientFileConnectorTest {
 		return new ByteArrayInputStream(byteOut.toByteArray());
 	}
 
+	private DataInputStream addSuccessfulToStream(DataInputStream inputStream) throws IOException {
+		ByteArrayOutputStream successfulOut = new ByteArrayOutputStream();
+		DataOutputStream dataOut = new DataOutputStream(successfulOut);
+		JsonObject returnJobj = new JsonObject();
+		returnJobj.addProperty(Responses.SUCCESSFUL, true);
+		dataOut.writeUTF(new Gson().toJson(returnJobj));
+		ByteArrayInputStream byteIn = new ByteArrayInputStream(successfulOut.toByteArray());
+
+		return new DataInputStream(new SequenceInputStream(inputStream, byteIn));
+
+	}
+
 	/**
 	 * Adds a spy to the outputstream which throws an exception when Close is called on that stream.
 	 * 
@@ -169,7 +182,7 @@ public class ClientFileConnectorTest {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(outputStream));
 
-			InputStream inStream = byteArrayToDataStream(FILECONTENT);
+			DataInputStream inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(FILECONTENT)));
 
 			// Upload the file
 			assertTrue(connector.uploadFile(inStream, out));
@@ -595,7 +608,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the upload and the upload's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(outputStream));
-			InputStream inStream = byteArrayToDataStream(FILECONTENT);
+			DataInputStream inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(FILECONTENT)));
 
 			// Upload the file
 			connector.uploadFile(inStream, out);
@@ -644,7 +657,7 @@ public class ClientFileConnectorTest {
 			// Create the streams to use for the upload and the upload's response.
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(outputStream));
-			InputStream inStream = byteArrayToDataStream(FILECONTENT);
+			DataInputStream inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(FILECONTENT)));
 
 			// Upload the file
 			connector.uploadFile(inStream, out);
@@ -658,7 +671,7 @@ public class ClientFileConnectorTest {
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream updateOutputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(updateOutputStream));
-			inStream = byteArrayToDataStream(updatedFileContent);
+			inStream = new DataInputStream(byteArrayToDataStream(updatedFileContent));
 
 			// The update
 			JsonObject updateRequest = new JsonObject();

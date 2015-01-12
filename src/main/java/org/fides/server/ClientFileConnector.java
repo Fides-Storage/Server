@@ -1,5 +1,6 @@
 package org.fides.server;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -104,7 +105,6 @@ public class ClientFileConnector {
 		} else {
 			CommunicationUtil.returnError(outputStream, Errors.NO_FILE_LOCATION);
 		}
-		IOUtils.closeQuietly(outputStream);
 		return false;
 	}
 
@@ -118,7 +118,7 @@ public class ClientFileConnector {
 	 *            The stream to write the response to
 	 * @return Whether the upload was successful or not
 	 */
-	public boolean uploadFile(InputStream inputStream, DataOutputStream outputStream) {
+	public boolean uploadFile(DataInputStream inputStream, DataOutputStream outputStream) {
 		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), FileManager.createFile(true));
 		String location = FileManager.createFile();
 		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
@@ -134,20 +134,24 @@ public class ClientFileConnector {
 
 				// Put the inputstream received from the user into a temporary file
 				long bytesCopied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile, true);
+
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualInputStream.close();
 
 				if (bytesCopied != -1) {
-					// Add the file to the user
-					Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					CommunicationUtil.returnSuccessful(outputStream);
+					// Check if the upload was succesful on the client side
+					if (CommunicationUtil.uploadSuccessful(outputStream, inputStream)) {
+						Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-					userFile.addFile(location);
+						// Add the file to the user
+						userFile.addFile(location);
 
-					userFile.addAmountOfBytes(bytesCopied);
-					log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
-					uploadSuccessful = true;
+						// Update the user's bytes left.
+						userFile.addAmountOfBytes(bytesCopied);
+						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+						uploadSuccessful = true;
+					}
 				} else {
 					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
 				}
@@ -187,7 +191,7 @@ public class ClientFileConnector {
 				File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 				// Check if the file exists
 				if (file.exists()) {
-					return FileManager.copyStreamToFile(inputStream, file, outputStream, userFile, true);
+					return FileManager.copyStreamToFile(inputStream, file, outputStream, userFile);
 				} else {
 					CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_FOUND);
 				}
@@ -266,7 +270,7 @@ public class ClientFileConnector {
 			File keyFile = new File(PropertiesManager.getInstance().getDataDir(), userFile.getKeyFileLocation());
 			// If the keyfile exists, copy the stream to the keyfile (via a temporary file)
 			if (keyFile.exists()) {
-				return FileManager.copyStreamToFile(inputStream, keyFile, outputStream, userFile, false);
+				return FileManager.copyStreamToKeyFile(inputStream, keyFile, outputStream, userFile);
 
 			} else {
 				log.error("User's keyfile doesn't exist");

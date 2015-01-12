@@ -89,6 +89,14 @@ public final class FileManager {
 		return location;
 	}
 
+	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
+		return copyStreamToFile(inputStream, file, outputStream, userFile, true);
+	}
+
+	public static boolean copyStreamToKeyFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
+		return copyStreamToFile(inputStream, file, outputStream, userFile, false);
+	}
+
 	/**
 	 * Copies an inputstream to fill the file.
 	 * 
@@ -104,7 +112,7 @@ public final class FileManager {
 	 *            used to exclude the key file
 	 * @return Whether the copy was successful or not
 	 */
-	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
+	private static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		String tempFileName = createFile(true);
 		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(tempFileName)) {
@@ -116,17 +124,17 @@ public final class FileManager {
 				CommunicationUtil.returnSuccessful(outputStream);
 
 				// Put the stream into a temporary file
-				long bytesCoppied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
 
-				if (bytesCoppied != -1) {
+				if (bytesCopied != -1) {
 
 					// don't use key file
 					if (isDataFile) {
 						userFile.removeAmountOfBytes(file.length());
-						userFile.addAmountOfBytes(bytesCoppied);
+						userFile.addAmountOfBytes(bytesCopied);
 						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					}
 
@@ -135,7 +143,7 @@ public final class FileManager {
 					CommunicationUtil.returnSuccessful(outputStream);
 					return true;
 				} else {
-					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
+					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
 					return false;
 				}
 

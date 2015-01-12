@@ -1,5 +1,6 @@
 package org.fides.server.tools;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
@@ -25,7 +26,7 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies an successful to the outputstream
+	 * Copies a successful to the outputstream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
@@ -38,7 +39,26 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies an successful to the outputstream
+	 * Copies a successful to the outputstream and waits for a successful from the inputstream.
+	 * 
+	 * @param outputStream
+	 *            The stream to copy the successful to
+	 * @throws IOException
+	 */
+	public static boolean uploadSuccessful(DataOutputStream outputStream, DataInputStream inputStream) throws IOException {
+		String message = inputStream.readUTF();
+		JsonObject response = new Gson().fromJson(message, JsonObject.class);
+		if (response.has(Responses.SUCCESSFUL) && response.get(Responses.SUCCESSFUL).getAsBoolean()) {
+			JsonObject returnJobj = new JsonObject();
+			returnJobj.addProperty(Responses.SUCCESSFUL, true);
+			outputStream.writeUTF(new Gson().toJson(returnJobj));
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Copies a successful with properties to the outputstream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
