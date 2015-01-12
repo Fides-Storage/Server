@@ -28,7 +28,7 @@ public final class FileManager {
 	/**
 	 * Log for this class
 	 */
-	private static final Logger LOG = LogManager.getLogger(FileManager.class);
+	private static Logger log = LogManager.getLogger(FileManager.class);
 
 	/** The maximum number of attempts when trying to create a unique filename */
 	private static final int MAX_UNIQUE_NAME_ATTEMPTS = 10;
@@ -79,7 +79,7 @@ public final class FileManager {
 					newFile = new File(properties.getDataDir(), location);
 				}
 			} catch (IOException e) {
-				LOG.error(e);
+				log.error(e);
 				location = null;
 			}
 		} else {
@@ -112,23 +112,32 @@ public final class FileManager {
 			File tempFile = new File(dataDir, tempFileName);
 			try (InputStream virtualIn = new VirtualInputStream(inputStream);
 				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-				// Tell the cli�nt he can start sending the file.
+				// Tell the client he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
+				// If current file is a data file (not key file) than amount of free bytes plus the size of the given file, 
+				// else limit the key file to the max size of the data file
+				long allowedAmountOfBytes = 0;
+				if (isDataFile) {
+					allowedAmountOfBytes = userFile.getAmountOfFreeBytes() + file.length();
+				} else {
+					allowedAmountOfBytes = userFile.getMaxAmountOfBytes();
+				}
+
 				// Put the stream into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile.getAmountOfFreeBytes() + file.length(), isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, allowedAmountOfBytes);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
 
-				// data is copied && if key file then key file can not be larger than data size
-				if (bytesCopied != -1 && (bytesCopied <= userFile.getMaxAmountOfBytes() || isDataFile)) {
+				// data is copied
+				if (bytesCopied != -1) {
 
 					// don't use key file
 					if (isDataFile) {
 						userFile.removeAmountOfBytes(file.length());
 						userFile.addAmountOfBytes(bytesCopied);
-						LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					}
 
 					// Copy the temporary file into the official file
@@ -141,7 +150,7 @@ public final class FileManager {
 				}
 
 			} catch (IOException e) {
-				LOG.error(e.getMessage());
+				log.error(e.getMessage());
 			} finally {
 				tempFile.delete();
 			}
@@ -172,7 +181,7 @@ public final class FileManager {
 
 			return true;
 		} catch (IOException e) {
-			LOG.error(e.getMessage());
+			log.error(e.getMessage());
 		}
 		return false;
 	}
@@ -220,34 +229,30 @@ public final class FileManager {
 	 *            the <code>OutputStream</code> to write to
 	 * @param bytesAllowedToCopy
 	 *            the amount of free space
-	 * @param isDataFile
-	 *            used to exclude the key file
 	 * @return the number of bytes copied, -1 of not succeed
 	 * @throws NullPointerException
 	 *             if the input or output is null
 	 * @throws IOException
 	 *             if an I/O error occurs
 	 */
-	public static long copyLarge(InputStream input, OutputStream output, long bytesAllowedToCopy, boolean isDataFile)
+	public static long copyLarge(InputStream input, OutputStream output, long bytesAllowedToCopy)
 		throws IOException {
 		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
-		if (isDataFile) {
-			LOG.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
-		}
+		log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 
 		long count = 0;
 		int n = 0;
-		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy || !isDataFile)) {
+		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy)) {
 			output.write(buffer, 0, n);
 			count += n;
 		}
 
-		if (count <= bytesAllowedToCopy || !isDataFile) {
-			LOG.trace("Copy amount of bytes: " + count + ", isDataFile: " + isDataFile);
+		if (count <= bytesAllowedToCopy) {
+			log.trace("Copy amount of bytes: " + count);
 			return count;
 		} else {
-			LOG.trace("Copy amount of bytes: -1 , isDataFile: " + isDataFile);
+			log.trace("Copy amount of bytes: -1");
 			return -1;
 		}
 

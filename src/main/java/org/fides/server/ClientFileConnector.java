@@ -130,7 +130,7 @@ public class ClientFileConnector {
 				CommunicationUtil.returnSuccessfulWithProperties(outputStream, properties);
 
 				// Put the inputstream received from the user into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile.getAmountOfFreeBytes(), true);
+				long bytesCopied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile.getAmountOfFreeBytes());
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualInputStream.close();
