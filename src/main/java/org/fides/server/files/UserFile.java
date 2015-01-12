@@ -118,7 +118,7 @@ public class UserFile implements Serializable {
 		keyFile = location;
 	}
 
-	public GregorianCalendar getLastRefreshed() {
+	protected GregorianCalendar getLastRefreshed() {
 		return lastRefreshed;
 	}
 
@@ -128,7 +128,7 @@ public class UserFile implements Serializable {
 	 * @param lastRefreshed
 	 *            as gregorian calendar
 	 */
-	public void setLastRefreshed(GregorianCalendar lastRefreshed) {
+	protected void setLastRefreshed(GregorianCalendar lastRefreshed) {
 		this.lastRefreshed = lastRefreshed;
 		UserManager.saveUserFile(this);
 	}
