@@ -124,6 +124,8 @@ public final class FileManager {
 				// Tell the client he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
+				// If current file is a data file (not key file) than amount of free bytes plus the size of the given file, 
+				// else limit the key file to the max size of the data file
 				long allowedAmountOfBytes = 0;
 				if (isDataFile) {
 					// If the file is a normal datafile, the maximum upload size is equal to the amount of bytes left on
