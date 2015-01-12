@@ -116,7 +116,7 @@ public final class FileManager {
 				CommunicationUtil.returnSuccessful(outputStream);
 
 				// Put the stream into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, (userFile.getAmountOfFreeBytes() + file.length()), isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile.getAmountOfFreeBytes() + file.length(), isDataFile);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
@@ -218,8 +218,8 @@ public final class FileManager {
 	 *            the <code>InputStream</code> to read from
 	 * @param output
 	 *            the <code>OutputStream</code> to write to
-	 * @param userFile
-	 *            used to get amount of free space
+	 * @param bytesAllowedToCopy
+	 *            the amount of free space
 	 * @param isDataFile
 	 *            used to exclude the key file
 	 * @return the number of bytes copied, -1 of not succeed
