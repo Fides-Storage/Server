@@ -39,9 +39,9 @@ import com.google.gson.JsonObject;
 /**
  * The JUnit Test Case for the UserManager
  */
+@PowerMockIgnore({ "javax.crypto.*", "javax.management.*" })
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ PropertiesManager.class, FileManager.class, UserManager.class })
-@PowerMockIgnore("javax.crypto.*")
 public class UserManagerTest {
 
 	/**

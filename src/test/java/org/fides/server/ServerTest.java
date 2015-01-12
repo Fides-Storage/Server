@@ -24,7 +24,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 /**
  * This unittest tests the Server class
  */
-@PowerMockIgnore("javax.net.ssl.*")
+@PowerMockIgnore({ "javax.net.ssl.*", "javax.management.*" })
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PropertiesManager.class)
 public class ServerTest {
