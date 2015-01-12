@@ -43,11 +43,11 @@ public class Cleaner {
 			for (File file : files) {
 				file.delete();
 			}
-			log.trace("End cleaner, cleanend " + files.size() + " files");
+			log.trace("End cleaner, cleaned " + files.size() + " files");
 
 			firstRun = false;
 		} else {
-			log.trace("Running cleaner, unnecessary");
+			log.trace("Running cleaner is unnecessary");
 		}
 	}
 }
