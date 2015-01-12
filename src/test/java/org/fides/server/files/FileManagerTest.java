@@ -1,5 +1,6 @@
 package org.fides.server.files;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -9,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.fides.server.tools.PropertiesManager;
@@ -151,6 +154,30 @@ public class FileManagerTest {
 			assertTrue(Files.exists(Paths.get(testDataDir.getCanonicalPath(), fileName)));
 			assertFalse(fileName.endsWith(".tmp"));
 		} catch (Exception e) {
+		}
+	}
+
+	/**
+	 * Tests if touch file is correct
+	 */
+	@Test
+	public void testTouchFile() {
+		try {
+			File testFile = new File(testDataDir, "touch.txt");
+			testFile.createNewFile();
+
+			FileManager.touchFile(testFile);
+
+			Calendar currentTime = Calendar.getInstance();
+			currentTime.setTime(new Date(testFile.lastModified()));
+
+			assertEquals(Calendar.getInstance().get(Calendar.YEAR), currentTime.get(Calendar.YEAR));
+			assertEquals(Calendar.getInstance().get(Calendar.MONTH), currentTime.get(Calendar.MONTH));
+			assertEquals(1, currentTime.get(Calendar.DAY_OF_MONTH));
+			assertEquals(0, currentTime.get(Calendar.HOUR_OF_DAY));
+			assertEquals(0, currentTime.get(Calendar.MINUTE));
+
+		} catch (IOException e) {
 			fail("An unexpected exception has occured: " + e.getMessage());
 		}
 	}

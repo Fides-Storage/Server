@@ -141,12 +141,15 @@ public class ClientFileConnector {
 					// Add the file to the user
 					userFile.addFile(location);
 					userFile.addAmountOfBytes(bytesCopied);
+
+					// Set timestamp back to first of month
+					FileManager.touchFile(file);
+
 					log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 					uploadSuccessful = true;
 				} else {
 					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
 				}
-
 			} catch (IOException e) {
 				log.error(e.getMessage());
 				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");

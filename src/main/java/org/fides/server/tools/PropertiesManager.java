@@ -37,6 +37,8 @@ public class PropertiesManager {
 
 	private long maxAmountOfBytesPerUser;
 
+	private int expirationTimeInMonths;
+
 	/**
 	 * Constructor of the properties manager. Loads the properties file.
 	 */
@@ -64,6 +66,7 @@ public class PropertiesManager {
 		dataDir = properties.getProperty("dataDir");
 		keystorePath = properties.getProperty("keystorePath");
 		keystorePassword = properties.getProperty("keystorePassword").toCharArray();
+		expirationTimeInMonths = Integer.parseInt(properties.getProperty("experitionTimeInMonths"));
 
 		// Converts amount of megabytes to bytes
 		maxAmountOfBytesPerUser = Long.parseLong(properties.getProperty("maxAmountOfMegabytesPerUser")) * 1048576L;
@@ -138,5 +141,14 @@ public class PropertiesManager {
 
 	public long getMaxAmountOfBytesPerUser() {
 		return maxAmountOfBytesPerUser;
+	}
+
+	/**
+	 * Get the expiration time in months
+	 * 
+	 * @return the expiration time in months
+	 */
+	public int getExpirationTimeInMonths() {
+		return expirationTimeInMonths;
 	}
 }
