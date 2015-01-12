@@ -1,5 +1,6 @@
 package org.fides.server.files;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -89,11 +90,11 @@ public final class FileManager {
 		return location;
 	}
 
-	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
+	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
 		return copyStreamToFile(inputStream, file, outputStream, userFile, true);
 	}
 
-	public static boolean copyStreamToKeyFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
+	public static boolean copyStreamToKeyFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
 		return copyStreamToFile(inputStream, file, outputStream, userFile, false);
 	}
 
@@ -112,7 +113,7 @@ public final class FileManager {
 	 *            used to exclude the key file
 	 * @return Whether the copy was successful or not
 	 */
-	private static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
+	private static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		String tempFileName = createFile(true);
 		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(tempFileName)) {
@@ -123,24 +124,38 @@ public final class FileManager {
 				// Tell the client he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
+				long allowedAmountOfBytes = 0;
+				if (isDataFile) {
+					// If the file is a normal datafile, the maximum upload size is equal to the amount of bytes left on
+					// the user's account plus the size of the file that's getting updated
+					allowedAmountOfBytes = userFile.getAmountOfFreeBytes() + file.length();
+				} else {
+					// If the is uploading a keyfile, the maximum upload size is equal to the user's maximum
+					// user size. Perhaps in the future this can be changed to the amount mentioned above plus some
+					// leeway.
+					allowedAmountOfBytes = userFile.getMaxAmountOfBytes();
+				}
+
 				// Put the stream into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile, isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, allowedAmountOfBytes);
+
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
 
+				// data is copied
 				if (bytesCopied != -1) {
 
-					// don't use key file
-					if (isDataFile) {
-						userFile.removeAmountOfBytes(file.length());
-						userFile.addAmountOfBytes(bytesCopied);
-						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
-					}
-
 					// Copy the temporary file into the official file
-					Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					CommunicationUtil.returnSuccessful(outputStream);
+					if (CommunicationUtil.uploadSuccessful(outputStream, inputStream)) {
+						// don't use key file
+						if (isDataFile) {
+							userFile.removeAmountOfBytes(file.length());
+							userFile.addAmountOfBytes(bytesCopied);
+							log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+						}
+						Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					}
 					return true;
 				} else {
 					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
@@ -225,37 +240,32 @@ public final class FileManager {
 	 *            the <code>InputStream</code> to read from
 	 * @param output
 	 *            the <code>OutputStream</code> to write to
-	 * @param userFile
-	 *            used to get amount of free space
-	 * @param isDataFile
-	 *            used to exclude the key file
+	 * @param bytesAllowedToCopy
+	 *            the amount of free space
 	 * @return the number of bytes copied, -1 of not succeed
 	 * @throws NullPointerException
 	 *             if the input or output is null
 	 * @throws IOException
 	 *             if an I/O error occurs
 	 */
-	public static long copyLarge(InputStream input, OutputStream output, UserFile userFile, boolean isDataFile)
+	public static long copyLarge(InputStream input, OutputStream output, long bytesAllowedToCopy)
 		throws IOException {
 		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
-		if (isDataFile) {
-			log.trace("Maximum amount of bytes allowed to copy: " + userFile.getAmountOfFreeBytes());
-			log.trace("Current max of bytes: " + userFile.getMaxAmountOfBytes());
-		}
+		log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 
 		long count = 0;
 		int n = 0;
-		while (EOF != (n = input.read(buffer)) && (count <= userFile.getAmountOfFreeBytes() || !isDataFile)) {
+		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy)) {
 			output.write(buffer, 0, n);
 			count += n;
 		}
 
-		if (count <= userFile.getAmountOfFreeBytes() || !isDataFile) {
-			log.trace("Copy amount of bytes: " + count + ", isDataFile: " + isDataFile);
+		if (count <= bytesAllowedToCopy) {
+			log.trace("Copy amount of bytes: " + count);
 			return count;
 		} else {
-			log.trace("Copy amount of bytes: -1 , isDataFile: " + isDataFile);
+			log.trace("Copy amount of bytes: -1");
 			return -1;
 		}
 

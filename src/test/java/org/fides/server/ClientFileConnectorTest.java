@@ -99,6 +99,7 @@ public class ClientFileConnectorTest {
 		PowerMockito.mockStatic(PropertiesManager.class);
 		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
 		Mockito.when(mockedUserFile.getAmountOfFreeBytes()).thenReturn(10000000L);
+		Mockito.when(mockedUserFile.getMaxAmountOfBytes()).thenReturn(10000000L);
 	}
 
 	/**
@@ -221,7 +222,7 @@ public class ClientFileConnectorTest {
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(outputStream));
-			InputStream inStream = byteArrayToDataStream(updatedFileContent);
+			DataInputStream inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(updatedFileContent)));
 
 			// The update
 			JsonObject updateRequest = new JsonObject();
@@ -671,7 +672,7 @@ public class ClientFileConnectorTest {
 			byte[] updatedFileContent = "This is an updated file content".getBytes();
 			ByteArrayOutputStream updateOutputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(updateOutputStream));
-			inStream = new DataInputStream(byteArrayToDataStream(updatedFileContent));
+			inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(updatedFileContent)));
 
 			// The update
 			JsonObject updateRequest = new JsonObject();
@@ -732,7 +733,7 @@ public class ClientFileConnectorTest {
 			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(outputStream));
-			InputStream inStream = byteArrayToDataStream(updatedKeyFileContent);
+			DataInputStream inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(updatedKeyFileContent)));
 
 			// Update the keyfilefile
 			assertTrue(connector.updateKeyFile(inStream, out));
@@ -769,7 +770,7 @@ public class ClientFileConnectorTest {
 			byte[] updatedKeyFileContent = "This is an updated keyfile content".getBytes();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			out = addCloseSpyToStream(new DataOutputStream(outputStream));
-			InputStream inStream = byteArrayToDataStream(updatedKeyFileContent);
+			DataInputStream inStream = addSuccessfulToStream(new DataInputStream(byteArrayToDataStream(updatedKeyFileContent)));
 
 			// Update the keyfilefile
 			assertTrue(connector.updateKeyFile(inStream, out));

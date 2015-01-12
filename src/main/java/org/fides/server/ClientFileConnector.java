@@ -133,8 +133,7 @@ public class ClientFileConnector {
 				CommunicationUtil.returnSuccessfulWithProperties(outputStream, properties);
 
 				// Put the inputstream received from the user into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile, true);
-
+				long bytesCopied = FileManager.copyLarge(virtualInputStream, fileOutputStream, userFile.getAmountOfFreeBytes());
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualInputStream.close();
@@ -182,7 +181,7 @@ public class ClientFileConnector {
 	 *            The stream to write responses to
 	 * @return Whether the update was successful or not
 	 */
-	public boolean updateFile(InputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
+	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
 		String location = JsonObjectHandler.getProperty(updateRequest, Actions.Properties.LOCATION);
 		// Check if the user sent a location
 		if (!StringUtils.isBlank(location)) {
@@ -261,7 +260,7 @@ public class ClientFileConnector {
 	 * @return Whether the update was successful or not
 	 */
 
-	public boolean updateKeyFile(InputStream inputStream, DataOutputStream outputStream) {
+	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		String keyFileLocation = userFile.getKeyFileLocation();
 
