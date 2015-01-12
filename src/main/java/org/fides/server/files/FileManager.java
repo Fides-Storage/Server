@@ -115,14 +115,21 @@ public final class FileManager {
 				// Tell the cli�nt he can start sending the file.
 				CommunicationUtil.returnSuccessful(outputStream);
 
+				long allowedAmountOfBytes = 0;
+				if (isDataFile) {
+					allowedAmountOfBytes = userFile.getAmountOfFreeBytes() + file.length();
+				} else {
+					allowedAmountOfBytes = userFile.getMaxAmountOfBytes();
+				}
+
 				// Put the stream into a temporary file
-				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, userFile.getAmountOfFreeBytes() + file.length(), isDataFile);
+				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, allowedAmountOfBytes);
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
 
-				// data is copied && if key file then key file can not be larger than data size
-				if (bytesCopied != -1 && (bytesCopied <= userFile.getMaxAmountOfBytes() || isDataFile)) {
+				// data is copied
+				if (bytesCopied != -1) {
 
 					// don't use key file
 					if (isDataFile) {
@@ -228,26 +235,24 @@ public final class FileManager {
 	 * @throws IOException
 	 *             if an I/O error occurs
 	 */
-	public static long copyLarge(InputStream input, OutputStream output, long bytesAllowedToCopy, boolean isDataFile)
+	public static long copyLarge(InputStream input, OutputStream output, long bytesAllowedToCopy)
 		throws IOException {
 		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
-		if (isDataFile) {
-			log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
-		}
+		log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 
 		long count = 0;
 		int n = 0;
-		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy || !isDataFile)) {
+		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy)) {
 			output.write(buffer, 0, n);
 			count += n;
 		}
 
-		if (count <= bytesAllowedToCopy || !isDataFile) {
-			log.trace("Copy amount of bytes: " + count + ", isDataFile: " + isDataFile);
+		if (count <= bytesAllowedToCopy) {
+			log.trace("Copy amount of bytes: " + count);
 			return count;
 		} else {
-			log.trace("Copy amount of bytes: -1 , isDataFile: " + isDataFile);
+			log.trace("Copy amount of bytes: -1");
 			return -1;
 		}
 
