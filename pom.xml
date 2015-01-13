@@ -15,13 +15,11 @@
 	</properties>
 	
 	<dependencies>
-
         <dependency>
             <groupId>org.fides.components</groupId>
             <artifactId>FidesComponents</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
         <dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -94,6 +92,21 @@
 				<version>1.2.1</version>
 				<configuration>
 					<mainClass>org.fides.server.App</mainClass>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<excludes>
+						<exclude>**/log4j2.xml</exclude>
+					</excludes>
+					<archive>
+						<manifest>
+							<mainClass>org.fides.server.App</mainClass>
+						</manifest>
+					</archive>
 				</configuration>
 			</plugin>
 		</plugins>
