@@ -29,7 +29,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest(PropertiesManager.class)
 public class ServerTest {
 
-	private static final int PORT = 4444;
+	private static final int PORT = 5555;
 
 	private static final String TRUSTSTOREPATH = "./truststore.ts";
 
