@@ -54,4 +54,9 @@ public class Errors {
 	 * File could not be removed
 	 */
 	public static final String FILE_NOT_REMOVED = "File could not be removed on the server";
+
+	/**
+	 * File could not be removed
+	 */
+	public static final String COULD_NOT_RETRIEVE_LOCATIONS = "The locations cannot be retrieved from the server";
 }

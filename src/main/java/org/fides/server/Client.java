@@ -6,6 +6,9 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import javax.net.ssl.SSLSocket;
 
@@ -13,6 +16,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.components.Actions;
+import org.fides.components.Responses;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.CommunicationUtil;
@@ -130,6 +134,9 @@ public class Client implements Runnable {
 				case Actions.REMOVE_FILE:
 					clientFileConnector.removeFile(requestObject, out);
 					break;
+				case Actions.REQUEST_LOCATIONS:
+					requestLocations(out);
+					break;
 				default:
 					CommunicationUtil.returnError(out, Errors.UNKNOWN_ACTION);
 					out.close();
@@ -145,5 +152,25 @@ public class Client implements Runnable {
 		}
 
 		log.trace("Action: " + Actions.DISCONNECT);
+	}
+
+	/**
+	 * 
+	 * @param outputStream
+	 * @return
+	 */
+	public boolean requestLocations(DataOutputStream outputStream) {
+		Set<String> locations = userFile.getLocations();
+
+		try {
+			Map<String, Object> properties = new HashMap<>();
+			properties.put(Responses.LOCATIONS, new Gson().toJsonTree(locations));
+			CommunicationUtil.returnSuccessfulWithProperties(outputStream, properties);
+			return true;
+		} catch (IOException e) {
+			CommunicationUtil.returnError(outputStream, Errors.COULD_NOT_RETRIEVE_LOCATIONS);
+			log.error(e.getMessage());
+		}
+		return false;
 	}
 }

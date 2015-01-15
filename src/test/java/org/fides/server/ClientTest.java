@@ -1,5 +1,7 @@
 package org.fides.server;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,15 +13,19 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.net.ssl.SSLSocket;
 
 import org.fides.components.Actions;
+import org.fides.components.Responses;
 import org.fides.server.files.UserFile;
 import org.fides.server.files.UserManager;
 import org.fides.server.tools.UserLocker;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -31,6 +37,7 @@ import org.powermock.reflect.Whitebox;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * This unittest tests the Client class
@@ -40,38 +47,47 @@ import com.google.gson.JsonObject;
 @PrepareForTest({ UserLocker.class, UserManager.class })
 public class ClientTest {
 
-	private static SSLSocket sslSocket = mock(SSLSocket.class);
+	private static SSLSocket sslSocket;
 
-	private static Client client = mock(Client.class);
+	private static Client client;
 
 	private static DataInputStream dataInputStream = null;
 
 	private static ClientFileConnector clientFileConnector;
 
 	/**
-	 * This function is called before the beginning of this class. It makes sure that the handleActions and run function
-	 * is called by the real method and not the mocked one. It also sets the server variable in the client.
-	 *
+	 * This function should be called before every test. It mocks the UserLocker, UserManager and ClientFileConnector.
+	 * It makes sure that the handleActions and run function is called by the real method and not the mocked one. It
+	 * also sets the server variable in the client.
+	 * 
 	 * @throws IOException
 	 */
-	@BeforeClass
-	public static void beforeClass() throws IOException {
-		// Setup client
-		Mockito.doCallRealMethod().when(client).handleActions(Mockito.any(DataInputStream.class), Mockito.any(ClientFileConnector.class), Mockito.any(DataOutputStream.class));
-		Mockito.doCallRealMethod().when(client).run();
-		Whitebox.setInternalState(client, "server", sslSocket);
-
-		when(sslSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
-	}
-
-	/**
-	 * This function should be called before every test. It mocks the UserLocker, UserManager and ClientFileConnector.
-	 */
 	@Before
-	public void before() {
+	public void before() throws IOException {
 		PowerMockito.mockStatic(UserLocker.class);
 		PowerMockito.mockStatic(UserManager.class);
 		clientFileConnector = mock(ClientFileConnector.class);
+
+		sslSocket = mock(SSLSocket.class);
+		when(sslSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+
+		// Setup client
+		client = mock(Client.class);
+		Mockito.doCallRealMethod().when(client).handleActions(Mockito.any(DataInputStream.class), Mockito.any(ClientFileConnector.class), Mockito.any(DataOutputStream.class));
+		Mockito.doCallRealMethod().when(client).run();
+		Whitebox.setInternalState(client, "server", sslSocket);
+	}
+
+	/**
+	 * Clears all the set variables
+	 */
+	@After
+	public void after() {
+		client = null;
+		clientFileConnector = null;
+		dataInputStream = null;
+		sslSocket = null;
+
 	}
 
 	/**
@@ -189,6 +205,7 @@ public class ClientTest {
 		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.never()).requestLocations(Mockito.any(DataOutputStream.class));
 	}
 
 	/**
@@ -208,6 +225,7 @@ public class ClientTest {
 		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.never()).requestLocations(Mockito.any(DataOutputStream.class));
 	}
 
 	/**
@@ -227,6 +245,7 @@ public class ClientTest {
 		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.never()).requestLocations(Mockito.any(DataOutputStream.class));
 	}
 
 	/**
@@ -246,6 +265,7 @@ public class ClientTest {
 		verify(clientFileConnector, Mockito.times(1)).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.never()).requestLocations(Mockito.any(DataOutputStream.class));
 	}
 
 	/**
@@ -265,6 +285,7 @@ public class ClientTest {
 		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.times(1)).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.never()).requestLocations(Mockito.any(DataOutputStream.class));
 	}
 
 	/**
@@ -284,6 +305,66 @@ public class ClientTest {
 		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
 		verify(clientFileConnector, Mockito.times(1)).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.never()).requestLocations(Mockito.any(DataOutputStream.class));
 	}
 
+	/**
+	 * This test will verify if the requestLocations function is called with the correct action
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void handleRequestLocations() throws Exception {
+		beforeHandleAction(Actions.REQUEST_LOCATIONS);
+		client.handleActions(dataInputStream, clientFileConnector, null);
+
+		verify(clientFileConnector, Mockito.never()).downloadKeyFile(Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).downloadFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateKeyFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).updateFile(Mockito.any(InputStream.class), Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).uploadFile(Mockito.any(InputStream.class), Mockito.any(DataOutputStream.class));
+		verify(clientFileConnector, Mockito.never()).removeFile(Mockito.any(JsonObject.class), Mockito.any(DataOutputStream.class));
+		verify(client, Mockito.times(1)).requestLocations(Mockito.any(DataOutputStream.class));
+	}
+
+	/**
+	 * This test will verify if the requestLocations function is correctly executed
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void requestLocations() throws IOException {
+		Mockito.doCallRealMethod().when(client).requestLocations(Mockito.any(DataOutputStream.class));
+
+		final String location1 = "SomeLocation";
+		final String location2 = "Another Location";
+		final String location3 = "gysg8fh390jifda";
+
+		Set<String> locations = new HashSet<>();
+		locations.add(location1);
+		locations.add(location2);
+		locations.add(location3);
+
+		UserFile userFileMock = mock(UserFile.class);
+		when(userFileMock.getLocations()).thenReturn(locations);
+		Whitebox.setInternalState(client, UserFile.class, userFileMock);
+
+		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+		client.requestLocations(new DataOutputStream(byteOut));
+
+		DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(byteOut.toByteArray()));
+
+		Gson gson = new Gson();
+
+		JsonObject jObject = gson.fromJson(dataIn.readUTF(), JsonObject.class);
+		Type collectionType = new TypeToken<Set<String>>() {
+		}.getType();
+		Set<String> locationsFromJson = gson.fromJson(jObject.get(Responses.LOCATIONS), collectionType);
+
+		assertEquals(3, locationsFromJson.size());
+		assertTrue(locationsFromJson.contains(location1));
+		assertTrue(locationsFromJson.contains(location2));
+		assertTrue(locationsFromJson.contains(location3));
+
+	}
 }

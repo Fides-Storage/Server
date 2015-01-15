@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.fides.components.Responses;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
@@ -59,6 +60,8 @@ public final class CommunicationUtil {
 				returnJobj.addProperty(property.getKey(), (Boolean) value);
 			} else if (value instanceof Character) {
 				returnJobj.addProperty(property.getKey(), (Character) value);
+			} else if (value instanceof JsonElement) {
+				returnJobj.add(property.getKey(), (JsonElement) value);
 			} else {
 				throw new IllegalArgumentException("Object may only be of type: String, Number, Boolean or Character");
 			}

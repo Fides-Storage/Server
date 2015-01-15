@@ -2,6 +2,7 @@ package org.fides.server.files;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
@@ -105,6 +106,15 @@ public class UserFile implements Serializable {
 	public void removeFile(String location) {
 		userFiles.remove(location);
 		UserManager.saveUserFile(this);
+	}
+
+	/**
+	 * Returns the list of file locations that belong to the user, it is returned as and unmodifiable set
+	 * 
+	 * @return The list of file locations as an unmodifiable set
+	 */
+	public Set<String> getLocations() {
+		return Collections.unmodifiableSet(userFiles);
 	}
 
 	/**
