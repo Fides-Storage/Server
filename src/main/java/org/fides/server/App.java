@@ -2,6 +2,7 @@ package org.fides.server;
 
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fides.server.tools.CleanerTask;
@@ -24,6 +25,7 @@ public class App {
 	public static void main(String[] args) {
 		Server server;
 		drawLogo();
+
 		LOG.trace("Starting server");
 		server = new Server();
 		Thread serverThread = new Thread(server);
