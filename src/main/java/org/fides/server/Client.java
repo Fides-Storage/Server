@@ -155,9 +155,11 @@ public class Client implements Runnable {
 	}
 
 	/**
+	 * Sends the list of locations the user owns to the client
 	 * 
 	 * @param outputStream
-	 * @return
+	 *            The output stream to read to
+	 * @return true if successfully send to the client
 	 */
 	public boolean requestLocations(DataOutputStream outputStream) {
 		Set<String> locations = userFile.getLocations();
