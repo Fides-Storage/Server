@@ -46,12 +46,13 @@ public final class CommunicationUtil {
 	 * @throws IOException
 	 */
 	public static boolean uploadSuccessful(DataOutputStream outputStream, DataInputStream inputStream) throws IOException {
+		JsonObject returnJobj = new JsonObject();
+		returnJobj.addProperty(Responses.SUCCESSFUL, true);
+		outputStream.writeUTF(new Gson().toJson(returnJobj));
+		
 		String message = inputStream.readUTF();
 		JsonObject response = new Gson().fromJson(message, JsonObject.class);
 		if (response.has(Responses.SUCCESSFUL) && response.get(Responses.SUCCESSFUL).getAsBoolean()) {
-			JsonObject returnJobj = new JsonObject();
-			returnJobj.addProperty(Responses.SUCCESSFUL, true);
-			outputStream.writeUTF(new Gson().toJson(returnJobj));
 			return true;
 		}
 		return false;
