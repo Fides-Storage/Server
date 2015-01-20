@@ -12,7 +12,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,7 +70,6 @@ public class ClientFileConnector {
 				LOG.error("User's keyfile doesn't exist");
 				CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 			}
-			IOUtils.closeQuietly(outputStream);
 		}
 
 		return false;
