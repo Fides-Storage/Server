@@ -12,7 +12,7 @@ Installation for system administrator
 In order to install the software, the following files are required:
 
 * Java 7 or above
-* The jar-with-dependancies.jar
+* The jar-with-dependencies.jar
 * config.properties (you can use the example in the repository)
 * keystore.jks (you need a valid certificate for security purpose)
 
