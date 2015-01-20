@@ -171,7 +171,7 @@ public class Client implements Runnable {
 			return true;
 		} catch (IOException e) {
 			CommunicationUtil.returnError(outputStream, Errors.COULD_NOT_RETRIEVE_LOCATIONS);
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 		}
 		return false;
 	}
