@@ -27,7 +27,7 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies a successful to the outputstream
+	 * Copies a successful to the DataOutputStream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
@@ -40,17 +40,19 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies a successful to the outputstream and waits for a successful from the inputstream.
+	 * Copies a successful to the DataOutputStream and waits for a successful from the DataInputStream.
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
+	 * @param inputStream
+	 *            The stream to read the successful from
 	 * @throws IOException
 	 */
 	public static boolean uploadSuccessful(DataOutputStream outputStream, DataInputStream inputStream) throws IOException {
 		JsonObject returnJobj = new JsonObject();
 		returnJobj.addProperty(Responses.SUCCESSFUL, true);
 		outputStream.writeUTF(new Gson().toJson(returnJobj));
-		
+
 		String message = inputStream.readUTF();
 		JsonObject response = new Gson().fromJson(message, JsonObject.class);
 		if (response.has(Responses.SUCCESSFUL) && response.get(Responses.SUCCESSFUL).getAsBoolean()) {
@@ -60,7 +62,7 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies a successful with properties to the outputstream
+	 * Copies a successful with properties to the DataOutputStream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
@@ -91,7 +93,7 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies an errormessage to the outputstream
+	 * Copies an errormessage to the DataOutputStream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the message to
