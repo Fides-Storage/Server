@@ -1,11 +1,14 @@
 package org.fides.server;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,9 +36,9 @@ public class ClientFileConnector {
 	/**
 	 * Logger for this class
 	 */
-	private static Logger log = LogManager.getLogger(ClientFileConnector.class);
+	private static final Logger LOG = LogManager.getLogger(ClientFileConnector.class);
 
-	private UserFile userFile;
+	private final UserFile userFile;
 
 	/**
 	 * Constructor for ClientFileConnector
@@ -65,7 +68,7 @@ public class ClientFileConnector {
 			if (keyFile.exists()) {
 				return FileManager.copyFileToStream(keyFile, outputStream);
 			} else {
-				log.error("User's keyfile doesn't exist");
+				LOG.error("User's keyfile doesn't exist");
 				CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 			}
 			IOUtils.closeQuietly(outputStream);
@@ -102,7 +105,6 @@ public class ClientFileConnector {
 		} else {
 			CommunicationUtil.returnError(outputStream, Errors.NO_FILE_LOCATION);
 		}
-		IOUtils.closeQuietly(outputStream);
 		return false;
 	}
 
@@ -116,14 +118,15 @@ public class ClientFileConnector {
 	 *            The stream to write the response to
 	 * @return Whether the upload was successful or not
 	 */
-	public boolean uploadFile(InputStream inputStream, DataOutputStream outputStream) {
+	public boolean uploadFile(DataInputStream inputStream, DataOutputStream outputStream) {
+		File tempFile = new File(PropertiesManager.getInstance().getDataDir(), FileManager.createFile(true));
 		String location = FileManager.createFile();
 		File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 		boolean uploadSuccessful = false;
 		// Check if the file was created correctly (should always be true)
-		if (file.exists()) {
+		if (file.exists() && tempFile.exists()) {
 			try (InputStream virtualInputStream = new VirtualInputStream(inputStream);
-				OutputStream fileOutputStream = new FileOutputStream(file)) {
+				OutputStream fileOutputStream = new FileOutputStream(tempFile)) {
 				// Return the location on the server where the new file will be written
 				Map<String, Object> properties = new HashMap<>();
 				properties.put(Actions.Properties.LOCATION, location);
@@ -136,30 +139,36 @@ public class ClientFileConnector {
 				virtualInputStream.close();
 
 				if (bytesCopied != -1) {
-					CommunicationUtil.returnSuccessful(outputStream);
+					// Check if the upload was successful on the client side
+					if (CommunicationUtil.uploadSuccessful(outputStream, inputStream)) {
+						Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-					// Add the file to the user
-					userFile.addFile(location);
-					userFile.addAmountOfBytes(bytesCopied);
+						// Add the file to the user
+						userFile.addFile(location);
 
-					// Set timestamp back to first of month
-					FileManager.touchFile(file);
+						// Update the user's bytes left.
+						userFile.addAmountOfBytes(bytesCopied);
+						LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 
-					log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
-					uploadSuccessful = true;
+						// Set timestamp back to first of month
+						FileManager.touchFile(file);
+						uploadSuccessful = true;
+					}
+
 				} else {
-					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
+					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
 				}
 			} catch (IOException e) {
-				log.error(e.getMessage());
+				LOG.error(e.getMessage());
 				CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 			} finally {
 				if (!uploadSuccessful) {
 					file.delete();
 				}
+				tempFile.delete();
 			}
 		} else {
-			log.error("A file generated with FileManager.createFile() was not generated correctly.");
+			LOG.error("A file generated with FileManager.createFile() was not generated correctly.");
 			CommunicationUtil.returnError(outputStream, "Upload failed. Please contact your server's administrator.");
 		}
 		return uploadSuccessful;
@@ -176,7 +185,7 @@ public class ClientFileConnector {
 	 *            The stream to write responses to
 	 * @return Whether the update was successful or not
 	 */
-	public boolean updateFile(InputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
+	public boolean updateFile(DataInputStream inputStream, JsonObject updateRequest, DataOutputStream outputStream) {
 		String location = JsonObjectHandler.getProperty(updateRequest, Actions.Properties.LOCATION);
 		// Check if the user sent a location
 		if (!StringUtils.isBlank(location)) {
@@ -185,7 +194,7 @@ public class ClientFileConnector {
 				File file = new File(PropertiesManager.getInstance().getDataDir(), location);
 				// Check if the file exists
 				if (file.exists()) {
-					return FileManager.copyStreamToFile(inputStream, file, outputStream, userFile, true);
+					return FileManager.copyStreamToFile(inputStream, file, outputStream, userFile);
 				} else {
 					CommunicationUtil.returnError(outputStream, Errors.FILE_NOT_FOUND);
 				}
@@ -221,10 +230,10 @@ public class ClientFileConnector {
 
 					if (result) {
 						try {
-							log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+							LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
 							CommunicationUtil.returnSuccessful(outputStream);
 						} catch (IOException e) {
-							log.debug("IOException when returning the successful delete: ", e);
+							LOG.debug("IOException when returning the successful delete: ", e);
 						}
 
 						// Remove file in UserFile
@@ -255,7 +264,7 @@ public class ClientFileConnector {
 	 * @return Whether the update was successful or not
 	 */
 
-	public boolean updateKeyFile(InputStream inputStream, DataOutputStream outputStream) {
+	public boolean updateKeyFile(DataInputStream inputStream, DataOutputStream outputStream) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		String keyFileLocation = userFile.getKeyFileLocation();
 
@@ -264,10 +273,10 @@ public class ClientFileConnector {
 			File keyFile = new File(PropertiesManager.getInstance().getDataDir(), userFile.getKeyFileLocation());
 			// If the keyfile exists, copy the stream to the keyfile (via a temporary file)
 			if (keyFile.exists()) {
-				return FileManager.copyStreamToFile(inputStream, keyFile, outputStream, userFile, false);
+				return FileManager.copyStreamToKeyFile(inputStream, keyFile, outputStream, userFile);
 
 			} else {
-				log.error("User's keyfile doesn't exist");
+				LOG.error("User's keyfile doesn't exist");
 				CommunicationUtil.returnError(outputStream, "User keyfile could not be found (Please contact a server administrator)");
 			}
 		}

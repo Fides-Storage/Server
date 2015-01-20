@@ -36,9 +36,9 @@ public class Client implements Runnable {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(Client.class);
+	private static final Logger LOG = LogManager.getLogger(Client.class);
 
-	private Socket server;
+	private final Socket server;
 
 	private UserFile userFile;
 
@@ -88,9 +88,9 @@ public class Client implements Runnable {
 			handleActions(in, clientFileConnector, out);
 
 		} catch (EOFException e) {
-			log.debug("Closed by client don't throw an error message");
+			LOG.debug("Closed by client don't throw an error message");
 		} catch (IOException e) {
-			log.error("IOException on server socket listen", e);
+			LOG.error("IOException on server socket listen", e);
 		} finally {
 			IOUtils.closeQuietly(server);
 		}
@@ -113,7 +113,7 @@ public class Client implements Runnable {
 			JsonObject requestObject = new Gson().fromJson(in.readUTF(), JsonObject.class);
 			String action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 			while (!action.equals(Actions.DISCONNECT)) {
-				log.trace("Action: " + action);
+				LOG.trace("Action: " + action);
 
 				switch (action) {
 				case Actions.GET_KEY_FILE:
@@ -146,12 +146,12 @@ public class Client implements Runnable {
 				action = JsonObjectHandler.getProperty(requestObject, Actions.ACTION);
 			}
 		} catch (SocketException e) {
-			log.debug("Closed by client don't throw an error message");
+			LOG.debug("Closed by client don't throw an error message");
 		} finally {
 			UserLocker.unlock(userFile.getUsernameHash());
 		}
 
-		log.trace("Action: " + Actions.DISCONNECT);
+		LOG.trace("Action: " + Actions.DISCONNECT);
 	}
 
 	/**

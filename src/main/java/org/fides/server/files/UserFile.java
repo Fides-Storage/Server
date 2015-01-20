@@ -20,11 +20,11 @@ public class UserFile implements Serializable {
 	 */
 	private static final long serialVersionUID = 4099951094350728444L;
 
-	private String usernameHash;
+	private final String usernameHash;
 
-	private String passwordHash;
+	private final String passwordHash;
 
-	private Set<String> userFiles = new HashSet<>();
+	private final Set<String> userFiles = new HashSet<>();
 
 	private String keyFile;
 

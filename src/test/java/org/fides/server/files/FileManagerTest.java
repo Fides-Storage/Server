@@ -47,9 +47,9 @@ public class FileManagerTest {
 
 	private static File testDataDir;
 
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
-	private static UserFile mockedUserFile = Mockito.mock(UserFile.class);
+	private static final UserFile MOCKED_USER_FILE = Mockito.mock(UserFile.class);
 
 	/**
 	 * Sets up the test class by adding a the necessary temporary files to the test folder.
@@ -59,13 +59,13 @@ public class FileManagerTest {
 		try {
 			testDataDir = new File(PropertiesManager.getInstance().getDataDir(), "Test");
 			if (!testDataDir.exists()) {
-				testDataDir.mkdirs();
+				assertTrue(testDataDir.mkdirs());
 			}
 			// This causes the mocked PropertiesManager to always return the test Data directory:
-			Mockito.when(mockedPropertiesManager.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
+			Mockito.when(MOCKED_PROPERTIES_MANAGER.getDataDir()).thenReturn(testDataDir.getAbsolutePath());
 
 			File emptyFile = new File(testDataDir, DEFAULTEMPTYFILELOCATION);
-			emptyFile.createNewFile();
+			assertTrue(emptyFile.createNewFile());
 
 			File defaultFile = new File(testDataDir, DEFAULTFILELOCATION);
 			FileOutputStream outputStream = new FileOutputStream(defaultFile);
@@ -88,7 +88,7 @@ public class FileManagerTest {
 	@Before
 	public void setUpMock() {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 	}
 
 	/**
@@ -113,7 +113,7 @@ public class FileManagerTest {
 	public void testRemoveFile() {
 		try {
 			assertTrue(Files.exists(Paths.get(testDataDir.getCanonicalPath(), DEFAULTREMOVEFILELOCATION)));
-			assertTrue(FileManager.removeFile(DEFAULTREMOVEFILELOCATION, mockedUserFile));
+			assertTrue(FileManager.removeFile(DEFAULTREMOVEFILELOCATION, MOCKED_USER_FILE));
 			assertFalse(Files.exists(Paths.get(testDataDir.getCanonicalPath(), DEFAULTREMOVEFILELOCATION)));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -125,7 +125,7 @@ public class FileManagerTest {
 	 */
 	@Test
 	public void testRemoveNonExistingFile() {
-		assertFalse(FileManager.removeFile("nonExistingFile.txt", mockedUserFile));
+		assertFalse(FileManager.removeFile("nonExistingFile.txt", MOCKED_USER_FILE));
 	}
 
 	/**

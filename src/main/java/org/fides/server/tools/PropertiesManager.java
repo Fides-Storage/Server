@@ -19,7 +19,7 @@ public class PropertiesManager {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(PropertiesManager.class);
+	private static final Logger LOG = LogManager.getLogger(PropertiesManager.class);
 
 	private static final String FILEPATH = "./config.properties";
 
@@ -52,10 +52,10 @@ public class PropertiesManager {
 			properties.load(in);
 
 		} catch (FileNotFoundException e) {
-			log.error("Properties file is not found", e);
+			LOG.error("Properties file is not found", e);
 			System.exit(1);
 		} catch (IOException e) {
-			log.error("IOException has occured", e);
+			LOG.error("IOException has occured", e);
 			System.exit(1);
 		} finally {
 			IOUtils.closeQuietly(in);

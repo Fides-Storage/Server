@@ -1,5 +1,6 @@
 package org.fides.server.files;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +31,7 @@ public final class FileManager {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(FileManager.class);
+	private static final Logger LOG = LogManager.getLogger(FileManager.class);
 
 	/** The maximum number of attempts when trying to create a unique filename */
 	private static final int MAX_UNIQUE_NAME_ATTEMPTS = 10;
@@ -81,7 +82,7 @@ public final class FileManager {
 					newFile = new File(properties.getDataDir(), location);
 				}
 			} catch (IOException e) {
-				log.error(e);
+				LOG.error(e);
 				location = null;
 			}
 		} else {
@@ -89,6 +90,40 @@ public final class FileManager {
 		}
 		// Return the location of the generated file
 		return location;
+	}
+
+	/**
+	 * Copies an inputstream to fill a file.
+	 * 
+	 * @param inputStream
+	 *            The inputstream to copy to the file
+	 * @param file
+	 *            The file to fill with the inputstream
+	 * @param outputStream
+	 *            The outputstream to respond to the client
+	 * @param userFile
+	 *            used to get amount of free space
+	 * @return Whether the copy was successful or not
+	 */
+	public static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
+		return copyStreamToFile(inputStream, file, outputStream, userFile, true);
+	}
+
+	/**
+	 * Copies an inputstream to fill a keyfile.
+	 * 
+	 * @param inputStream
+	 *            The inputstream to copy to the file
+	 * @param file
+	 *            The file to fill with the inputstream
+	 * @param outputStream
+	 *            The outputstream to respond to the client
+	 * @param userFile
+	 *            used to get amount of free space
+	 * @return Whether the copy was successful or not
+	 */
+	public static boolean copyStreamToKeyFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile) {
+		return copyStreamToFile(inputStream, file, outputStream, userFile, false);
 	}
 
 	/**
@@ -106,7 +141,7 @@ public final class FileManager {
 	 *            used to exclude the key file
 	 * @return Whether the copy was successful or not
 	 */
-	public static boolean copyStreamToFile(InputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
+	private static boolean copyStreamToFile(DataInputStream inputStream, File file, DataOutputStream outputStream, UserFile userFile, boolean isDataFile) {
 		String dataDir = PropertiesManager.getInstance().getDataDir();
 		String tempFileName = createFile(true);
 		if (StringUtils.isNotEmpty(dataDir) && StringUtils.isNotEmpty(tempFileName)) {
@@ -122,13 +157,19 @@ public final class FileManager {
 				// else limit the key file to the max size of the data file
 				long allowedAmountOfBytes = 0;
 				if (isDataFile) {
+					// If the file is a normal datafile, the maximum upload size is equal to the amount of bytes left on
+					// the user's account plus the size of the file that's getting updated
 					allowedAmountOfBytes = userFile.getAmountOfFreeBytes() + file.length();
 				} else {
+					// If the is uploading a keyfile, the maximum upload size is equal to the user's maximum
+					// user size. Perhaps in the future this can be changed to the amount mentioned above plus some
+					// leeway.
 					allowedAmountOfBytes = userFile.getMaxAmountOfBytes();
 				}
 
 				// Put the stream into a temporary file
 				long bytesCopied = FileManager.copyLarge(virtualIn, fileOutputStream, allowedAmountOfBytes);
+
 				fileOutputStream.flush();
 				fileOutputStream.close();
 				virtualIn.close();
@@ -136,27 +177,27 @@ public final class FileManager {
 				// data is copied
 				if (bytesCopied != -1) {
 
-					// don't use key file
-					if (isDataFile) {
-						userFile.removeAmountOfBytes(file.length());
-						userFile.addAmountOfBytes(bytesCopied);
-						log.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+					// Copy the temporary file into the official file
+					if (CommunicationUtil.uploadSuccessful(outputStream, inputStream)) {
+						// don't use key file
+						if (isDataFile) {
+							userFile.removeAmountOfBytes(file.length());
+							userFile.addAmountOfBytes(bytesCopied);
+							LOG.trace("Amount of free bytes: " + userFile.getAmountOfFreeBytes());
+						}
+						Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+						// Set timestamp back to first of month
+						FileManager.touchFile(file);
 					}
 
-					// Copy the temporary file into the official file
-					Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-					// Set timestamp back to first of month
-					FileManager.touchFile(file);
-
-					CommunicationUtil.returnSuccessful(outputStream);
 					return true;
 				} else {
-					CommunicationUtil.returnError(outputStream, "Upload file size to big.");
+					CommunicationUtil.returnError(outputStream, "Upload file size too big.");
 					return false;
 				}
 			} catch (IOException e) {
-				log.error(e.getMessage());
+				LOG.error(e.getMessage());
 			} finally {
 				tempFile.delete();
 			}
@@ -187,7 +228,7 @@ public final class FileManager {
 
 			return true;
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 		}
 		return false;
 	}
@@ -222,7 +263,7 @@ public final class FileManager {
 		try {
 			touchFile(userFileLocation);
 		} catch (IOException e) {
-			log.error(e);
+			LOG.error(e);
 		}
 	}
 
@@ -237,7 +278,7 @@ public final class FileManager {
 		try {
 			touchFile(dataFileLocation);
 		} catch (IOException e) {
-			log.error(e);
+			LOG.error(e);
 		}
 	}
 
@@ -285,20 +326,20 @@ public final class FileManager {
 		throws IOException {
 		byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
-		log.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
+		LOG.trace("Maximum amount of bytes allowed to copy: " + bytesAllowedToCopy);
 
 		long count = 0;
-		int n = 0;
+		int n;
 		while (EOF != (n = input.read(buffer)) && (count <= bytesAllowedToCopy)) {
 			output.write(buffer, 0, n);
 			count += n;
 		}
 
 		if (count <= bytesAllowedToCopy) {
-			log.trace("Copy amount of bytes: " + count);
+			LOG.trace("Copy amount of bytes: " + count);
 			return count;
 		} else {
-			log.trace("Copy amount of bytes: -1");
+			LOG.trace("Copy amount of bytes: -1");
 			return -1;
 
 		}

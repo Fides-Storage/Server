@@ -23,7 +23,7 @@ public class Server implements Runnable {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(Server.class);
+	private static final Logger LOG = LogManager.getLogger(Server.class);
 
 	private SSLServerSocket sslServerSocket;
 
@@ -31,13 +31,11 @@ public class Server implements Runnable {
 
 	/**
 	 * Constructor to create a new server socket
-	 * 
-	 * @throws IOException
-	 *             Throws an IOException if the connection can't be made
+	 *
 	 */
-	public Server() throws IOException {
+	public Server() {
 
-		// Instantiating the propertiesmanager
+		// Instantiating the PropertiesManager
 		PropertiesManager propertiesManager = PropertiesManager.getInstance();
 		UserLocker.clearAllLocks();
 		try {
@@ -50,7 +48,7 @@ public class Server implements Runnable {
 			keyStore.load(new FileInputStream(propertiesManager.getKeystorePath()), propertiesManager.getKeystorePassword());
 			keyManagerFactory.init(keyStore, propertiesManager.getKeystorePassword());
 
-			// Load the keymanagers in the sslcontext
+			// Load the KeyManagers in the sslContext
 			sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 
 			// Create a SSLServerSocketFactory from the SSLContext
@@ -59,13 +57,13 @@ public class Server implements Runnable {
 			// Create the SSLServerSocket from the factory on the given port
 			sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(propertiesManager.getPort());
 
-			log.debug("Server started on port: " + propertiesManager.getPort());
-			log.debug("Using user directory: " + propertiesManager.getUserDir());
-			log.debug("Using data directory: " + propertiesManager.getDataDir());
-			log.debug("Using max amount of bytes: " + propertiesManager.getMaxAmountOfBytesPerUser());
+			LOG.debug("Server started on port: " + propertiesManager.getPort());
+			LOG.debug("Using user directory: " + propertiesManager.getUserDir());
+			LOG.debug("Using data directory: " + propertiesManager.getDataDir());
+			LOG.debug("Using max amount of bytes: " + propertiesManager.getMaxAmountOfBytesPerUser());
 
 		} catch (Exception e) {
-			log.error(e);
+			LOG.error(e);
 		}
 	}
 
@@ -88,7 +86,7 @@ public class Server implements Runnable {
 				t.start();
 
 			} catch (IOException e) {
-				log.error("IOException on socket listen", e);
+				LOG.error("IOException on socket listen", e);
 			}
 		}
 	}

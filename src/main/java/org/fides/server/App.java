@@ -1,6 +1,5 @@
 package org.fides.server;
 
-import java.io.IOException;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -15,7 +14,7 @@ public class App {
 	/**
 	 * Log for this class
 	 */
-	private static final Logger log = LogManager.getLogger(App.class);
+	private static final Logger LOG = LogManager.getLogger(App.class);
 
 	/**
 	 * Main class of the Fides Server
@@ -26,16 +25,13 @@ public class App {
 	public static void main(String[] args) {
 		Server server;
 		drawLogo();
-		log.trace("Starting server");
-		try {
-			server = new Server();
-			Thread serverThread = new Thread(server);
-			serverThread.start();
-		} catch (IOException e) {
-			log.error(e);
-		}
 
-		log.trace("Starting timer for cleaner");
+		LOG.trace("Starting server");
+		server = new Server();
+		Thread serverThread = new Thread(server);
+		serverThread.start();
+
+		LOG.trace("Starting timer for cleaner");
 		Timer timer = new Timer("CleanerTimer");
 		long timeToClean = TimeUnit.DAYS.toMillis(1);
 		timer.scheduleAtFixedRate(new CleanerTask(), 0, timeToClean);
@@ -43,7 +39,7 @@ public class App {
 	}
 
 	private static void drawLogo() {
-		log.info("\n"
+		LOG.info("\n"
 			+ "                                          dddddddd                                     \n"
 			+ "FFFFFFFFFFFFFFFFFFFFFF  iiii              d::::::d                                     \n"
 			+ "F::::::::::::::::::::F i::::i             d::::::d                                     \n"

@@ -47,7 +47,7 @@ public class UserManagerTest {
 	/**
 	 * A mocked PropertiesManager which should always return the test User Directory
 	 */
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * The test User Directory
@@ -64,7 +64,7 @@ public class UserManagerTest {
 			assertTrue(testUserDir.mkdirs());
 		}
 		// This causes the mocked PropertiesManager to always return the test Data directory:
-		Mockito.when(mockedPropertiesManager.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
+		Mockito.when(MOCKED_PROPERTIES_MANAGER.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class UserManagerTest {
 	@Before
 	public void setUpMock() throws IOException {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 
 		PowerMockito.mockStatic(FileManager.class);
 		String randomLocation = UUID.randomUUID().toString();

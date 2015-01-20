@@ -1,5 +1,6 @@
 package org.fides.server.tools;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
@@ -20,13 +21,13 @@ public final class CommunicationUtil {
 	/**
 	 * Log for this class
 	 */
-	private static Logger log = LogManager.getLogger(CommunicationUtil.class);
+	private static final Logger LOG = LogManager.getLogger(CommunicationUtil.class);
 
 	private CommunicationUtil() {
 	}
 
 	/**
-	 * Copies an successful to the outputstream
+	 * Copies a successful to the outputstream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
@@ -39,7 +40,27 @@ public final class CommunicationUtil {
 	}
 
 	/**
-	 * Copies an successful to the outputstream
+	 * Copies a successful to the outputstream and waits for a successful from the inputstream.
+	 * 
+	 * @param outputStream
+	 *            The stream to copy the successful to
+	 * @throws IOException
+	 */
+	public static boolean uploadSuccessful(DataOutputStream outputStream, DataInputStream inputStream) throws IOException {
+		JsonObject returnJobj = new JsonObject();
+		returnJobj.addProperty(Responses.SUCCESSFUL, true);
+		outputStream.writeUTF(new Gson().toJson(returnJobj));
+		
+		String message = inputStream.readUTF();
+		JsonObject response = new Gson().fromJson(message, JsonObject.class);
+		if (response.has(Responses.SUCCESSFUL) && response.get(Responses.SUCCESSFUL).getAsBoolean()) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Copies a successful with properties to the outputstream
 	 * 
 	 * @param outputStream
 	 *            The stream to copy the successful to
@@ -84,7 +105,7 @@ public final class CommunicationUtil {
 			returnJobj.addProperty(Responses.ERROR, errorMessage);
 			outputStream.writeUTF(new Gson().toJson(returnJobj));
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 		}
 	}
 }

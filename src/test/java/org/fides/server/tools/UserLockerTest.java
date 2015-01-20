@@ -32,7 +32,7 @@ public class UserLockerTest {
 	/**
 	 * A mocked PropertiesManager which should always return the test User Directory
 	 */
-	private static PropertiesManager mockedPropertiesManager = Mockito.mock(PropertiesManager.class);
+	private static final PropertiesManager MOCKED_PROPERTIES_MANAGER = Mockito.mock(PropertiesManager.class);
 
 	/**
 	 * The test User Directory
@@ -51,7 +51,7 @@ public class UserLockerTest {
 			assertTrue(testUserDir.mkdirs());
 		}
 		// This causes the mocked PropertiesManager to always return the test Data directory:
-		Mockito.when(mockedPropertiesManager.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
+		Mockito.when(MOCKED_PROPERTIES_MANAGER.getUserDir()).thenReturn(testUserDir.getAbsolutePath());
 	}
 
 	/**
@@ -62,7 +62,7 @@ public class UserLockerTest {
 	@Before
 	public void setUpMock() throws IOException {
 		PowerMockito.mockStatic(PropertiesManager.class);
-		Mockito.when(PropertiesManager.getInstance()).thenReturn(mockedPropertiesManager);
+		Mockito.when(PropertiesManager.getInstance()).thenReturn(MOCKED_PROPERTIES_MANAGER);
 	}
 
 	/**
@@ -85,7 +85,7 @@ public class UserLockerTest {
 	public void testRemoveLockFile() throws IOException {
 		String username = "testRemoveLockFile";
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
-		testLockFile.createNewFile();
+		assertTrue(testLockFile.createNewFile());
 		assertTrue(testLockFile.exists());
 		UserLocker.unlock(username);
 		assertFalse(testLockFile.exists());
@@ -100,7 +100,7 @@ public class UserLockerTest {
 	public void testBlockingLockFile() throws IOException {
 		String username = "testBlockingLockFile";
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
-		testLockFile.createNewFile();
+		assertTrue(testLockFile.createNewFile());
 		assertTrue(testLockFile.exists());
 		assertFalse(UserLocker.lock(username));
 	}
@@ -143,8 +143,8 @@ public class UserLockerTest {
 		String username2 = "testClearAllLocks2";
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
 		File testLockFile2 = new File(testUserDir, username2.concat(".lock"));
-		testLockFile.createNewFile();
-		testLockFile2.createNewFile();
+		assertTrue(testLockFile.createNewFile());
+		assertTrue(testLockFile2.createNewFile());
 		assertTrue(testLockFile.exists());
 		assertTrue(testLockFile2.exists());
 		UserLocker.clearAllLocks();
@@ -164,9 +164,9 @@ public class UserLockerTest {
 		File testLockFile = new File(testUserDir, username.concat(".lock"));
 		File testUserFile = new File(testUserDir, username);
 		File testUserFile2 = new File(testUserDir, username2);
-		testLockFile.createNewFile();
-		testUserFile.createNewFile();
-		testUserFile2.createNewFile();
+		assertTrue(testLockFile.createNewFile());
+		assertTrue(testUserFile.createNewFile());
+		assertTrue(testUserFile2.createNewFile());
 		assertTrue(testLockFile.exists());
 		assertTrue(testUserFile.exists());
 		assertTrue(testUserFile2.exists());
